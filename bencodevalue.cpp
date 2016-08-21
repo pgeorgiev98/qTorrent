@@ -230,3 +230,45 @@ bool BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 	}
 	return true;
 }
+
+
+void BencodeInteger::print(QTextStream& out) const {
+	out << m_value;
+}
+
+void BencodeString::print(QTextStream& out) const {
+	out << m_value;
+}
+
+void BencodeList::print(QTextStream& out) const {
+	out << "List {" << endl;
+	for(auto v : m_values) {
+		QString s;
+		QTextStream stream(&s);
+		v -> print(stream);
+		while(!stream.atEnd()) {
+			QString line = stream.readLine();
+			out << '\t' << line << endl;
+		}
+	}
+	out << "}";
+}
+
+void BencodeDictionary::print(QTextStream& out) const {
+	out << "Dictionary {" << endl;
+	for(auto v : m_values) {
+		QString s;
+		QTextStream stream(&s);
+		(v.first) -> print(stream);
+		while(!stream.atEnd()) {
+			out << '\t' << stream.readLine();
+		}
+		(v.second) -> print(stream);
+		out << " : ";
+		out << stream.readLine() << endl;
+		while(!stream.atEnd()) {
+			out << '\t' << stream.readLine() << endl;
+		}
+	}
+	out << "}";
+}

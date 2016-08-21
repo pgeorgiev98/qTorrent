@@ -46,6 +46,13 @@ bool Bencode::loadFromByteArray(const QByteArray &data) {
 	return true;
 }
 
+void Bencode::print(QTextStream &out) const {
+	for(auto v : m_values) {
+		v -> print(out);
+		out << endl;
+	}
+}
+
 QString Bencode::errorString() const {
 	return m_errorString;
 }

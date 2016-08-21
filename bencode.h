@@ -18,6 +18,7 @@ public:
 	QString errorString() const;
 	const QList<BencodeValue*>& values() const;
 	QList<BencodeValue*> values();
+	void print(QTextStream& out) const;
 };
 
 #endif // BENCODE_H

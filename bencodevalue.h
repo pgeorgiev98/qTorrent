@@ -2,6 +2,7 @@
 #define BENCODEVALUE_H
 
 #include <QByteArray>
+#include <QTextStream>
 #include <QString>
 #include <QList>
 
@@ -20,6 +21,7 @@ public:
 	QString errorString() const;
 	virtual bool loadFromByteArray(const QByteArray& data, int& position) = 0;
 	static BencodeValue* createFromByteArray(const QByteArray& data, int& position);
+	virtual void print(QTextStream& out) const = 0;
 };
 
 class BencodeInteger : public BencodeValue {
@@ -29,6 +31,7 @@ public:
 	~BencodeInteger();
 	int value() const;
 	bool loadFromByteArray(const QByteArray& data, int& position);
+	void print(QTextStream& out) const;
 };
 
 class BencodeString : public BencodeValue {
@@ -39,6 +42,7 @@ public:
 	const QByteArray& value() const;
 	QByteArray value();
 	bool loadFromByteArray(const QByteArray& data, int& position);
+	void print(QTextStream& out) const;
 };
 
 class BencodeList : public BencodeValue {
@@ -49,6 +53,7 @@ public:
 	const QList<BencodeValue*>& values() const;
 	QList<BencodeValue*> values();
 	bool loadFromByteArray(const QByteArray& data, int& position);
+	void print(QTextStream& out) const;
 };
 
 class BencodeDictionary : public BencodeValue {
@@ -59,6 +64,7 @@ public:
 	const QList< QPair<BencodeValue*, BencodeValue*> >& values() const;
 	QList< QPair<BencodeValue*, BencodeValue*> > values();
 	bool loadFromByteArray(const QByteArray& data, int& position);
+	void print(QTextStream& out) const;
 };
 
 #endif // BENCODEVALUE_H
