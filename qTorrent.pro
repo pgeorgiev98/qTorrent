@@ -9,4 +9,10 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    bencode.cpp \
+    bencodevalue.cpp
+
+HEADERS += \
+    bencode.h \
+    bencodevalue.h
