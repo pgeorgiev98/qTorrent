@@ -40,6 +40,7 @@ protected:
 	int m_value;
 public:
 	BencodeInteger();
+	BencodeInteger(int value);
 	~BencodeInteger();
 	int value() const;
 	bool loadFromByteArray(const QByteArray& data, int& position);
@@ -52,6 +53,7 @@ protected:
 	QByteArray m_value;
 public:
 	BencodeString();
+	BencodeString(const QByteArray& value);
 	~BencodeString();
 	const QByteArray& value() const;
 	QByteArray value();

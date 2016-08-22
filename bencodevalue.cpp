@@ -53,6 +53,9 @@ BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &pos
 BencodeInteger::BencodeInteger() : BencodeValue(Type::Integer) {
 }
 
+BencodeInteger::BencodeInteger(int value) : BencodeValue(Type::Integer), m_value(value) {
+}
+
 BencodeInteger::~BencodeInteger() {
 }
 
@@ -91,6 +94,9 @@ bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
 
 
 BencodeString::BencodeString() : BencodeValue(Type::String) {
+}
+
+BencodeString::BencodeString(const QByteArray& value) : BencodeValue(Type::String), m_value(value) {
 }
 
 BencodeString::~BencodeString() {
