@@ -23,6 +23,7 @@ void BencodeValue::clearErrorString() {
 	m_errorString.clear();
 }
 
+
 BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &position) {
 	if(position >= data.size()) {
 		return nullptr;
@@ -271,4 +272,75 @@ void BencodeDictionary::print(QTextStream& out) const {
 		}
 	}
 	out << "}";
+}
+
+QList<BencodeValue*> BencodeDictionary::keys() const {
+	QList<BencodeValue*> keys;
+	for(auto pair : m_values) {
+		keys.push_back(pair.first);
+	}
+	return keys;
+}
+
+BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
+	for(auto pair : m_values) {
+		if(pair.first == key) {
+			return pair.second;
+		}
+		if(pair.first -> equalTo(key)) {
+			return pair.second;
+		}
+	}
+	return nullptr;
+}
+
+
+
+bool BencodeInteger::equalTo(BencodeValue *other) const {
+	BencodeInteger* otherInt = other -> convertTo<BencodeInteger>();
+	if(otherInt == nullptr) {
+		return false;
+	}
+	return m_value == otherInt -> m_value;
+}
+
+bool BencodeString::equalTo(BencodeValue *other) const {
+	BencodeString* otherString = other -> convertTo<BencodeString>();
+	if(otherString == nullptr) {
+		return false;
+	}
+	return m_value == otherString -> m_value;
+}
+
+bool BencodeList::equalTo(BencodeValue *other) const {
+	BencodeList* otherList = other -> convertTo<BencodeList>();
+	if(otherList == nullptr) {
+		return false;
+	}
+	if(m_values.size() != otherList -> m_values.size()) {
+		return false;
+	}
+	for(int i = 0; i < m_values.size(); i++) {
+		if(!m_values[i]->equalTo(otherList->m_values[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool BencodeDictionary::equalTo(BencodeValue *other) const {
+	BencodeDictionary* otherDictionary = other -> convertTo<BencodeDictionary>();
+	if(otherDictionary == nullptr) {
+		return false;
+	}
+	if(m_values.size() != otherDictionary -> m_values.size()) {
+		return false;
+	}
+	for(int i = 0; i < m_values.size(); i++) {
+		if(!m_values[i].first->equalTo(otherDictionary->m_values[i].first) ||
+			!m_values[i].second->equalTo(otherDictionary->m_values[i].second)) {
+			return false;
+		}
+	}
+	return true;
 }

@@ -4,9 +4,10 @@
 #include "bencodevalue.h"
 #include <QByteArray>
 #include <QString>
+#include <QList>
+#include <QTextStream>
 
-class Bencode {
-	QList<BencodeValue*> m_values;
+class Bencode : public BencodeList {
 	QString m_errorString;
 	void setError(QString errorString);
 	void clearError();
@@ -16,8 +17,6 @@ public:
 	bool loadFromFile(QString fileName);
 	bool loadFromByteArray(const QByteArray& data);
 	QString errorString() const;
-	const QList<BencodeValue*>& values() const;
-	QList<BencodeValue*> values();
 	void print(QTextStream& out) const;
 };
 

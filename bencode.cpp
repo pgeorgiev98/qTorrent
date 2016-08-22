@@ -1,4 +1,5 @@
 #include "bencode.h"
+#include "bencodevalue.h"
 #include <QFile>
 
 void Bencode::setError(QString errorString) {
@@ -55,12 +56,4 @@ void Bencode::print(QTextStream &out) const {
 
 QString Bencode::errorString() const {
 	return m_errorString;
-}
-
-const QList<BencodeValue*>& Bencode::values() const {
-	return m_values;
-}
-
-QList<BencodeValue*> Bencode::values() {
-	return m_values;
 }
