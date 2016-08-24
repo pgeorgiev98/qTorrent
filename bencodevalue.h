@@ -6,6 +6,7 @@
 #include <QString>
 #include <QList>
 
+class Bencode;
 class BencodeInteger;
 class BencodeString;
 class BencodeList;
@@ -19,6 +20,7 @@ protected:
 	QString m_errorString;
 	int m_dataPosBegin;
 	int m_dataPosEnd;
+	const QByteArray* m_bencodeData;
 	void setErrorString(QString errorString);
 	void clearErrorString();
 public:
@@ -26,6 +28,7 @@ public:
 	virtual ~BencodeValue();
 	Type type() const;
 	QString errorString() const;
+	QByteArray getBencodeData(bool includeBeginAndEnd = true);
 	virtual bool loadFromByteArray(const QByteArray& data, int& position) = 0;
 	static BencodeValue* createFromByteArray(const QByteArray& data, int& position);
 	virtual void print(QTextStream& out) const = 0;

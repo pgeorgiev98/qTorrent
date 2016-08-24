@@ -23,6 +23,20 @@ void BencodeValue::clearErrorString() {
 	m_errorString.clear();
 }
 
+QByteArray BencodeValue::getBencodeData(bool includeBeginAndEnd) {
+	QByteArray returnData;
+	int begin = m_dataPosBegin;
+	int end = m_dataPosEnd;
+	if(!includeBeginAndEnd) {
+		begin++;
+		end--;
+	}
+	for(int i = begin; i < end; i++) {
+		returnData.push_back(m_bencodeData->at(i));
+	}
+	return returnData;
+}
+
 
 BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &position) {
 	if(position >= data.size()) {
@@ -64,6 +78,7 @@ int BencodeInteger::value() const {
 }
 
 bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
+	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int &i = position;
 	if(i >= data.size()) {
@@ -113,6 +128,7 @@ QByteArray BencodeString::value() {
 }
 
 bool BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
+	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
 	if(i >= data.size()) {
@@ -170,6 +186,7 @@ QList<BencodeValue*> BencodeList::values() {
 }
 
 bool BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
+	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
 	if(i >= data.size()) {
@@ -214,6 +231,7 @@ QList< QPair<BencodeValue*, BencodeValue*> > BencodeDictionary::values() {
 }
 
 bool BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position) {
+	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
 	if(i == data.size()) {
