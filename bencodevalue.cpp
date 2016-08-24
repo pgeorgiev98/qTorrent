@@ -314,6 +314,15 @@ QList<BencodeValue*> BencodeDictionary::keys() const {
 	return keys;
 }
 
+bool BencodeDictionary::keyExists(BencodeValue* key) const {
+	return (value(key) != nullptr);
+}
+
+bool BencodeDictionary::keyExists(const QByteArray& key) const {
+	return (value(key) != nullptr);
+}
+
+
 BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
 	for(auto pair : m_values) {
 		if(pair.first == key) {
@@ -324,6 +333,11 @@ BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
 		}
 	}
 	return nullptr;
+}
+
+BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
+	BencodeString convertedKey(key);
+	return value(&convertedKey);
 }
 
 

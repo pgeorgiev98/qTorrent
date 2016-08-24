@@ -103,7 +103,10 @@ public:
 	bool loadFromByteArray(const QByteArray& data, int& position);
 	void print(QTextStream& out) const;
 	QList<BencodeValue*> keys() const;
+	bool keyExists(BencodeValue* key) const;
+	bool keyExists(const QByteArray& key) const;
 	BencodeValue* value(BencodeValue* key) const;
+	BencodeValue* value(const QByteArray& key) const;
 	bool equalTo(BencodeValue *other) const;
 
 	template<typename T>
