@@ -17,6 +17,8 @@ public:
 protected:
 	Type m_type;
 	QString m_errorString;
+	int m_dataPosBegin;
+	int m_dataPosEnd;
 	void setErrorString(QString errorString);
 	void clearErrorString();
 public:

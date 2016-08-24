@@ -25,12 +25,13 @@ bool Bencode::loadFromFile(QString fileName) {
 		setError(file.errorString());
 		return false;
 	}
-	QByteArray fileData = file.readAll();
+	m_bencodeData = file.readAll();
 	file.close();
-	return loadFromByteArray(fileData);
+	return loadFromByteArray(m_bencodeData);
 }
 
 bool Bencode::loadFromByteArray(const QByteArray &data) {
+
 	clearError();
 	int i = 0;
 	for(;;) {
@@ -44,6 +45,7 @@ bool Bencode::loadFromByteArray(const QByteArray &data) {
 		}
 		m_values.push_back(value);
 	}
+
 	return true;
 }
 
@@ -56,4 +58,8 @@ void Bencode::print(QTextStream &out) const {
 
 QString Bencode::errorString() const {
 	return m_errorString;
+}
+
+const QByteArray& Bencode::bencodeData() const {
+	return m_bencodeData;
 }
