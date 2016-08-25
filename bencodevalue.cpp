@@ -78,6 +78,7 @@ int BencodeInteger::value() const {
 }
 
 bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
+	setErrorString("Failed to parse bencode data");
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int &i = position;
@@ -105,6 +106,9 @@ bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
 	bool ok;
 	m_value = valueString.toInt(&ok);
 	m_dataPosEnd = i;
+	if(ok) {
+		clearErrorString();
+	}
 	return ok;
 }
 
@@ -128,6 +132,7 @@ QByteArray BencodeString::value() {
 }
 
 bool BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
+	setErrorString("Failed to parse bencode data");
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
@@ -166,6 +171,7 @@ bool BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
 		m_value += byte;
 	}
 	m_dataPosEnd = i;
+	clearErrorString();
 	return true;
 }
 
@@ -186,6 +192,7 @@ QList<BencodeValue*> BencodeList::values() {
 }
 
 bool BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
+	setErrorString("Failed to parse bencode data");
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
@@ -211,6 +218,7 @@ bool BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
 		m_values.push_back(element);
 	}
 	m_dataPosEnd = i;
+	clearErrorString();
 	return true;
 }
 
@@ -231,6 +239,7 @@ QList< QPair<BencodeValue*, BencodeValue*> > BencodeDictionary::values() {
 }
 
 bool BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position) {
+	setErrorString("Failed to parse bencode data");
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
@@ -261,6 +270,7 @@ bool BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 		m_values.push_back(pair);
 	}
 	m_dataPosEnd = i;
+	clearErrorString();
 	return true;
 }
 
@@ -335,6 +345,13 @@ BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
 	return nullptr;
 }
 
+BencodeValue* BencodeList::getValue(int index) {
+	if(m_values.size() <= index) {
+		return nullptr;
+	}
+	return m_values[index];
+}
+
 BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
 	BencodeString convertedKey(key);
 	return value(&convertedKey);
@@ -343,7 +360,7 @@ BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
 
 
 bool BencodeInteger::equalTo(BencodeValue *other) const {
-	BencodeInteger* otherInt = other -> convertTo<BencodeInteger>();
+	BencodeInteger* otherInt = other -> castTo<BencodeInteger>();
 	if(otherInt == nullptr) {
 		return false;
 	}
@@ -351,7 +368,7 @@ bool BencodeInteger::equalTo(BencodeValue *other) const {
 }
 
 bool BencodeString::equalTo(BencodeValue *other) const {
-	BencodeString* otherString = other -> convertTo<BencodeString>();
+	BencodeString* otherString = other -> castTo<BencodeString>();
 	if(otherString == nullptr) {
 		return false;
 	}
@@ -359,7 +376,7 @@ bool BencodeString::equalTo(BencodeValue *other) const {
 }
 
 bool BencodeList::equalTo(BencodeValue *other) const {
-	BencodeList* otherList = other -> convertTo<BencodeList>();
+	BencodeList* otherList = other -> castTo<BencodeList>();
 	if(otherList == nullptr) {
 		return false;
 	}
@@ -375,7 +392,7 @@ bool BencodeList::equalTo(BencodeValue *other) const {
 }
 
 bool BencodeDictionary::equalTo(BencodeValue *other) const {
-	BencodeDictionary* otherDictionary = other -> convertTo<BencodeDictionary>();
+	BencodeDictionary* otherDictionary = other -> castTo<BencodeDictionary>();
 	if(otherDictionary == nullptr) {
 		return false;
 	}

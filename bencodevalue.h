@@ -12,6 +12,16 @@ class BencodeString;
 class BencodeList;
 class BencodeDictionary;
 
+class BencodeException {
+	QString m_errorString;
+public:
+	BencodeException(const QString& errorString) : m_errorString(errorString) {
+	}
+	const QString& what() const {
+		return m_errorString;
+	}
+};
+
 class BencodeValue {
 public:
 	enum class Type { Integer, String, List, Dictionary };
@@ -34,9 +44,24 @@ public:
 	virtual void print(QTextStream& out) const = 0;
 	virtual bool equalTo(BencodeValue* other) const = 0;
 
+	void loadFromByteArrayEx(const QByteArray &data, int &position) {
+		if(!loadFromByteArray(data, position)) {
+			throw BencodeException(m_errorString);
+		}
+	}
+
 	template<typename T>
-	T* convertTo() {
+	T* castTo() {
 		return dynamic_cast<T*>(this);
+	}
+
+	template<typename T>
+	T* castToEx() {
+		auto casted = dynamic_cast<T*>(this);
+		if(casted == nullptr) {
+			throw BencodeException("Dynamic cast failed");
+		}
+		return casted;
 	}
 };
 
@@ -78,12 +103,20 @@ public:
 	bool loadFromByteArray(const QByteArray& data, int& position);
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
+	BencodeValue* getValue(int index);
+	BencodeValue* getValueEx(int index) {
+		auto val = getValue(index);
+		if(val == nullptr) {
+			throw BencodeException("Out of range");
+		}
+		return val;
+	}
 
 	template<typename T>
 	QList<T*> values() const {
 		QList<T*> values;
 		for(auto value : m_values) {
-			T* v = value -> convertTo<T>();
+			T* v = value -> castTo<T>();
 			if(v != nullptr) {
 				values.push_back(v);
 			}
@@ -109,11 +142,26 @@ public:
 	BencodeValue* value(const QByteArray& key) const;
 	bool equalTo(BencodeValue *other) const;
 
+
+	BencodeValue* valueEx(BencodeValue* key) const {
+		auto val = value(key);
+		if(val == nullptr) {
+			throw BencodeException("Key does not exist in dictionary");
+		}
+		return val;
+	}
+	BencodeValue* valueEx(const QByteArray& key) const {
+		auto val = value(key);
+		if(val == nullptr) {
+			throw BencodeException("Key '" + key + "' does not exist in dictionary");
+		}
+		return val;
+	}
 	template<typename T>
 	QList<T*> keys() const {
 		QList<T*> keys;
 		for(auto pair : m_values) {
-			T* key = pair.first -> convertTo<T>();
+			T* key = pair.first -> castTo<T>();
 			if(key != nullptr) {
 				keys.push_back(key);
 			}
