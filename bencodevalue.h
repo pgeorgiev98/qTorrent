@@ -67,12 +67,12 @@ public:
 
 class BencodeInteger : public BencodeValue {
 protected:
-	int m_value;
+	qint64 m_value;
 public:
 	BencodeInteger();
-	BencodeInteger(int value);
+	BencodeInteger(qint64 value);
 	~BencodeInteger();
-	int value() const;
+	qint64 value() const;
 	bool loadFromByteArray(const QByteArray& data, int& position);
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;

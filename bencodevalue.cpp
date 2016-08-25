@@ -67,13 +67,13 @@ BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &pos
 BencodeInteger::BencodeInteger() : BencodeValue(Type::Integer) {
 }
 
-BencodeInteger::BencodeInteger(int value) : BencodeValue(Type::Integer), m_value(value) {
+BencodeInteger::BencodeInteger(qint64 value) : BencodeValue(Type::Integer), m_value(value) {
 }
 
 BencodeInteger::~BencodeInteger() {
 }
 
-int BencodeInteger::value() const {
+qint64 BencodeInteger::value() const {
 	return m_value;
 }
 
@@ -104,7 +104,7 @@ bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
 		valueString += byte;
 	}
 	bool ok;
-	m_value = valueString.toInt(&ok);
+	m_value = valueString.toLongLong(&ok);
 	m_dataPosEnd = i;
 	if(ok) {
 		clearErrorString();
