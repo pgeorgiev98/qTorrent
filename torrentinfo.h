@@ -33,6 +33,7 @@ public:
 	const QByteArray& pieces() const;
 
 	const QByteArray& infoHash() const;
+	QByteArray infoHashPercentEncoded() const;
 
 	TorrentInfo();
 	~TorrentInfo();
