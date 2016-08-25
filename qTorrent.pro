@@ -11,8 +11,10 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     bencode.cpp \
-    bencodevalue.cpp
+    bencodevalue.cpp \
+    torrentinfo.cpp
 
 HEADERS += \
     bencode.h \
-    bencodevalue.h
+    bencodevalue.h \
+    torrentinfo.h
