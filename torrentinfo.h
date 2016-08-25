@@ -22,6 +22,18 @@ class TorrentInfo {
 public:
 	QString errorString() const;
 	bool loadTorrentFile(QString filename);
+
+	const QByteArray& announceUrl() const;
+	QDateTime creationDate() const;
+	QString encoding() const;
+
+	qint64 length() const;
+	const QByteArray& torrentName() const;
+	qint64 pieceLength() const;
+	const QByteArray& pieces() const;
+
+	const QByteArray& infoHash() const;
+
 	TorrentInfo();
 	~TorrentInfo();
 };

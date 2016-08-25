@@ -49,3 +49,36 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 	}
 	return true;
 }
+
+
+const QByteArray& TorrentInfo::announceUrl() const {
+	return m_announceUrl;
+}
+
+QDateTime TorrentInfo::creationDate() const {
+	return m_creationDate;
+}
+
+QString TorrentInfo::encoding() const {
+	return m_encoding;
+}
+
+qint64 TorrentInfo::length() const {
+	return m_length;
+}
+
+const QByteArray& TorrentInfo::torrentName() const {
+	return m_torrentName;
+}
+
+qint64 TorrentInfo::pieceLength() const {
+	return m_pieceLength;
+}
+
+const QByteArray& TorrentInfo::pieces() const {
+	return m_pieces;
+}
+
+const QByteArray& TorrentInfo::infoHash() const {
+	return m_infoHash;
+}
