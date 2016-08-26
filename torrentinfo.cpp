@@ -37,10 +37,28 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		m_creationDate = QDateTime::fromMSecsSinceEpoch(1000*mainDict->valueEx("creation date")->castToEx<BencodeInteger>()->value());
 		m_encoding = mainDict->valueEx("encoding")->castToEx<BencodeString>()->value();
 
-		m_length = infoDict->valueEx("length")->castToEx<BencodeInteger>()->value();
 		m_torrentName = infoDict->valueEx("name")->castToEx<BencodeString>()->value();
 		m_pieceLength = infoDict->valueEx("piece length")->castToEx<BencodeInteger>()->value();
 		m_pieces = infoDict->valueEx("pieces")->castToEx<BencodeString>()->value();
+
+		if(infoDict->keyExists("length")) {
+			// Single file torrent
+			m_length = infoDict->valueEx("length")->castToEx<BencodeInteger>()->value();
+			FileInfo fileInfo;
+			fileInfo.length = m_length;
+			fileInfo.path = m_torrentName;
+		} else {
+			// Multi file torrent
+			m_length = 0;
+			auto filesList = infoDict->valueEx("files")->castToEx<BencodeList>();
+			for(auto file : filesList->values<BencodeDictionary>()) {
+				FileInfo fileInfo;
+				fileInfo.length = file->valueEx("length")->castToEx<BencodeInteger>()->value();
+				auto pathList = file->valueEx("path")->castToEx<BencodeList>();
+				fileInfo.path = pathList->getValueEx(0)->castToEx<BencodeString>()->value();
+				m_length += fileInfo.length;
+			}
+		}
 
 		m_infoHash = QCryptographicHash::hash(infoDict->getBencodeData(), QCryptographicHash::Sha1);
 	} catch(BencodeException& ex) {

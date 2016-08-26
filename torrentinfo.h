@@ -4,6 +4,12 @@
 #include <QString>
 #include <QDateTime>
 
+class FileInfo {
+public:
+	QString path;
+	qint64 length;
+};
+
 class TorrentInfo {
 	QString m_errorString;
 	void clearError();
@@ -17,6 +23,8 @@ class TorrentInfo {
 	QByteArray m_torrentName;
 	qint64 m_pieceLength;
 	QByteArray m_pieces;
+
+	QList<FileInfo> m_fileInfos;
 
 	QByteArray m_infoHash;
 public:
