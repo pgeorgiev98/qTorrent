@@ -9,13 +9,14 @@ class TrackerClient : public QObject {
 
 	QNetworkAccessManager m_accessManager;
 	QNetworkReply *m_reply;
+	TorrentInfo* m_torrentInfo;
 public slots:
 	void httpFinished();
 	void httpReadyRead();
 public:
-	TrackerClient();
+	TrackerClient(TorrentInfo* torrentInfo);
 	~TrackerClient();
-	void fetchPeerList(TorrentInfo& torrentInfo);
+	void fetchPeerList();
 };
 
 #endif // TRACKERCLIENT_H

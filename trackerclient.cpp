@@ -1,28 +1,31 @@
 #include "trackerclient.h"
+#include "torrentclient.h"
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrlQuery>
 #include <QUrl>
 
-TrackerClient::TrackerClient() {
+TrackerClient::TrackerClient(TorrentInfo* torrentInfo) :
+	m_torrentInfo(torrentInfo)
+{
 }
 
 TrackerClient::~TrackerClient() {
 }
 
-void TrackerClient::fetchPeerList(TorrentInfo &torrentInfo) {
+void TrackerClient::fetchPeerList() {
 	QUrl url;
-	url.setUrl(torrentInfo.announceUrl());
+	url.setUrl(m_torrentInfo->announceUrl());
 
 	QUrlQuery query(url);
-	auto hash = torrentInfo.infoHashPercentEncoded();
+	auto hash = m_torrentInfo->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
 	query.addQueryItem("peer_id", "ASEDRFGYQIWKSJDUEYTF");
 	query.addQueryItem("port", "6881");
 	query.addQueryItem("uploaded", "0");
 	query.addQueryItem("downloaded", "0");
-	query.addQueryItem("left", QString::number(torrentInfo.length()));
+	query.addQueryItem("left", QString::number(m_torrentInfo->length()));
 	query.addQueryItem("event", "started");
 	/* TODO: Use non-hardcoded values */
 
