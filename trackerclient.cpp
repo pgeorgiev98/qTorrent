@@ -62,7 +62,12 @@ void TrackerClient::httpFinished() {
 		for(auto peerDict : peersList->values<BencodeDictionary>()) {
 			QByteArray peerIp = peerDict->valueEx("ip")->castToEx<BencodeString>()->value();
 			int peerPort = peerDict->valueEx("port")->castToEx<BencodeInteger>()->value();
-			m_torrent->addPeer(new Peer(peerIp, peerPort));
+			m_torrent->addPeer(new Peer(m_torrent, peerIp, peerPort));
+		}
+		if(m_torrent->peers().isEmpty()) {
+			err << "No peers" << endl;
+		} else {
+			m_torrent->peers()[0]->startConnection();
 		}
 	} catch(BencodeException& ex) {
 		err << "Failed to parse: " << ex.what() << endl;

@@ -1,18 +1,50 @@
 #include "torrentclient.h"
-#include <QtNetwork>
+#include "peer.h"
+#include "torrent.h"
+#include <QTcpSocket>
 #include <QByteArray>
 #include <QDebug>
 
-TorrentClient::TorrentClient() {
+TorrentClient::TorrentClient(Peer* peer) :
+	m_socket(new QTcpSocket),
+	m_peer(peer)
+{
+	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
+	connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+	connect(m_socket, SIGNAL(disconnected()), this, SLOT(finished()));
 }
 
 TorrentClient::~TorrentClient() {
 }
 
-void TorrentClient::readyRead() {
-
+void TorrentClient::connectToPeer() {
+	qDebug() << "Connecting to" << m_peer->address() << ":" << m_peer->port();
+	m_socket->connectToHost(m_peer->address(), m_peer->port());
 }
 
+void TorrentClient::connected() {
+	qDebug() << "Connected to" << m_peer->address() << ":" << m_peer->port();
+	QByteArray dataToWrite;
+	dataToWrite.push_back(char(19));
+	dataToWrite.push_back("BitTorrent protocol");
+	for(int i = 0; i < 8; i++) {
+		dataToWrite.push_back(char(0));
+	}
+	dataToWrite.push_back(m_peer->torrent()->torrentInfo()->infoHash());
+	dataToWrite.push_back("ThisIsNotAFakePeerId");
+	m_socket->write(dataToWrite);
+}
+
+void TorrentClient::readyRead() {
+	QTextStream out(stdout);
+	out << m_socket->readAll();
+}
+
+void TorrentClient::finished() {
+	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
+}
+
+/*
 void TorrentClient::handshake(TorrentInfo &torrentInfo) {
 	//qDebug() << "Connecting";
 	m_socket.connectToHost(QHostAddress("91.139.201.213"), 36777);
@@ -100,3 +132,4 @@ void TorrentClient::handshake(TorrentInfo &torrentInfo) {
 	qDebug() << something.size();
 	qDebug() << something.toHex();
 }
+*/

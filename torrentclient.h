@@ -3,16 +3,25 @@
 
 #include "torrentinfo.h"
 #include <QTcpSocket>
+#include <QObject>
 
-class TorrentClient {
-	QTcpSocket m_socket;
+class Peer;
+class QTcpSocket;
+
+class TorrentClient : QObject {
+	Q_OBJECT
+
+	QTcpSocket* m_socket;
+	Peer* m_peer;
 public slots:
+	void connected();
 	void readyRead();
-	void connectionFinished();
+	void finished();
 public:
-	TorrentClient();
+	TorrentClient(Peer* peer);
 	~TorrentClient();
-	void handshake(TorrentInfo& torrentInfo);
+	void connectToPeer();
+	//void handshake(TorrentInfo& torrentInfo);
 };
 
 #endif // TORRENTCLIENT_H

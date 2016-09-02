@@ -7,8 +7,7 @@
 Torrent::Torrent(QTorrent *qTorrent) :
 	m_qTorrent(qTorrent),
 	m_torrentInfo(nullptr),
-	m_trackerClient(nullptr),
-	m_torrentClient(nullptr)
+	m_trackerClient(nullptr)
 {
 }
 
@@ -17,7 +16,6 @@ Torrent::~Torrent() {
 		delete peer;
 	}
 	if(m_torrentInfo) delete m_torrentInfo;
-	if(m_torrentClient) delete m_torrentClient;
 	if(m_trackerClient) delete m_trackerClient;
 }
 
@@ -51,4 +49,20 @@ void Torrent::addPeer(Peer *peer) {
 		return;
 	}
 	m_peers.push_back(peer);
+}
+
+QTorrent* Torrent::qTorrent() {
+	return m_qTorrent;
+}
+
+QList<Peer*>& Torrent::peers() {
+	return m_peers;
+}
+
+TorrentInfo* Torrent::torrentInfo() {
+	return m_torrentInfo;
+}
+
+TrackerClient* Torrent::trackerClient() {
+	return m_trackerClient;
 }
