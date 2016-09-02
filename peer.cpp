@@ -30,3 +30,19 @@ int Peer::port() {
 void Peer::startConnection() {
 	m_torrentClient->connectToPeer();
 }
+
+QByteArray& Peer::protocol() {
+	return m_protocol;
+}
+
+QByteArray& Peer::reserved() {
+	return m_reserved;
+}
+
+QByteArray& Peer::infoHash() {
+	return m_infoHash;
+}
+
+QByteArray& Peer::peerId() {
+	return m_peerId;
+}

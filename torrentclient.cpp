@@ -9,6 +9,7 @@ TorrentClient::TorrentClient(Peer* peer) :
 	m_socket(new QTcpSocket),
 	m_peer(peer)
 {
+	m_status = Created;
 	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
 	connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 	connect(m_socket, SIGNAL(disconnected()), this, SLOT(finished()));
@@ -18,11 +19,14 @@ TorrentClient::~TorrentClient() {
 }
 
 void TorrentClient::connectToPeer() {
+	m_status = Connecting;
 	qDebug() << "Connecting to" << m_peer->address() << ":" << m_peer->port();
 	m_socket->connectToHost(m_peer->address(), m_peer->port());
 }
 
 void TorrentClient::connected() {
+	m_status = Handshaking;
+	m_receivedData.clear();
 	qDebug() << "Connected to" << m_peer->address() << ":" << m_peer->port();
 	QByteArray dataToWrite;
 	dataToWrite.push_back(char(19));
@@ -37,10 +41,45 @@ void TorrentClient::connected() {
 
 void TorrentClient::readyRead() {
 	QTextStream out(stdout);
-	out << m_socket->readAll();
+	m_receivedData.push_back(m_socket->readAll());
+	if(m_status == Handshaking) {
+		if(m_receivedData.isEmpty()) {
+			return;
+		}
+		int i = 0;
+		int protocolLength = m_receivedData[i++];
+		if(m_receivedData.size() < 49 + protocolLength) {
+			return;
+		}
+		for(int j = 0; j < protocolLength; j++) {
+			m_peer->protocol().push_back(m_receivedData[i++]);
+		}
+		for(int j = 0; j < 8; j++) {
+			m_peer->reserved().push_back(m_receivedData[i++]);
+		}
+		for(int j = 0; j < 20; j++) {
+			m_peer->infoHash().push_back(m_receivedData[i++]);
+		}
+		for(int j = 0; j < 20; j++) {
+			m_peer->peerId().push_back(m_receivedData[i++]);
+		}
+		m_receivedData.remove(0, 49 + protocolLength);
+		m_status = ConnectionEstablished;
+		out << "Handshaking completed with peer " << m_peer->address() << ":" << m_peer->port() << endl;
+		out << "protocol: " << m_peer->protocol() << endl;
+		out << "reserved: " << m_peer->reserved().toHex() << endl;
+		out << "infoHash: " << m_peer->infoHash().toHex() << endl;
+		out << "peerId: " << m_peer->peerId().toHex() << endl;
+	} else if(m_status == ConnectionEstablished) {
+		out << "Peer " << m_peer->address() << ":" << m_peer->port() << " said:" << endl;
+		out << m_receivedData.toHex() << endl;
+	} else {
+		m_receivedData.clear();
+	}
 }
 
 void TorrentClient::finished() {
+	m_status = Created;
 	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
 }
 
