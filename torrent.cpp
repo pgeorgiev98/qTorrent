@@ -28,10 +28,27 @@ bool Torrent::createFromFile(const QString &filename) {
 		torrentInfo = nullptr;
 		return false;
 	}
-	TrackerClient* trackerClient = new TrackerClient(torrentInfo);
+	TrackerClient* trackerClient = new TrackerClient(this, torrentInfo);
 	trackerClient->fetchPeerList();
 
 	m_torrentInfo = torrentInfo;
 	m_trackerClient = trackerClient;
 	return true;
+}
+
+void Torrent::addPeer(Peer *peer) {
+	for(auto p : m_peers) {
+		if(p == peer) {
+			return;
+		}
+		if(p->port() != peer->port()) {
+			continue;
+		}
+		if(p->address() != peer->address()) {
+			continue;
+		}
+		delete peer;
+		return;
+	}
+	m_peers.push_back(peer);
 }

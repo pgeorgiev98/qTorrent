@@ -8,3 +8,11 @@ Peer::Peer(const QByteArray &address, int port) :
 
 Peer::~Peer() {
 }
+
+QByteArray& Peer::address() {
+	return m_address;
+}
+
+int Peer::port() {
+	return m_port;
+}

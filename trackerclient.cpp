@@ -1,3 +1,6 @@
+#include "bencode.h"
+#include "torrent.h"
+#include "peer.h"
 #include "trackerclient.h"
 #include "torrentclient.h"
 #include <QNetworkAccessManager>
@@ -6,7 +9,8 @@
 #include <QUrlQuery>
 #include <QUrl>
 
-TrackerClient::TrackerClient(TorrentInfo* torrentInfo) :
+TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
+	m_torrent(torrent),
 	m_torrentInfo(torrentInfo)
 {
 }
@@ -39,13 +43,32 @@ void TrackerClient::fetchPeerList() {
 void TrackerClient::httpFinished() {
 	QTextStream err(stderr);
 	if(m_reply->error()) {
-		err << endl << "Error:" << m_reply->errorString() << endl;
-	} else {
-		err << endl << "Successfull" << endl;
+		err << "Error:" << m_reply->errorString() << endl;
+		return;
+	}
+	Bencode* bencodeParser = new Bencode();
+	if(!bencodeParser->loadFromByteArray(m_peerListData)) {
+		err << "Failed to parse reply" << endl;
+		return;
+	}
+	const auto& values = bencodeParser->values();
+	if(values.size() != 1) {
+		err << "Bencode must have a size of 1" << endl;
+		return;
+	}
+	try {
+		auto mainDict = values[0]->castToEx<BencodeDictionary>();
+		auto peersList = mainDict->valueEx("peers")->castToEx<BencodeList>();
+		for(auto peerDict : peersList->values<BencodeDictionary>()) {
+			QByteArray peerIp = peerDict->valueEx("ip")->castToEx<BencodeString>()->value();
+			int peerPort = peerDict->valueEx("port")->castToEx<BencodeInteger>()->value();
+			m_torrent->addPeer(new Peer(peerIp, peerPort));
+		}
+	} catch(BencodeException& ex) {
+		err << "Failed to parse: " << ex.what() << endl;
 	}
 }
 
 void TrackerClient::httpReadyRead() {
-	QTextStream out(stdout);
-	out << m_reply->readAll();
+	m_peerListData.push_back(m_reply->readAll());
 }
