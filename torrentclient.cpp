@@ -16,7 +16,9 @@ TorrentClient::TorrentClient(Peer* peer) :
 	if(torrentLength%pieceLength != 0) {
 		bitfieldSize++;
 	}
-	bitfieldSize += 8 - bitfieldSize%8;
+	if(bitfieldSize%8 != 0) {
+		bitfieldSize += 8 - bitfieldSize%8;
+	}
 	m_peer->bitfieldSize() = bitfieldSize;
 	bool* bitfield = new bool[bitfieldSize];
 	for(int i = 0; i < bitfieldSize; i++) {
