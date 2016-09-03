@@ -67,7 +67,9 @@ void TrackerClient::httpFinished() {
 		if(m_torrent->peers().isEmpty()) {
 			err << "No peers" << endl;
 		} else {
-			m_torrent->peers()[0]->startConnection();
+			for(auto peer : m_torrent->peers()) {
+				peer->startConnection();
+			}
 		}
 	} catch(BencodeException& ex) {
 		err << "Failed to parse: " << ex.what() << endl;

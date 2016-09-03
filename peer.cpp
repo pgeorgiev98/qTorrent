@@ -13,6 +13,7 @@ Peer::Peer(Torrent* torrent, const QByteArray &address, int port) :
 
 Peer::~Peer() {
 	delete m_torrentClient;
+	delete[] m_bitfield;
 }
 
 Torrent* Peer::torrent() {
@@ -29,6 +30,14 @@ int Peer::port() {
 
 void Peer::startConnection() {
 	m_torrentClient->connectToPeer();
+}
+
+int& Peer::bitfieldSize() {
+	return m_bitfieldSize;
+}
+
+bool*& Peer::bitfield() {
+	return m_bitfield;
 }
 
 QByteArray& Peer::protocol() {

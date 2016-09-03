@@ -28,6 +28,9 @@ private:
 	Peer* m_peer;
 	QByteArray m_receivedData;
 	Status m_status;
+
+	bool readHandshakeReply();
+	bool readPeerMessage();
 };
 
 #endif // TORRENTCLIENT_H

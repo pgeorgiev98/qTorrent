@@ -14,6 +14,9 @@ class Peer : public QObject {
 	QByteArray m_address;
 	int m_port;
 	TorrentClient* m_torrentClient;
+
+	int m_bitfieldSize;
+	bool* m_bitfield;
 	/* Handshaking info */
 	QByteArray m_protocol;
 	QByteArray m_reserved;
@@ -26,6 +29,8 @@ public:
 	QByteArray& address();
 	int port();
 	void startConnection();
+	int& bitfieldSize();
+	bool*& bitfield();
 	QByteArray& protocol();
 	QByteArray& reserved();
 	QByteArray& infoHash();
