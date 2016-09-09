@@ -27,6 +27,8 @@ class TorrentInfo {
 	QList<FileInfo> m_fileInfos;
 
 	QByteArray m_infoHash;
+
+	int m_numberOfPieces;
 public:
 	QString errorString() const;
 	bool loadTorrentFile(QString filename);
@@ -42,6 +44,8 @@ public:
 
 	const QByteArray& infoHash() const;
 	QByteArray infoHashPercentEncoded() const;
+
+	int numberOfPieces() const;
 
 	TorrentInfo();
 	~TorrentInfo();

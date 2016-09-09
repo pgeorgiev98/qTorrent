@@ -61,6 +61,11 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		}
 
 		m_infoHash = QCryptographicHash::hash(infoDict->getBencodeData(), QCryptographicHash::Sha1);
+
+		m_numberOfPieces = m_length / m_pieceLength;
+		if(m_length % m_pieceLength != 0) {
+			m_numberOfPieces++;
+		}
 	} catch(BencodeException& ex) {
 		setError(ex.what());
 		return false;
@@ -108,4 +113,8 @@ QByteArray TorrentInfo::infoHashPercentEncoded() const {
 		encoded += QByteArray::number(b, 16).right(2).rightJustified(2, '0');
 	}
 	return encoded;
+}
+
+int TorrentInfo::numberOfPieces() const {
+	return m_numberOfPieces;
 }
