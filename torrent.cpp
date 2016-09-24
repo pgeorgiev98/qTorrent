@@ -3,6 +3,7 @@
 #include "torrentinfo.h"
 #include "torrentclient.h"
 #include "trackerclient.h"
+#include "piece.h"
 
 Torrent::Torrent(QTorrent *qTorrent) :
 	m_qTorrent(qTorrent),
@@ -31,6 +32,10 @@ bool Torrent::createFromFile(const QString &filename) {
 
 	m_torrentInfo = torrentInfo;
 	m_trackerClient = trackerClient;
+    for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
+        Piece* piece = new Piece(this, i);
+        m_pieces.push_back(piece);
+    }
 	return true;
 }
 

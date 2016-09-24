@@ -16,7 +16,9 @@ SOURCES += main.cpp \
     torrentclient.cpp \
     qtorrent.cpp \
     torrent.cpp \
-    peer.cpp
+    peer.cpp \
+    piece.cpp \
+    block.cpp
 
 HEADERS += \
     bencode.h \
@@ -26,4 +28,6 @@ HEADERS += \
     torrentclient.h \
     qtorrent.h \
     torrent.h \
-    peer.h
+    peer.h \
+    piece.h \
+    block.h

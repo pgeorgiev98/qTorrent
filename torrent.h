@@ -9,6 +9,7 @@ class Peer;
 class TorrentInfo;
 class TrackerClient;
 class TorrentClient;
+class Piece;
 
 class Torrent {
 public:
@@ -23,7 +24,8 @@ public:
 private:
 	QTorrent* m_qTorrent;
 	QList<Peer*> m_peers;
-	TorrentInfo* m_torrentInfo;
+    QList<Piece*> m_pieces;
+    TorrentInfo* m_torrentInfo;
 	TrackerClient* m_trackerClient;
 };
 
