@@ -38,7 +38,7 @@ TorrentClient::~TorrentClient() {
 }
 
 Peer* TorrentClient::peer() {
-    return m_peer;
+	return m_peer;
 }
 
 void TorrentClient::connectToPeer() {
@@ -49,10 +49,10 @@ void TorrentClient::connectToPeer() {
 
 void TorrentClient::connected() {
 	m_status = Handshaking;
-    m_amChoking = true;
-    m_amInterested = false;
-    m_peerChoking = true;
-    m_peerInterested = false;
+	m_amChoking = true;
+	m_amInterested = false;
+	m_peerChoking = true;
+	m_peerInterested = false;
 	m_waitingForBlock = nullptr;
 	m_receivedData.clear();
 	qDebug() << "Connected to" << m_peer->address() << ":" << m_peer->port();
@@ -95,8 +95,8 @@ void TorrentClient::readyRead() {
 			m_socket->write(message);
 			qDebug() << "interested in" << m_socket->peerAddress().toString();
 		} else if(m_waitingForBlock == nullptr && !m_peerChoking) {
-            requestPiece();
-        }
+			requestPiece();
+		}
 		break;
 	default:
 		m_receivedData.clear();
@@ -195,19 +195,19 @@ bool TorrentClient::readPeerMessage() {
 	switch(messageId) {
 	case 0: // choke
 		out << "choke" << endl;
-        m_peerChoking = true;
+		m_peerChoking = true;
 		break;
 	case 1: // unchoke
 		out << "unchoke" << endl;
-        m_peerChoking = false;
+		m_peerChoking = false;
 		break;
 	case 2: // interested
 		out << "interested" << endl;
-        m_peerInterested = true;
+		m_peerInterested = true;
 		break;
 	case 3: // not interested
 		out << "not interested" << endl;
-        m_peerInterested = false;
+		m_peerInterested = false;
 		break;
 	case 4: // have
 	{

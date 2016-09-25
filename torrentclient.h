@@ -20,7 +20,7 @@ public:
 	TorrentClient(Peer* peer);
 	~TorrentClient();
 	void connectToPeer();
-    Peer* peer();
+	Peer* peer();
 public slots:
 	void connected();
 	void readyRead();
@@ -33,14 +33,14 @@ private:
 
 	Block* m_waitingForBlock;
 
-    bool m_amChoking;
-    bool m_amInterested;
-    bool m_peerChoking;
-    bool m_peerInterested;
+	bool m_amChoking;
+	bool m_amInterested;
+	bool m_peerChoking;
+	bool m_peerInterested;
 
 	bool readHandshakeReply();
 	bool readPeerMessage();
-    void requestPiece();
+	void requestPiece();
 };
 
 #endif // TORRENTCLIENT_H

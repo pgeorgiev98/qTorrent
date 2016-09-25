@@ -401,7 +401,7 @@ bool BencodeDictionary::equalTo(BencodeValue *other) const {
 	}
 	for(int i = 0; i < m_values.size(); i++) {
 		if(!m_values[i].first->equalTo(otherDictionary->m_values[i].first) ||
-			!m_values[i].second->equalTo(otherDictionary->m_values[i].second)) {
+				!m_values[i].second->equalTo(otherDictionary->m_values[i].second)) {
 			return false;
 		}
 	}

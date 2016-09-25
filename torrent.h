@@ -23,14 +23,14 @@ public:
 	QList<Peer*>& peers();
 	TorrentInfo* torrentInfo();
 	TrackerClient* trackerClient();
-    Block* requestBlock(TorrentClient* client, int size);
+	Block* requestBlock(TorrentClient* client, int size);
 private:
 	QTorrent* m_qTorrent;
 	QList<Peer*> m_peers;
-    QList<Piece*> m_pieces;
-    TorrentInfo* m_torrentInfo;
+	QList<Piece*> m_pieces;
+	TorrentInfo* m_torrentInfo;
 	TrackerClient* m_trackerClient;
-    QMutex m_requestBlockMutex;
+	QMutex m_requestBlockMutex;
 };
 
 #endif // TORRENT_H

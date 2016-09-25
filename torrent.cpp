@@ -33,10 +33,10 @@ bool Torrent::createFromFile(const QString &filename) {
 
 	m_torrentInfo = torrentInfo;
 	m_trackerClient = trackerClient;
-    for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
-        Piece* piece = new Piece(this, i);
-        m_pieces.push_back(piece);
-    }
+	for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
+		Piece* piece = new Piece(this, i);
+		m_pieces.push_back(piece);
+	}
 	return true;
 }
 
@@ -58,21 +58,21 @@ void Torrent::addPeer(Peer *peer) {
 }
 
 Block* Torrent::requestBlock(TorrentClient *client, int size) {
-    m_requestBlockMutex.lock();
+	m_requestBlockMutex.lock();
 
-    Block* block = nullptr;
-    for(int i = 0; i < m_pieces.size(); i++) {
-        auto piece = m_pieces[i];
-        if(client->peer()->bitfield()[i] && !piece->downloaded()) {
-            block = piece->requestBlock(size);
-            if(block != nullptr) {
-                break;
-            }
+	Block* block = nullptr;
+	for(int i = 0; i < m_pieces.size(); i++) {
+		auto piece = m_pieces[i];
+		if(client->peer()->bitfield()[i] && !piece->downloaded()) {
+			block = piece->requestBlock(size);
+			if(block != nullptr) {
+				break;
+			}
 		}
-    }
+	}
 
-    m_requestBlockMutex.unlock();
-    return block;
+	m_requestBlockMutex.unlock();
+	return block;
 }
 
 QTorrent* Torrent::qTorrent() {
