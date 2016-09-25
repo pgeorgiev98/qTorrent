@@ -18,6 +18,7 @@ public:
 	Torrent(QTorrent* qTorrent);
 	~Torrent();
 	bool createFromFile(const QString& filename);
+	bool createFileTree(const QString& directory);
 	void addPeer(Peer* peer);
 	QTorrent* qTorrent();
 	QList<Peer*>& peers();

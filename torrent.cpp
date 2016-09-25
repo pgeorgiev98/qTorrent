@@ -5,6 +5,8 @@
 #include "trackerclient.h"
 #include "piece.h"
 #include "block.h"
+#include <QDir>
+#include <QFile>
 
 Torrent::Torrent(QTorrent *qTorrent) :
 	m_qTorrent(qTorrent),
@@ -22,21 +24,57 @@ Torrent::~Torrent() {
 }
 
 bool Torrent::createFromFile(const QString &filename) {
-	TorrentInfo* torrentInfo = new TorrentInfo();
-	if(!torrentInfo->loadTorrentFile(filename)) {
-		delete torrentInfo;
-		torrentInfo = nullptr;
+	m_torrentInfo = new TorrentInfo();
+	if(!m_torrentInfo->loadTorrentFile(filename)) {
+		delete m_torrentInfo;
+		m_torrentInfo = nullptr;
 		return false;
 	}
-	TrackerClient* trackerClient = new TrackerClient(this, torrentInfo);
+	if(!createFileTree(".")) {
+		return false;
+	}
+	TrackerClient* trackerClient = new TrackerClient(this, m_torrentInfo);
 	trackerClient->fetchPeerList();
 
-	m_torrentInfo = torrentInfo;
 	m_trackerClient = trackerClient;
 	for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
 		Piece* piece = new Piece(this, i);
 		m_pieces.push_back(piece);
 	}
+	return true;
+}
+
+bool Torrent::createFileTree(const QString &directory) {
+	qDebug() << "Creating file tree for" << m_torrentInfo->torrentName();
+	const auto& files = m_torrentInfo->fileInfos();
+	qDebug() << "files:" << files.size();
+	QDir dir(directory);
+	if(files.size() > 1) {
+		qDebug() << "Creating sub-directory";
+		if(!dir.exists(m_torrentInfo->torrentName())) {
+			if(!dir.mkdir(m_torrentInfo->torrentName())) {
+				return false;
+			}
+		}
+		if(!dir.cd(m_torrentInfo->torrentName())) {
+			return false;
+		}
+	}
+	for(auto& f : files) {
+		QFile file;
+		file.setFileName(dir.absoluteFilePath(f.path));
+		if(!file.open(QFile::ReadWrite)) {
+			qDebug() << "Failed to open file" << file.errorString();
+			return false;
+		}
+		qDebug() << "file" << file.fileName();
+		if(!file.resize(f.length)) {
+			qDebug() << "Failed to resize" << file.errorString();
+			return false;
+		}
+		file.close();
+	}
+	qDebug() << "Successful";
 	return true;
 }
 
