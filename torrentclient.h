@@ -6,9 +6,10 @@
 #include <QObject>
 
 class Peer;
+class Block;
 class QTcpSocket;
 
-class TorrentClient : QObject {
+class TorrentClient : public QObject {
 	Q_OBJECT
 
 public:
@@ -19,6 +20,7 @@ public:
 	TorrentClient(Peer* peer);
 	~TorrentClient();
 	void connectToPeer();
+    Peer* peer();
 public slots:
 	void connected();
 	void readyRead();
@@ -29,8 +31,16 @@ private:
 	QByteArray m_receivedData;
 	Status m_status;
 
+	Block* m_waitingForBlock;
+
+    bool m_amChoking;
+    bool m_amInterested;
+    bool m_peerChoking;
+    bool m_peerInterested;
+
 	bool readHandshakeReply();
 	bool readPeerMessage();
+    void requestPiece();
 };
 
 #endif // TORRENTCLIENT_H

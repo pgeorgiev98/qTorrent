@@ -4,6 +4,7 @@
 #include "torrentclient.h"
 #include "trackerclient.h"
 #include "piece.h"
+#include "block.h"
 
 Torrent::Torrent(QTorrent *qTorrent) :
 	m_qTorrent(qTorrent),
@@ -54,6 +55,24 @@ void Torrent::addPeer(Peer *peer) {
 		return;
 	}
 	m_peers.push_back(peer);
+}
+
+Block* Torrent::requestBlock(TorrentClient *client, int size) {
+    m_requestBlockMutex.lock();
+
+    Block* block = nullptr;
+    for(int i = 0; i < m_pieces.size(); i++) {
+        auto piece = m_pieces[i];
+        if(client->peer()->bitfield()[i] && !piece->downloaded()) {
+            block = piece->requestBlock(size);
+            if(block != nullptr) {
+                break;
+            }
+		}
+    }
+
+    m_requestBlockMutex.unlock();
+    return block;
 }
 
 QTorrent* Torrent::qTorrent() {

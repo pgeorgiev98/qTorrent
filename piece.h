@@ -22,6 +22,7 @@ public:
 	~Piece();
     bool downloading() const;
     bool downloaded() const;
+    int pieceNumber() const;
     Block* requestBlock(int size);
     void updateInfo();
 };
