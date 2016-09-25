@@ -47,6 +47,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 			FileInfo fileInfo;
 			fileInfo.length = m_length;
 			fileInfo.path = m_torrentName;
+			m_fileInfos.push_back(fileInfo);
 		} else {
 			// Multi file torrent
 			m_length = 0;
