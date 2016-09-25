@@ -57,6 +57,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 				auto pathList = file->valueEx("path")->castToEx<BencodeList>();
 				fileInfo.path = pathList->getValueEx(0)->castToEx<BencodeString>()->value();
 				m_length += fileInfo.length;
+				m_fileInfos.push_back(fileInfo);
 			}
 		}
 
@@ -100,6 +101,10 @@ qint64 TorrentInfo::pieceLength() const {
 
 const QByteArray& TorrentInfo::pieces() const {
 	return m_pieces;
+}
+
+const QList<FileInfo>& TorrentInfo::fileInfos() const {
+	return m_fileInfos;
 }
 
 const QByteArray& TorrentInfo::infoHash() const {

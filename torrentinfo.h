@@ -42,6 +42,8 @@ public:
 	qint64 pieceLength() const;
 	const QByteArray& pieces() const;
 
+	const QList<FileInfo>& fileInfos() const;
+
 	const QByteArray& infoHash() const;
 	QByteArray infoHashPercentEncoded() const;
 
