@@ -5,9 +5,10 @@
 #include <QCryptographicHash>
 #include <QDebug>
 
-Piece::Piece(Torrent* torrent, int pieceNumber) :
+Piece::Piece(Torrent* torrent, int pieceNumber, int size) :
 	m_torrent(torrent),
 	m_pieceNumber(pieceNumber),
+	m_size(size),
 	m_downloaded(false),
 	m_downloading(false)
 {
@@ -32,6 +33,22 @@ int Piece::pieceNumber() const {
 	return m_pieceNumber;
 }
 
+QByteArray Piece::data() const {
+	QByteArray ret;
+	if(!downloaded()) {
+		qDebug() << "Internal error Piece::data(" << this << ") - downloaded() returned false!";
+		exit(1);
+	}
+	for(auto b : m_blocksDownloaded) {
+		ret.push_back(b->data());
+	}
+	return ret;
+}
+
+int Piece::size() const {
+	return m_size;
+}
+
 
 void Piece::addBlock(Block *block) {
 	int insertPos = 0;
@@ -44,6 +61,22 @@ void Piece::addBlock(Block *block) {
 	m_blocksDownloaded.insert(insertPos, block);
 }
 
+void Piece::deleteBlock(Block* block) {
+	m_accessPieceMutex.lock();
+	int blockNumber = -1;
+	for(int i = 0; i < m_blocksDownloaded.size(); i++) {
+		if(m_blocksDownloaded[i] == block) {
+			blockNumber = i;
+			break;
+		}
+	}
+	if(blockNumber != -1) {
+		delete m_blocksDownloaded[blockNumber];
+		m_blocksDownloaded.removeAt(blockNumber);
+	}
+	m_accessPieceMutex.unlock();
+}
+
 bool Piece::checkIfDownloaded() {
 	int pos = 0;
 	for(auto b : m_blocksDownloaded) {
@@ -54,13 +87,12 @@ bool Piece::checkIfDownloaded() {
 			return false;
 		}
 	}
-	int size = m_torrent->torrentInfo()->pieceLength();
-	m_downloaded = (size == pos);
+	m_downloaded = (m_size == pos);
 	return m_downloaded;
 }
 
 void Piece::updateInfo() {
-	m_updateInfoMutex.lock();
+	m_accessPieceMutex.lock();
 	if(checkIfDownloaded()) {
 		QCryptographicHash hash(QCryptographicHash::Sha1);
 		for(auto b : m_blocksDownloaded) {
@@ -84,15 +116,22 @@ void Piece::updateInfo() {
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
 			qDebug() << "Received piece" << m_pieceNumber << "/" << m_torrent->torrentInfo()->numberOfPieces();
+			int downloadedPieces = m_torrent->downloadedPieces();
+			int totalPieces = m_torrent->torrentInfo()->numberOfPieces();
+			float percentage = downloadedPieces;
+			percentage /= totalPieces;
+			percentage *= 100;
+			qDebug() << "Downloaded pieces" << downloadedPieces << "/" << totalPieces << "|" << percentage << "%";
+			m_torrent->savePiece(m_pieceNumber);
 			m_downloaded = true;
 			m_downloading = false;
 		}
 	}
-	m_updateInfoMutex.unlock();
+	m_accessPieceMutex.unlock();
 }
 
 Block* Piece::requestBlock(int size) {
-	m_requestBlockMutex.lock();
+	m_accessPieceMutex.lock();
 
 	int tmp = 0;
 	int s = size;
@@ -111,7 +150,7 @@ Block* Piece::requestBlock(int size) {
 		}
 	}
 	if(block == nullptr) {
-		int pieceSize = m_torrent->torrentInfo()->pieceLength();
+		int pieceSize = m_size;
 		if(pieceSize - tmp > size) {
 			block = new Block(this, tmp, size);
 		} else if(pieceSize - tmp > 0) {
@@ -122,6 +161,6 @@ Block* Piece::requestBlock(int size) {
 		addBlock(block);
 	}
 
-	m_requestBlockMutex.unlock();
+	m_accessPieceMutex.unlock();
 	return block;
 }

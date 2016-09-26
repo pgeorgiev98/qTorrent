@@ -12,6 +12,7 @@ class TrackerClient;
 class TorrentClient;
 class Piece;
 class Block;
+class QFile;
 
 class Torrent {
 public:
@@ -25,13 +26,18 @@ public:
 	TorrentInfo* torrentInfo();
 	TrackerClient* trackerClient();
 	Block* requestBlock(TorrentClient* client, int size);
+	bool savePiece(int pieceNumber);
+	int downloadedPieces();
 private:
 	QTorrent* m_qTorrent;
 	QList<Peer*> m_peers;
 	QList<Piece*> m_pieces;
 	TorrentInfo* m_torrentInfo;
 	TrackerClient* m_trackerClient;
+	QList<QFile*> m_files;
 	QMutex m_requestBlockMutex;
+	QMutex m_savePieceMutex;
+	QMutex m_getDownloadedPiecesMutex;
 };
 
 #endif // TORRENT_H

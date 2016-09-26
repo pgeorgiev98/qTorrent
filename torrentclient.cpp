@@ -105,6 +105,10 @@ void TorrentClient::readyRead() {
 }
 
 void TorrentClient::finished() {
+	if(m_waitingForBlock != nullptr) {
+		Piece* piece = m_waitingForBlock->piece();
+		piece->deleteBlock(m_waitingForBlock);
+	}
 	m_status = Created;
 	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
 }
@@ -166,7 +170,7 @@ void TorrentClient::requestPiece() {
 		var %= div;
 		div /= 256;
 	}
-	qDebug() << "sending request to" << m_socket->peerAddress().toString() << "index:" << index << "begin:" << begin << "length:" << length;
+	//qDebug() << "sending request to" << m_socket->peerAddress().toString() << "index:" << index << "begin:" << begin << "length:" << length;
 	m_socket->write(message);
 	m_waitingForBlock = block;
 }
@@ -191,7 +195,7 @@ bool TorrentClient::readPeerMessage() {
 		return false;
 	}
 	int messageId = m_receivedData[i++];
-	out << m_peer->address() << ":" << m_peer->port() << ": ";
+	//out << m_peer->address() << ":" << m_peer->port() << ": ";
 	switch(messageId) {
 	case 0: // choke
 		out << "choke" << endl;
@@ -211,7 +215,7 @@ bool TorrentClient::readPeerMessage() {
 		break;
 	case 4: // have
 	{
-		out << "have" << endl;
+		//out << "have" << endl;
 		int piece = 0;
 		for(int j = 0; j < 4; j++) {
 			piece *= 256;
@@ -229,7 +233,7 @@ bool TorrentClient::readPeerMessage() {
 	}
 	case 5: // bitfield
 	{
-		out << "bitfield" << endl;
+		//out << "bitfield" << endl;
 		int bitfieldSize = length-1;
 		if(bitfieldSize*8 != m_peer->bitfieldSize()) {
 			out << "Error: wrong bitfield sizes of " << bitfieldSize*8 << "; expected " << m_peer->bitfieldSize() << endl;
@@ -268,7 +272,7 @@ bool TorrentClient::readPeerMessage() {
 			begin *= 256;
 			begin += (unsigned char)m_receivedData[i++];
 		}
-		out << "piece index: " << index << " begin: " << begin << " length: " << blockLength << endl;
+		//out << "piece index: " << index << " begin: " << begin << " length: " << blockLength << endl;
 		if(m_waitingForBlock == nullptr) {
 			out << "Error: was not waiting for block, but received piece!" << endl;
 			break;
