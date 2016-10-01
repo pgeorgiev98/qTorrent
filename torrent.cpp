@@ -26,6 +26,7 @@ Torrent::~Torrent() {
 bool Torrent::createFromFile(const QString &filename) {
 	m_torrentInfo = new TorrentInfo();
 	if(!m_torrentInfo->loadTorrentFile(filename)) {
+		qDebug() << "Failed to load torrent file" << m_torrentInfo->errorString();
 		delete m_torrentInfo;
 		m_torrentInfo = nullptr;
 		return false;
