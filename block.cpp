@@ -1,5 +1,6 @@
 #include "block.h"
 #include "piece.h"
+#include <QDebug>
 
 Block::Block(Piece* piece, int begin, int size) :
 	m_piece(piece),
@@ -37,12 +38,15 @@ void Block::setDownloaded(bool downloaded) {
 	m_downloadedMutex.unlock();
 }
 
-const QByteArray& Block::data() const {
-	return m_data;
-}
-
 void Block::setData(const QByteArray &data) {
-	m_data = data;
+	if(data.size() != m_size) {
+		qDebug() << "Error: Block::setData() - Data size " << data.size() << ", expected " << m_size;
+		exit(1);
+	}
+	char* p = m_piece->data() + m_begin;
+	for(int i = 0; i < data.size(); i++) {
+		p[i] = data[i];
+	}
 	setDownloaded(true);
 	m_piece->updateInfo();
 }

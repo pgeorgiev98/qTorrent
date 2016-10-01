@@ -13,6 +13,7 @@ class Piece {
 	int m_size;
 	bool m_downloaded;
 	bool m_downloading;
+	char* m_pieceData;
 	QList<Block*> m_blocksDownloaded;
 	QMutex m_accessPieceMutex;
 	void addBlock(Block* block);
@@ -26,7 +27,7 @@ public:
 	Block* requestBlock(int size);
 	void updateInfo();
 	void deleteBlock(Block* block);
-	QByteArray data() const;
+	char* data() const;
 	int size() const;
 };
 

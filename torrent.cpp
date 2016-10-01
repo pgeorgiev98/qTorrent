@@ -139,8 +139,7 @@ bool Torrent::savePiece(int pieceNumber) {
 		}
 	}
 
-	QByteArray data = m_pieces[pieceNumber]->data();
-	char* dataPtr = data.data();
+	char* dataPtr = m_pieces[pieceNumber]->data();
 
 	int bytesToWrite = thisPieceLength;
 	for(int i = firstFileNumber;; i++) {

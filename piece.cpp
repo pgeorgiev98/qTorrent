@@ -10,7 +10,8 @@ Piece::Piece(Torrent* torrent, int pieceNumber, int size) :
 	m_pieceNumber(pieceNumber),
 	m_size(size),
 	m_downloaded(false),
-	m_downloading(false)
+	m_downloading(false),
+	m_pieceData(new char[size])
 {
 }
 
@@ -18,6 +19,7 @@ Piece::~Piece() {
 	for(auto b : m_blocksDownloaded) {
 		delete b;
 	}
+	delete[] m_pieceData;
 }
 
 
@@ -33,16 +35,8 @@ int Piece::pieceNumber() const {
 	return m_pieceNumber;
 }
 
-QByteArray Piece::data() const {
-	QByteArray ret;
-	if(!downloaded()) {
-		qDebug() << "Internal error Piece::data(" << this << ") - downloaded() returned false!";
-		exit(1);
-	}
-	for(auto b : m_blocksDownloaded) {
-		ret.push_back(b->data());
-	}
-	return ret;
+char* Piece::data() const {
+	return m_pieceData;
 }
 
 int Piece::size() const {
@@ -95,9 +89,7 @@ void Piece::updateInfo() {
 	m_accessPieceMutex.lock();
 	if(checkIfDownloaded()) {
 		QCryptographicHash hash(QCryptographicHash::Sha1);
-		for(auto b : m_blocksDownloaded) {
-			hash.addData(b->data());
-		}
+		hash.addData(m_pieceData, m_size);
 		const QByteArray& validHash = m_torrent->torrentInfo()->pieces();
 		QByteArray actualHash = hash.result();
 		bool isValid = true;
