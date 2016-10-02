@@ -1,12 +1,13 @@
 #ifndef TORRENTINFO_H
 #define TORRENTINFO_H
 
+#include <QList>
 #include <QString>
 #include <QDateTime>
 
 class FileInfo {
 public:
-	QString path;
+	QList<QString> path;
 	qint64 length;
 };
 

@@ -50,8 +50,8 @@ bool Torrent::createFromFile(const QString &filename) {
 bool Torrent::createFileTree(const QString &directory) {
 	qDebug() << "Creating file tree for" << m_torrentInfo->torrentName();
 	const auto& files = m_torrentInfo->fileInfos();
-	qDebug() << "files:" << files.size();
-	QDir dir(directory);
+	QDir rootDir(directory);
+	/*
 	if(files.size() > 1) {
 		qDebug() << "Creating sub-directory";
 		if(!dir.exists(m_torrentInfo->torrentName())) {
@@ -63,9 +63,20 @@ bool Torrent::createFileTree(const QString &directory) {
 			return false;
 		}
 	}
+	*/
 	for(auto& f : files) {
+		QDir dir(rootDir);
+		for(int i = 0; i < f.path.size() - 1; i++) {
+			if(!dir.exists(f.path[i])) {
+				if(!dir.mkdir(f.path[i])) {
+					qDebug() << "Failed to create directory" << f.path[i];
+					return false;
+				}
+			}
+			dir.cd(f.path[i]);
+		}
 		QFile* file = new QFile();
-		file->setFileName(dir.absoluteFilePath(f.path));
+		file->setFileName(dir.absoluteFilePath(f.path.last()));
 		if(!file->open(QFile::ReadWrite)) {
 			qDebug() << "Failed to open file" << file->errorString();
 			return false;

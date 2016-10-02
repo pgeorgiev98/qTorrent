@@ -46,7 +46,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 			m_length = infoDict->valueEx("length")->castToEx<BencodeInteger>()->value();
 			FileInfo fileInfo;
 			fileInfo.length = m_length;
-			fileInfo.path = m_torrentName;
+			fileInfo.path = QList<QString>({m_torrentName});
 			m_fileInfos.push_back(fileInfo);
 		} else {
 			// Multi file torrent
@@ -55,8 +55,11 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 			for(auto file : filesList->values<BencodeDictionary>()) {
 				FileInfo fileInfo;
 				fileInfo.length = file->valueEx("length")->castToEx<BencodeInteger>()->value();
-				auto pathList = file->valueEx("path")->castToEx<BencodeList>();
-				fileInfo.path = pathList->getValueEx(0)->castToEx<BencodeString>()->value();
+				auto pathList = file->valueEx("path")->castToEx<BencodeList>()->values<BencodeString>();
+				fileInfo.path = QList<QString>({m_torrentName});
+				for(auto v : pathList) {
+					fileInfo.path.push_back(v->value());
+				}
 				m_length += fileInfo.length;
 				m_fileInfos.push_back(fileInfo);
 			}
