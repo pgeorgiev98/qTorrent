@@ -38,13 +38,13 @@ void Block::setDownloaded(bool downloaded) {
 	m_downloadedMutex.unlock();
 }
 
-void Block::setData(const QByteArray &data) {
-	if(data.size() != m_size) {
-		qDebug() << "Error: Block::setData() - Data size " << data.size() << ", expected " << m_size;
+void Block::setData(const char* data, int length) {
+	if(length != m_size) {
+		qDebug() << "Error: Block::setData() - Data length " << length << ", expected " << m_size;
 		exit(1);
 	}
 	char* p = m_piece->data() + m_begin;
-	for(int i = 0; i < data.size(); i++) {
+	for(int i = 0; i < length; i++) {
 		p[i] = data[i];
 	}
 	setDownloaded(true);

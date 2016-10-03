@@ -12,7 +12,9 @@ class Block {
 	int m_size;
 	bool m_downloaded;
 	QMutex m_downloadedMutex;
-public:
+private: // Accessed through Torrent and Block classes
+	friend class Torrent;
+	friend class Piece;
 	Block(Piece* piece, int begin, int size);
 	~Block();
 	Piece* piece();
@@ -20,7 +22,7 @@ public:
 	int size() const;
 	bool downloaded();
 	void setDownloaded(bool downloaded);
-	void setData(const QByteArray& data);
+	void setData(const char* data, int length);
 };
 
 #endif // BLOCK_H

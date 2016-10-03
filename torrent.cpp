@@ -11,7 +11,8 @@
 Torrent::Torrent(QTorrent *qTorrent) :
 	m_qTorrent(qTorrent),
 	m_torrentInfo(nullptr),
-	m_trackerClient(nullptr)
+	m_trackerClient(nullptr),
+	m_accessMutex(QMutex::Recursive)
 {
 }
 
@@ -94,6 +95,7 @@ bool Torrent::createFileTree(const QString &directory) {
 }
 
 void Torrent::addPeer(Peer *peer) {
+	m_accessMutex.lock();
 	for(auto p : m_peers) {
 		if(p == peer) {
 			return;
@@ -108,10 +110,11 @@ void Torrent::addPeer(Peer *peer) {
 		return;
 	}
 	m_peers.push_back(peer);
+	m_accessMutex.unlock();
 }
 
 Block* Torrent::requestBlock(TorrentClient *client, int size) {
-	m_requestBlockMutex.lock();
+	m_accessMutex.lock();
 
 	Block* block = nullptr;
 	for(int i = 0; i < m_pieces.size(); i++) {
@@ -124,12 +127,12 @@ Block* Torrent::requestBlock(TorrentClient *client, int size) {
 		}
 	}
 
-	m_requestBlockMutex.unlock();
+	m_accessMutex.unlock();
 	return block;
 }
 
 bool Torrent::savePiece(int pieceNumber) {
-	m_savePieceMutex.lock();
+	m_accessMutex.lock();
 	int pieceLength = m_torrentInfo->pieceLength();
 	int thisPieceLength = m_pieces[pieceNumber]->size();
 	auto& fileInfos = m_torrentInfo->fileInfos();
@@ -157,20 +160,20 @@ bool Torrent::savePiece(int pieceNumber) {
 		QFile* file = m_files[i];
 		if(!file->open(QIODevice::ReadWrite)) { // Append causes bugs with seek
 			qDebug() << "Failed to open file" << i << file->fileName() << ":" << file->errorString();
-			m_savePieceMutex.unlock();
+			m_accessMutex.unlock();
 			return false;
 		}
-		int pos = 0;
+		qint64 pos = 0;
 		if(i == firstFileNumber) {
 			pos = startingPos;
 		}
 		if(!file->seek(pos)) {
 			qDebug() << "Failed to seek in file" << i << file->fileName() << ":" << file->errorString();
-			m_savePieceMutex.unlock();
+			m_accessMutex.unlock();
 			return false;
 		}
 		int toWrite = bytesToWrite;
-		int bytesToEnd = fileInfos[i].length - pos;
+		qint64 bytesToEnd = fileInfos[i].length - pos;
 		if(toWrite > bytesToEnd) {
 			toWrite = bytesToEnd;
 		}
@@ -185,7 +188,7 @@ bool Torrent::savePiece(int pieceNumber) {
 			if(written == -1) {
 				qDebug() << "Failed to write to file" << i << file->fileName() << ":" << file->errorString();
 				file->close();
-				m_savePieceMutex.unlock();
+				m_accessMutex.unlock();
 				return false;
 			}
 		}
@@ -194,19 +197,19 @@ bool Torrent::savePiece(int pieceNumber) {
 			break;
 		}
 	}
-	m_savePieceMutex.unlock();
+	m_accessMutex.unlock();
 	return true;
 }
 
 int Torrent::downloadedPieces() {
 	int ans = 0;
-	m_getDownloadedPiecesMutex.lock();
+	m_accessMutex.lock();
 	for(auto& p : m_pieces) {
 		if(p->downloaded()) {
 			ans++;
 		}
 	}
-	m_getDownloadedPiecesMutex.unlock();
+	m_accessMutex.unlock();
 	return ans;
 }
 
@@ -224,4 +227,27 @@ TorrentInfo* Torrent::torrentInfo() {
 
 TrackerClient* Torrent::trackerClient() {
 	return m_trackerClient;
+}
+
+
+
+void Torrent::deleteBlock(Block *block) {
+	Piece* piece = block->piece();
+	piece->deleteBlock(block);
+}
+
+int Torrent::blockPieceNumber(Block *block) {
+	return block->piece()->pieceNumber();
+}
+
+int Torrent::blockBeginIndex(Block *block) {
+	return block->begin();
+}
+
+int Torrent::blockSize(Block *block) {
+	return block->size();
+}
+
+void Torrent::blockSetData(Block* block, const char *data, int length) {
+	block->setData(data, length);
 }

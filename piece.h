@@ -18,7 +18,9 @@ class Piece {
 	QMutex m_accessPieceMutex;
 	void addBlock(Block* block);
 	bool checkIfDownloaded();
-public:
+private: // Accessed through Torrent and Block classes
+	friend class Torrent;
+	friend class Block;
 	Piece(Torrent* torrent, int pieceNumber, int size);
 	~Piece();
 	bool downloading() const;

@@ -106,8 +106,7 @@ void TorrentClient::readyRead() {
 
 void TorrentClient::finished() {
 	if(m_waitingForBlock != nullptr) {
-		Piece* piece = m_waitingForBlock->piece();
-		piece->deleteBlock(m_waitingForBlock);
+		m_peer->torrent()->deleteBlock(m_waitingForBlock);
 	}
 	m_status = Created;
 	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
@@ -144,9 +143,10 @@ void TorrentClient::requestPiece() {
 		return;
 	}
 	int len = 13;
-	int index = block->piece()->pieceNumber();
-	int begin = block->begin();
-	int length = block->size();
+	Torrent* torrent = m_peer->torrent();
+	int index = torrent->blockPieceNumber(block);
+	int begin = torrent->blockBeginIndex(block);
+	int length = torrent->blockSize(block);
 
 	QByteArray message;
 	for(int i = 0, var = len, div = 256*256*256; i < 4; i++) {
@@ -277,17 +277,15 @@ bool TorrentClient::readPeerMessage() {
 			out << "Error: was not waiting for block, but received piece!" << endl;
 			break;
 		}
-		if(m_waitingForBlock->piece()->pieceNumber() != index ||
-				m_waitingForBlock->begin() != begin ||
-				m_waitingForBlock->size() != blockLength) {
+		Torrent* torrent = m_peer->torrent();
+		if(torrent->blockPieceNumber(m_waitingForBlock) != index ||
+				torrent->blockBeginIndex(m_waitingForBlock) != begin ||
+				torrent->blockSize(m_waitingForBlock) != blockLength) {
 			out << "Error: block info does not match requested one!" << endl;
 			break;
 		}
-		QByteArray block;
-		for(int j = 0; j < blockLength; j++) {
-			block.push_back(m_receivedData[i++]);
-		}
-		m_waitingForBlock->setData(block);
+		const char* blockData = m_receivedData.data() + i;
+		torrent->blockSetData(m_waitingForBlock, blockData, blockLength);
 		m_waitingForBlock = nullptr;
 		break;
 	}

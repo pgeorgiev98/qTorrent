@@ -28,6 +28,12 @@ public:
 	Block* requestBlock(TorrentClient* client, int size);
 	bool savePiece(int pieceNumber);
 	int downloadedPieces();
+
+	void deleteBlock(Block* block);
+	int blockPieceNumber(Block* block);
+	int blockBeginIndex(Block* block);
+	int blockSize(Block* block);
+	void blockSetData(Block* block, const char* data, int length);
 private:
 	QTorrent* m_qTorrent;
 	QList<Peer*> m_peers;
@@ -35,9 +41,7 @@ private:
 	TorrentInfo* m_torrentInfo;
 	TrackerClient* m_trackerClient;
 	QList<QFile*> m_files;
-	QMutex m_requestBlockMutex;
-	QMutex m_savePieceMutex;
-	QMutex m_getDownloadedPiecesMutex;
+	QMutex m_accessMutex;
 };
 
 #endif // TORRENT_H
