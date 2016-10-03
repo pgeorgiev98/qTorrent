@@ -49,6 +49,7 @@ void TrackerClient::httpFinished() {
 	Bencode* bencodeParser = new Bencode();
 	if(!bencodeParser->loadFromByteArray(m_peerListData)) {
 		err << "Failed to parse reply" << endl;
+		err << m_peerListData << endl;
 		return;
 	}
 	const auto& values = bencodeParser->values();
