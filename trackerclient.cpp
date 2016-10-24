@@ -27,6 +27,7 @@ void TrackerClient::fetchPeerList() {
 	query.addQueryItem("info_hash", hash);
 	query.addQueryItem("peer_id", "ASEDRFGYQIWKSJDUEYTF");
 	query.addQueryItem("port", "6881");
+	query.addQueryItem("compact", "1");
 	query.addQueryItem("uploaded", "0");
 	query.addQueryItem("downloaded", "0");
 	query.addQueryItem("left", QString::number(m_torrentInfo->length()));
@@ -48,7 +49,7 @@ void TrackerClient::httpFinished() {
 	}
 	Bencode* bencodeParser = new Bencode();
 	if(!bencodeParser->loadFromByteArray(m_peerListData)) {
-		err << "Failed to parse reply" << endl;
+		err << "Failed to parse reply: " << bencodeParser->errorString() << endl;
 		err << m_peerListData << endl;
 		return;
 	}
@@ -59,10 +60,29 @@ void TrackerClient::httpFinished() {
 	}
 	try {
 		auto mainDict = values[0]->castToEx<BencodeDictionary>();
-		auto peersList = mainDict->valueEx("peers")->castToEx<BencodeList>();
-		for(auto peerDict : peersList->values<BencodeDictionary>()) {
-			QByteArray peerIp = peerDict->valueEx("ip")->castToEx<BencodeString>()->value();
-			int peerPort = peerDict->valueEx("port")->castToEx<BencodeInteger>()->value();
+		QByteArray peersData = mainDict->valueEx("peers")->castToEx<BencodeString>()->value();
+		if(peersData.size() % 6 != 0) {
+			err << "Tracker response parse error: peers string length is not a multiple of 6; length = " << peersData.size() << endl;
+			return;
+		}
+		int numberOfPeers = peersData.size() / 6;
+		for(int i = 0, counter = 0; i < numberOfPeers; i++)  {
+			// Address
+			QByteArray peerIp;
+			peerIp += QString::number((unsigned char)peersData[counter++]);
+			peerIp += '.';
+			peerIp += QString::number((unsigned char)peersData[counter++]);
+			peerIp += '.';
+			peerIp += QString::number((unsigned char)peersData[counter++]);
+			peerIp += '.';
+			peerIp += QString::number((unsigned char)peersData[counter++]);
+
+			// Port
+			int peerPort = 0;
+			peerPort += (unsigned char)peersData[counter++];
+			peerPort *= 256;
+			peerPort += (unsigned char)peersData[counter++];
+			err << "Peer " << peerIp << ":" << peerPort << endl;
 			m_torrent->addPeer(new Peer(m_torrent, peerIp, peerPort));
 		}
 		if(m_torrent->peers().isEmpty()) {
@@ -74,6 +94,8 @@ void TrackerClient::httpFinished() {
 		}
 	} catch(BencodeException& ex) {
 		err << "Failed to parse: " << ex.what() << endl;
+		err << m_peerListData << endl;
+		return;
 	}
 }
 
