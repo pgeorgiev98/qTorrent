@@ -52,19 +52,6 @@ bool Torrent::createFileTree(const QString &directory) {
 	qDebug() << "Creating file tree for" << m_torrentInfo->torrentName();
 	const auto& files = m_torrentInfo->fileInfos();
 	QDir rootDir(directory);
-	/*
-	if(files.size() > 1) {
-		qDebug() << "Creating sub-directory";
-		if(!dir.exists(m_torrentInfo->torrentName())) {
-			if(!dir.mkdir(m_torrentInfo->torrentName())) {
-				return false;
-			}
-		}
-		if(!dir.cd(m_torrentInfo->torrentName())) {
-			return false;
-		}
-	}
-	*/
 	for(auto& f : files) {
 		QDir dir(rootDir);
 		for(int i = 0; i < f.path.size() - 1; i++) {
