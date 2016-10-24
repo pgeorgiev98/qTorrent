@@ -17,13 +17,16 @@ class TorrentInfo {
 	void setError(QString errorString);
 
 	QByteArray m_announceUrl;
-	QDateTime m_creationDate;
-	QString m_encoding;
 
 	qint64 m_length;
 	QByteArray m_torrentName;
 	qint64 m_pieceLength;
 	QByteArray m_pieces;
+
+	QDateTime* m_creationDate;
+	QString* m_comment;
+	QString* m_createdBy;
+	QString* m_encoding;
 
 	QList<FileInfo> m_fileInfos;
 
@@ -35,13 +38,16 @@ public:
 	bool loadTorrentFile(QString filename);
 
 	const QByteArray& announceUrl() const;
-	QDateTime creationDate() const;
-	QString encoding() const;
 
 	qint64 length() const;
 	const QByteArray& torrentName() const;
 	qint64 pieceLength() const;
 	const QByteArray& pieces() const;
+
+	const QDateTime* creationDate() const;
+	const QString* comment() const;
+	const QString* createdBy() const;
+	const QString* encoding() const;
 
 	const QList<FileInfo>& fileInfos() const;
 
