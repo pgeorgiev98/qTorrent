@@ -15,7 +15,6 @@ class Piece {
 	bool m_downloading;
 	char* m_pieceData;
 	QList<Block*> m_blocksDownloaded;
-	QMutex m_accessPieceMutex;
 	void addBlock(Block* block);
 	bool checkIfDownloaded();
 private: // Accessed through Torrent and Block classes
@@ -29,6 +28,7 @@ private: // Accessed through Torrent and Block classes
 	Block* requestBlock(int size);
 	void updateInfo();
 	void deleteBlock(Block* block);
+	void unloadFromMemory();
 	char* data() const;
 	int size() const;
 };

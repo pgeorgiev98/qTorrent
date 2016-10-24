@@ -26,16 +26,12 @@ int Block::size() const {
 }
 
 bool Block::downloaded() {
-	m_downloadedMutex.lock();
 	bool tmp = m_downloaded;
-	m_downloadedMutex.unlock();
 	return tmp;
 }
 
 void Block::setDownloaded(bool downloaded) {
-	m_downloadedMutex.lock();
 	m_downloaded = downloaded;
-	m_downloadedMutex.unlock();
 }
 
 void Block::setData(const char* data, int length) {

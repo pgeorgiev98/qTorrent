@@ -11,7 +11,6 @@ class Block {
 	int m_begin;
 	int m_size;
 	bool m_downloaded;
-	QMutex m_downloadedMutex;
 private: // Accessed through Torrent and Block classes
 	friend class Torrent;
 	friend class Piece;
