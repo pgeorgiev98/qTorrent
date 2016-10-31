@@ -91,21 +91,18 @@ bool Torrent::createFileTree(const QString &directory) {
 	return true;
 }
 
-void Torrent::addPeer(Peer *peer) {
+void Torrent::addPeer(const QByteArray &address, int port) {
 	m_accessMutex.lock();
 	for(auto p : m_peers) {
-		if(p == peer) {
-			return;
-		}
-		if(p->port() != peer->port()) {
+		if(p->port() != port) {
 			continue;
 		}
-		if(p->address() != peer->address()) {
+		if(p->address() != address) {
 			continue;
 		}
-		delete peer;
 		return;
 	}
+	Peer* peer = new Peer(this, address, port);
 	m_peers.push_back(peer);
 	m_accessMutex.unlock();
 }

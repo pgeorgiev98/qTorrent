@@ -104,7 +104,7 @@ void TrackerClient::httpFinished() {
 			peerPort *= 256;
 			peerPort += (unsigned char)peersData[counter++];
 			err << "Peer " << peerIp << ":" << peerPort << endl;
-			m_torrent->addPeer(new Peer(m_torrent, peerIp, peerPort));
+			m_torrent->addPeer(peerIp, peerPort);
 		}
 		if(m_torrent->peers().isEmpty()) {
 			err << "No peers" << endl;

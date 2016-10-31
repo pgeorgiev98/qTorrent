@@ -20,7 +20,7 @@ public:
 	~Torrent();
 	bool createFromFile(const QString& filename);
 	bool createFileTree(const QString& directory);
-	void addPeer(Peer* peer);
+	void addPeer(const QByteArray& address, int port);
 	QTorrent* qTorrent();
 	QList<Peer*>& peers();
 	TorrentInfo* torrentInfo();
