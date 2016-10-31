@@ -89,7 +89,7 @@ void TrackerClient::httpFinished() {
 
 		// Update interval
 		m_interval = mainDict->valueEx("interval")->castToEx<BencodeInteger>()->value();
-		m_updatePeerListTimer.setInterval(m_interval);
+		m_updatePeerListTimer.setInterval(m_interval*1000);
 		m_updatePeerListTimer.start();
 
 		// Peer list
