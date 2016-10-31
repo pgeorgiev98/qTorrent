@@ -39,12 +39,22 @@ bool Torrent::createFromFile(const QString &filename) {
 	trackerClient->fetchPeerList();
 
 	m_trackerClient = trackerClient;
-	for(int i = 0; i < m_torrentInfo->numberOfPieces()-1; i++) {
-		Piece* piece = new Piece(this, i, m_torrentInfo->pieceLength());
-		m_pieces.push_back(piece);
+
+	if(m_torrentInfo->length() % m_torrentInfo->pieceLength() == 0) {
+		// All pieces are the same size
+		for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
+			Piece* piece = new Piece(this, i, m_torrentInfo->pieceLength());
+			m_pieces.push_back(piece);
+		}
+	} else {
+		// Last piece has different size
+		for(int i = 0; i < m_torrentInfo->numberOfPieces()-1; i++) {
+			Piece* piece = new Piece(this, i, m_torrentInfo->pieceLength());
+			m_pieces.push_back(piece);
+		}
+		int lastPieceLength = m_torrentInfo->length() % m_torrentInfo->pieceLength();
+		m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces()-1, lastPieceLength));
 	}
-	int lastPieceLength = m_torrentInfo->length() % m_torrentInfo->pieceLength();
-	m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces()-1, lastPieceLength));
 	return true;
 }
 
