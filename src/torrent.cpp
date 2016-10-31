@@ -36,7 +36,7 @@ bool Torrent::createFromFile(const QString &filename) {
 		return false;
 	}
 	TrackerClient* trackerClient = new TrackerClient(this, m_torrentInfo);
-	trackerClient->fetchPeerList();
+	trackerClient->fetchPeerList(TrackerClient::Started);
 
 	m_trackerClient = trackerClient;
 
@@ -247,4 +247,30 @@ int Torrent::blockSize(Block *block) {
 
 void Torrent::blockSetData(Block* block, const char *data, int length) {
 	block->setData(data, length);
+}
+
+qint64 Torrent::bytesDownloaded() {
+	m_accessMutex.lock();
+	qint64 tmp = m_bytesDownloaded;
+	m_accessMutex.unlock();
+	return tmp;
+}
+
+qint64 Torrent::bytesUploaded() {
+	m_accessMutex.lock();
+	qint64 tmp = m_bytesUploaded;
+	m_accessMutex.unlock();
+	return tmp;
+}
+
+void Torrent::addToBytesDownloaded(qint64 value) {
+	m_accessMutex.lock();
+	m_bytesDownloaded += value;
+	m_accessMutex.unlock();
+}
+
+void Torrent::addToBytesUploaded(qint64 value) {
+	m_accessMutex.lock();
+	m_bytesUploaded += value;
+	m_accessMutex.unlock();
 }

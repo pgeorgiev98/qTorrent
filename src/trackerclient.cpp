@@ -11,27 +11,48 @@
 
 TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
 	m_torrent(torrent),
-	m_torrentInfo(torrentInfo)
+	m_torrentInfo(torrentInfo),
+	m_bytesDownloadedAtStarted(-1),
+	m_bytesUploadedAtStarted(-1)
 {
 }
 
 TrackerClient::~TrackerClient() {
 }
 
-void TrackerClient::fetchPeerList() {
+void TrackerClient::fetchPeerList(Event event) {
 	QUrl url;
 	url.setUrl(m_torrentInfo->announceUrl());
+
+	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
+	qint64 bytesUploaded = m_torrent->bytesUploaded();
+	qint64 torrentLength = m_torrentInfo->length();
+
+	if(event == Event::Started) {
+		m_bytesDownloadedAtStarted = bytesDownloaded;
+		m_bytesUploadedAtStarted = bytesUploaded;
+	}
+
+	QString bytesDownloadedString = QString::number(bytesDownloaded - m_bytesDownloadedAtStarted);
+	QString bytesUploadedString = QString::number(bytesUploaded - m_bytesUploadedAtStarted);
+	QString bytesLeftString = QString::number(torrentLength - bytesDownloaded);
 
 	QUrlQuery query(url);
 	auto hash = m_torrentInfo->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
-	query.addQueryItem("peer_id", "ASEDRFGYQIWKSJDUEYTF");
+	query.addQueryItem("peer_id", "ThisIsNotAFakePeerId");
 	query.addQueryItem("port", "6881");
+	query.addQueryItem("uploaded", bytesUploadedString);
+	query.addQueryItem("downloaded", bytesDownloadedString);
+	query.addQueryItem("left", bytesLeftString);
 	query.addQueryItem("compact", "1");
-	query.addQueryItem("uploaded", "0");
-	query.addQueryItem("downloaded", "0");
-	query.addQueryItem("left", QString::number(m_torrentInfo->length()));
-	query.addQueryItem("event", "started");
+	if(event == Event::Started) {
+		query.addQueryItem("event", "started");
+	} else if(event == Event::Stopped) {
+		query.addQueryItem("event", "stopped");
+	} else if(event == Event::Completed) {
+		query.addQueryItem("event", "completed");
+	}
 	/* TODO: Use non-hardcoded values */
 
 	url.setQuery(query);

@@ -34,6 +34,11 @@ public:
 	int blockBeginIndex(Block* block);
 	int blockSize(Block* block);
 	void blockSetData(Block* block, const char* data, int length);
+
+	qint64 bytesDownloaded();
+	qint64 bytesUploaded();
+	void addToBytesDownloaded(qint64 value);
+	void addToBytesUploaded(qint64 value);
 private:
 	QTorrent* m_qTorrent;
 	QList<Peer*> m_peers;
@@ -42,6 +47,9 @@ private:
 	TrackerClient* m_trackerClient;
 	QList<QFile*> m_files;
 	QMutex m_accessMutex;
+
+	qint64 m_bytesDownloaded;
+	qint64 m_bytesUploaded;
 };
 
 #endif // TORRENT_H

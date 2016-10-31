@@ -127,6 +127,7 @@ void Piece::updateInfo() {
 			m_torrent->savePiece(m_pieceNumber);
 			m_downloaded = true;
 			m_downloading = false;
+			m_torrent->addToBytesDownloaded(m_size);
 			unloadFromMemory();
 		}
 	}
