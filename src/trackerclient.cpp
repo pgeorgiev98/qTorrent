@@ -15,9 +15,14 @@ TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
 	m_bytesDownloadedAtStarted(-1),
 	m_bytesUploadedAtStarted(-1)
 {
+	connect(&m_updatePeerListTimer, SIGNAL(timeout()), this, SLOT(updatePeerListTimeoutSlot()));
 }
 
 TrackerClient::~TrackerClient() {
+}
+
+void TrackerClient::updatePeerListTimeoutSlot() {
+	fetchPeerList(Event::None);
 }
 
 void TrackerClient::fetchPeerList(Event event) {
@@ -81,6 +86,13 @@ void TrackerClient::httpFinished() {
 	}
 	try {
 		auto mainDict = values[0]->castToEx<BencodeDictionary>();
+
+		// Update interval
+		m_interval = mainDict->valueEx("interval")->castToEx<BencodeInteger>()->value();
+		m_updatePeerListTimer.setInterval(m_interval);
+		m_updatePeerListTimer.start();
+
+		// Peer list
 		QByteArray peersData = mainDict->valueEx("peers")->castToEx<BencodeString>()->value();
 		if(peersData.size() % 6 != 0) {
 			err << "Tracker response parse error: peers string length is not a multiple of 6; length = " << peersData.size() << endl;
