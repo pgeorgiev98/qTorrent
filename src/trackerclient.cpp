@@ -8,6 +8,7 @@
 #include <QNetworkReply>
 #include <QUrlQuery>
 #include <QUrl>
+#include <QDebug>
 
 TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
 	m_torrent(torrent),
@@ -68,6 +69,34 @@ void TrackerClient::fetchPeerList(Event event) {
 }
 
 void TrackerClient::httpFinished() {
+	QVariant statusCodeVariant = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+	if(!statusCodeVariant.isValid()) {
+		qDebug() << "Error in TracketClient::httpFinished() - invalid status code!";
+		return;
+	}
+	int statusCode = statusCodeVariant.toInt();
+	if(statusCode != 200) {
+		if(statusCode == 301) {
+			// Moved permanently
+			qDebug() << "Moved Permanently";
+			QUrl redirectUrl = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+			if(redirectUrl.isEmpty()) {
+				qDebug() << "Redirect URL is empty";
+				return;
+			}
+			qDebug() << "Redirecting to" << redirectUrl;
+			m_peerListData.clear();
+			m_reply = m_accessManager.get(QNetworkRequest(redirectUrl));
+			connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
+			connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
+			return;
+		} else {
+			QString reason = m_reply->attribute( QNetworkRequest::HttpReasonPhraseAttribute ).toString();
+			qDebug() << "Error: Status code" << statusCode << ":" << reason;
+			return;
+		}
+	}
+
 	QTextStream err(stderr);
 	if(m_reply->error()) {
 		err << "Error:" << m_reply->errorString() << endl;
@@ -89,7 +118,7 @@ void TrackerClient::httpFinished() {
 
 		// Update interval
 		m_interval = mainDict->valueEx("interval")->castToEx<BencodeInteger>()->value();
-		m_updatePeerListTimer.setInterval(m_interval);
+		m_updatePeerListTimer.setInterval(m_interval*1000);
 		m_updatePeerListTimer.start();
 
 		// Peer list
@@ -116,14 +145,13 @@ void TrackerClient::httpFinished() {
 			peerPort *= 256;
 			peerPort += (unsigned char)peersData[counter++];
 			err << "Peer " << peerIp << ":" << peerPort << endl;
-			m_torrent->addPeer(peerIp, peerPort);
+			Peer* peer = m_torrent->addPeer(peerIp, peerPort);
+			if(peer != nullptr) {
+				peer->startConnection();
+			}
 		}
 		if(m_torrent->peers().isEmpty()) {
 			err << "No peers" << endl;
-		} else {
-			for(auto peer : m_torrent->peers()) {
-				peer->startConnection();
-			}
 		}
 	} catch(BencodeException& ex) {
 		err << "Failed to parse: " << ex.what() << endl;
