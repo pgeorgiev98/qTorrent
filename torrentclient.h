@@ -3,6 +3,7 @@
 
 #include "torrentinfo.h"
 #include <QByteArray>
+#include <QTimer>
 #include <QObject>
 
 class Peer;
@@ -25,8 +26,12 @@ public slots:
 	void connected();
 	void readyRead();
 	void finished();
+	void replyTimeout();
+	void handshakeTimeout();
 private:
 	QTcpSocket* m_socket;
+	QTimer m_replyTimeoutTimer;
+	QTimer m_handshakeTimeoutTimer;
 	Peer* m_peer;
 	QByteArray m_receivedData;
 	Status m_status;
@@ -41,6 +46,7 @@ private:
 	bool readHandshakeReply();
 	bool readPeerMessage();
 	void requestPiece();
+	void disconnect();
 };
 
 #endif // TORRENTCLIENT_H

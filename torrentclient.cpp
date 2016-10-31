@@ -8,6 +8,9 @@
 #include <QByteArray>
 #include <QDebug>
 
+const int REPLY_TIMEOUT_MSEC = 20000;
+const int HANDSHAKE_TIMEOUT_MSEC = 20000;
+
 TorrentClient::TorrentClient(Peer* peer) :
 	m_socket(new QTcpSocket),
 	m_peer(peer)
@@ -29,9 +32,19 @@ TorrentClient::TorrentClient(Peer* peer) :
 	}
 	m_peer->bitfield() = bitfield;
 	m_status = Created;
+	m_waitingForBlock = nullptr;
+
+	// Connection events
 	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
 	connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 	connect(m_socket, SIGNAL(disconnected()), this, SLOT(finished()));
+
+	// Timeout callbacks
+	connect(&m_replyTimeoutTimer, SIGNAL(timeout()), this, SLOT(replyTimeout()));
+	connect(&m_handshakeTimeoutTimer, SIGNAL(timeout()), this, SLOT(handshakeTimeout()));
+	// Timeout intervals
+	m_replyTimeoutTimer.setInterval(REPLY_TIMEOUT_MSEC);
+	m_handshakeTimeoutTimer.setInterval(HANDSHAKE_TIMEOUT_MSEC);
 }
 
 TorrentClient::~TorrentClient() {
@@ -65,6 +78,7 @@ void TorrentClient::connected() {
 	dataToWrite.push_back(m_peer->torrent()->torrentInfo()->infoHash());
 	dataToWrite.push_back("ThisIsNotAFakePeerId");
 	m_socket->write(dataToWrite);
+	m_handshakeTimeoutTimer.start();
 }
 
 void TorrentClient::readyRead() {
@@ -76,6 +90,7 @@ void TorrentClient::readyRead() {
 		if(!readHandshakeReply()) {
 			break;
 		}
+		m_handshakeTimeoutTimer.stop();
 		out << "Handshaking completed with peer " << m_peer->address() << ":" << m_peer->port() << endl;
 		out << "protocol: " << m_peer->protocol() << endl;
 		out << "reserved: " << m_peer->reserved().toHex() << endl;
@@ -109,7 +124,20 @@ void TorrentClient::finished() {
 		m_peer->torrent()->deleteBlock(m_waitingForBlock);
 	}
 	m_status = Created;
+	m_waitingForBlock = nullptr;
 	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
+}
+
+void TorrentClient::replyTimeout() {
+	qDebug() << "Peer" << m_peer->address() << ":" << m_peer->port() << "took too long to reply!";
+	m_replyTimeoutTimer.stop();
+	disconnect();
+}
+
+void TorrentClient::handshakeTimeout() {
+	qDebug() << "Peer" << m_peer->address() << ":" << m_peer->port() << "took too long to handshake!";
+	m_handshakeTimeoutTimer.stop();
+	disconnect();
 }
 
 bool TorrentClient::readHandshakeReply() {
@@ -172,6 +200,7 @@ void TorrentClient::requestPiece() {
 	}
 	//qDebug() << "sending request to" << m_socket->peerAddress().toString() << "index:" << index << "begin:" << begin << "length:" << length;
 	m_socket->write(message);
+	m_replyTimeoutTimer.start();
 	m_waitingForBlock = block;
 }
 
@@ -284,6 +313,7 @@ bool TorrentClient::readPeerMessage() {
 			out << "Error: block info does not match requested one!" << endl;
 			break;
 		}
+		m_replyTimeoutTimer.stop();
 		const char* blockData = m_receivedData.data() + i;
 		torrent->blockSetData(m_waitingForBlock, blockData, blockLength);
 		m_waitingForBlock = nullptr;
@@ -298,4 +328,9 @@ bool TorrentClient::readPeerMessage() {
 	}
 	m_receivedData.remove(0, 4 + length);
 	return true;
+}
+
+void TorrentClient::disconnect() {
+	qDebug() << "Disconnecting from" << m_peer->address() << ":" << m_peer->port();
+	m_socket->close();
 }
