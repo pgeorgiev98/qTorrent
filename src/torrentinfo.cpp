@@ -43,7 +43,23 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		auto infoDict = mainDict->valueEx("info")->castToEx<BencodeDictionary>();
 
 		// Announce URL
-		m_announceUrl = mainDict->valueEx("announce")->castToEx<BencodeString>()->value();
+		try {
+			QList<QByteArray> announceUrlsList;
+			QList<BencodeList*> announceList = mainDict->valueEx("announce-list")->castToEx<BencodeList>()->values<BencodeList>();
+			for(auto announceSubList : announceList) {
+				QList<BencodeString*> stringsList = announceSubList->values<BencodeString>();
+				for(auto announceUrl : stringsList) {
+					// [TODO] Support shuffling
+					// http://bittorrent.org/beps/bep_0012.html
+					announceUrlsList.push_back(announceUrl->value());
+				}
+			}
+			m_announceUrlsList = announceUrlsList;
+		} catch(BencodeException& ex) {
+			m_announceUrlsList.clear();
+			QByteArray url = mainDict->valueEx("announce")->castToEx<BencodeString>()->value();
+			m_announceUrlsList.push_back(url);
+		}
 
 		// Torrent name
 		m_torrentName = infoDict->valueEx("name")->castToEx<BencodeString>()->value();
@@ -132,8 +148,8 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 }
 
 
-const QByteArray& TorrentInfo::announceUrl() const {
-	return m_announceUrl;
+const QList<QByteArray>& TorrentInfo::announceUrlsList() const {
+	return m_announceUrlsList;
 }
 
 qint64 TorrentInfo::length() const {

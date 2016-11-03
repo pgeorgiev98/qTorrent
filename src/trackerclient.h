@@ -37,6 +37,16 @@ private:
 	// Update Peer list
 	int m_interval;
 	QTimer m_updatePeerListTimer;
+
+	// The current index in the TorrentInfo::announceUrlsList()
+	// This is incremented if connecting to the tracker failed
+	int m_urlListCurrentIndex;
+
+	// Last event with which was fetchPeerList() called
+	Event m_lastEvent;
+
+	// This will be called by when connection failed
+	void failedToConnect();
 signals:
 	void bencodePeerListParsed(Bencode* bencode);
 };

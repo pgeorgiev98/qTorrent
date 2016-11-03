@@ -16,7 +16,7 @@ class TorrentInfo {
 	void clearError();
 	void setError(QString errorString);
 
-	QByteArray m_announceUrl;
+	QList<QByteArray> m_announceUrlsList;
 
 	qint64 m_length;
 	QByteArray m_torrentName;
@@ -37,7 +37,7 @@ public:
 	QString errorString() const;
 	bool loadTorrentFile(QString filename);
 
-	const QByteArray& announceUrl() const;
+	const QList<QByteArray>& announceUrlsList() const;
 
 	qint64 length() const;
 	const QByteArray& torrentName() const;
