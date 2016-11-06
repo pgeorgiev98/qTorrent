@@ -36,7 +36,7 @@ private:
 	QByteArray m_receivedData;
 	Status m_status;
 
-	Block* m_waitingForBlock;
+	QList<Block*> m_waitingForBlocks;
 
 	bool m_amChoking;
 	bool m_amInterested;
@@ -45,7 +45,7 @@ private:
 
 	bool readHandshakeReply();
 	bool readPeerMessage();
-	void requestPiece();
+	bool requestPiece();
 	void disconnect();
 };
 

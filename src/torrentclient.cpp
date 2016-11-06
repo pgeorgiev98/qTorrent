@@ -11,6 +11,8 @@
 const int REPLY_TIMEOUT_MSEC = 20000;
 const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 
+const int BLOCKS_TO_REQUEST = 5;
+
 TorrentClient::TorrentClient(Peer* peer) :
 	m_socket(new QTcpSocket),
 	m_peer(peer)
@@ -32,7 +34,7 @@ TorrentClient::TorrentClient(Peer* peer) :
 	}
 	m_peer->bitfield() = bitfield;
 	m_status = Created;
-	m_waitingForBlock = nullptr;
+	m_waitingForBlocks.clear();
 
 	// Connection events
 	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
@@ -66,7 +68,7 @@ void TorrentClient::connected() {
 	m_amInterested = false;
 	m_peerChoking = true;
 	m_peerInterested = false;
-	m_waitingForBlock = nullptr;
+	m_waitingForBlocks.clear();
 	m_receivedData.clear();
 	qDebug() << "Connected to" << m_peer->address() << ":" << m_peer->port();
 	QByteArray dataToWrite;
@@ -109,8 +111,12 @@ void TorrentClient::readyRead() {
 			message.push_back((char)2);
 			m_socket->write(message);
 			qDebug() << "interested in" << m_socket->peerAddress().toString();
-		} else if(m_waitingForBlock == nullptr && !m_peerChoking) {
-			requestPiece();
+		} else if(!m_peerChoking) {
+			while(m_waitingForBlocks.size() < BLOCKS_TO_REQUEST) {
+				if(!requestPiece()) {
+					break;
+				}
+			}
 		}
 		break;
 	default:
@@ -120,11 +126,11 @@ void TorrentClient::readyRead() {
 }
 
 void TorrentClient::finished() {
-	if(m_waitingForBlock != nullptr) {
-		m_peer->torrent()->deleteBlock(m_waitingForBlock);
+	for(auto block : m_waitingForBlocks) {
+		m_peer->torrent()->deleteBlock(block);
 	}
 	m_status = Created;
-	m_waitingForBlock = nullptr;
+	m_waitingForBlocks.clear();
 	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
 }
 
@@ -165,10 +171,10 @@ bool TorrentClient::readHandshakeReply() {
 	return true;
 }
 
-void TorrentClient::requestPiece() {
+bool TorrentClient::requestPiece() {
 	Block* block = m_peer->torrent()->requestBlock(this, 16384);
 	if(block == nullptr) {
-		return;
+		return false;
 	}
 	int len = 13;
 	Torrent* torrent = m_peer->torrent();
@@ -201,7 +207,8 @@ void TorrentClient::requestPiece() {
 	//qDebug() << "sending request to" << m_socket->peerAddress().toString() << "index:" << index << "begin:" << begin << "length:" << length;
 	m_socket->write(message);
 	m_replyTimeoutTimer.start();
-	m_waitingForBlock = block;
+	m_waitingForBlocks.push_back(block);
+	return true;
 }
 
 bool TorrentClient::readPeerMessage() {
@@ -302,21 +309,30 @@ bool TorrentClient::readPeerMessage() {
 			begin += (unsigned char)m_receivedData[i++];
 		}
 		//out << "piece index: " << index << " begin: " << begin << " length: " << blockLength << endl;
-		if(m_waitingForBlock == nullptr) {
+		if(m_waitingForBlocks.isEmpty()) {
 			out << "Error: was not waiting for block, but received piece!" << endl;
 			break;
 		}
 		Torrent* torrent = m_peer->torrent();
-		if(torrent->blockPieceNumber(m_waitingForBlock) != index ||
-				torrent->blockBeginIndex(m_waitingForBlock) != begin ||
-				torrent->blockSize(m_waitingForBlock) != blockLength) {
-			out << "Error: block info does not match requested one!" << endl;
+		Block* block = nullptr;
+		int blockIndex = 0;
+		for(auto b : m_waitingForBlocks) {
+			if(torrent->blockPieceNumber(b) == index &&
+					torrent->blockBeginIndex(b) == begin &&
+					torrent->blockSize(b) == blockLength) {
+				block = b;
+				break;
+			}
+			blockIndex++;
+		}
+		if(block == nullptr) {
+			out << "Error: block info does not match any of the requested ones!" << endl;
 			break;
 		}
 		m_replyTimeoutTimer.stop();
 		const char* blockData = m_receivedData.data() + i;
-		torrent->blockSetData(m_waitingForBlock, blockData, blockLength);
-		m_waitingForBlock = nullptr;
+		torrent->blockSetData(block, blockData, blockLength);
+		m_waitingForBlocks.removeAt(blockIndex);
 		break;
 	}
 	case 8: // cancel

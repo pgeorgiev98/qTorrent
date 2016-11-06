@@ -117,7 +117,7 @@ void Piece::updateInfo() {
 			m_downloaded = false;
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
-			qDebug() << "Received piece" << m_pieceNumber << "/" << m_torrent->torrentInfo()->numberOfPieces();
+			//qDebug() << "Received piece" << m_pieceNumber << "/" << m_torrent->torrentInfo()->numberOfPieces();
 			int downloadedPieces = m_torrent->downloadedPieces();
 			int totalPieces = m_torrent->torrentInfo()->numberOfPieces();
 			float percentage = downloadedPieces;
