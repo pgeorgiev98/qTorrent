@@ -126,6 +126,8 @@ void TorrentClient::readyRead() {
 }
 
 void TorrentClient::finished() {
+	m_handshakeTimeoutTimer.stop();
+	m_replyTimeoutTimer.stop();
 	for(auto block : m_waitingForBlocks) {
 		m_peer->torrent()->deleteBlock(block);
 	}
