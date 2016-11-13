@@ -30,12 +30,12 @@ void TrackerClient::updatePeerListTimeoutSlot() {
 void TrackerClient::fetchPeerList(Event event) {
 	m_lastEvent = event;
 	QUrl url;
-	auto announceUrls = m_torrentInfo->announceUrlsList();
-	if(m_urlListCurrentIndex >= announceUrls.size()) {
+	auto fetchPeerListUrls = m_torrentInfo->fetchPeerListUrlsList();
+	if(m_urlListCurrentIndex >= fetchPeerListUrls.size()) {
 		// No more backup urls
 		m_urlListCurrentIndex = 0;
 	}
-	url.setUrl(announceUrls[m_urlListCurrentIndex]);
+	url.setUrl(fetchPeerListUrls[m_urlListCurrentIndex]);
 
 	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
 	qint64 bytesUploaded = m_torrent->bytesUploaded();
@@ -76,42 +76,41 @@ void TrackerClient::fetchPeerList(Event event) {
 }
 
 void TrackerClient::httpFinished() {
-	QVariant statusCodeVariant = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-	if(!statusCodeVariant.isValid()) {
-		qDebug() << "Error in TracketClient::httpFinished() - invalid status code!";
-		return;
-	}
-	int statusCode = statusCodeVariant.toInt();
-	if(statusCode != 200) {
-		if(statusCode == 301) {
-			// Moved permanently
-			qDebug() << "Moved Permanently";
-			QUrl redirectUrl = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-			if(redirectUrl.isEmpty()) {
-				qDebug() << "Redirect URL is empty";
-				failedToConnect();
-				return;
-			}
-			qDebug() << "Redirecting to" << redirectUrl;
-			m_peerListData.clear();
-			m_reply = m_accessManager.get(QNetworkRequest(redirectUrl));
-			connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
-			connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
-			return;
-		} else {
-			QString reason = m_reply->attribute( QNetworkRequest::HttpReasonPhraseAttribute ).toString();
-			qDebug() << "Error: Status code" << statusCode << ":" << reason;
-			failedToConnect();
-			return;
-		}
-	}
 
-	QTextStream err(stderr);
+	// Check for errors
 	if(m_reply->error()) {
-		err << "Error:" << m_reply->errorString() << endl;
+		qDebug() << "Error in httpFinished():" << m_reply->errorString();
+
+		// Get HTTP status code
+		QVariant statusCodeVariant = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+		if(statusCodeVariant.isValid()) {
+			int statusCode = statusCodeVariant.toInt();
+			if(statusCode == 200) {
+				// What??
+			} else if(statusCode == 301) {
+				// Moved permanently
+				qDebug() << "Moved Permanently";
+				QUrl redirectUrl = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
+				if(redirectUrl.isEmpty()) {
+					qDebug() << "Redirect URL is empty";
+				} else {
+					qDebug() << "Redirecting to" << redirectUrl;
+					m_peerListData.clear();
+					m_reply = m_accessManager.get(QNetworkRequest(redirectUrl));
+					connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
+					connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
+					return;
+				}
+			} else {
+				QString reason = m_reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
+				qDebug() << "Error: Status code" << statusCode << ":" << reason;
+			}
+		}
 		failedToConnect();
 		return;
 	}
+
+	QTextStream err(stderr);
 	Bencode* bencodeParser = new Bencode();
 	if(!bencodeParser->loadFromByteArray(m_peerListData)) {
 		err << "Failed to parse reply: " << bencodeParser->errorString() << endl;
@@ -179,12 +178,12 @@ void TrackerClient::httpReadyRead() {
 }
 
 void TrackerClient::failedToConnect() {
-	auto announceList = m_torrentInfo->announceUrlsList();
-	if(m_urlListCurrentIndex + 1 >= announceList.size()) {
+	auto fetchPeerListList = m_torrentInfo->fetchPeerListUrlsList();
+	if(m_urlListCurrentIndex + 1 >= fetchPeerListList.size()) {
 		qDebug() << "No more backup URLs";
 		return;
 	}
 	m_urlListCurrentIndex++;
-	qDebug() << "Trying backup URL";
+	qDebug() << "Trying backup URL:" << fetchPeerListList[m_urlListCurrentIndex];
 	fetchPeerList(m_lastEvent);
 }
