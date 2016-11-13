@@ -36,7 +36,7 @@ bool Torrent::createFromFile(const QString &filename) {
 		return false;
 	}
 	TrackerClient* trackerClient = new TrackerClient(this, m_torrentInfo);
-	trackerClient->fetchPeerList(TrackerClient::Started);
+	trackerClient->announce(TrackerClient::Started);
 
 	m_trackerClient = trackerClient;
 

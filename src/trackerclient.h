@@ -15,7 +15,7 @@ public:
 	};
 	TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo);
 	~TrackerClient();
-	void fetchPeerList(Event event);
+	void announce(Event event);
 public slots:
 	void httpFinished();
 	void httpReadyRead();
@@ -42,7 +42,7 @@ private:
 	// This is incremented if connecting to the tracker failed
 	int m_urlListCurrentIndex;
 
-	// Last event with which was fetchPeerList() called
+	// Last event with which was announce() called
 	Event m_lastEvent;
 
 	// This will be called by when connection failed

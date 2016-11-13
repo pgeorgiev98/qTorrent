@@ -24,18 +24,18 @@ TrackerClient::~TrackerClient() {
 }
 
 void TrackerClient::updatePeerListTimeoutSlot() {
-	fetchPeerList(Event::None);
+	announce(Event::None);
 }
 
-void TrackerClient::fetchPeerList(Event event) {
+void TrackerClient::announce(Event event) {
 	m_lastEvent = event;
 	QUrl url;
-	auto fetchPeerListUrls = m_torrentInfo->fetchPeerListUrlsList();
-	if(m_urlListCurrentIndex >= fetchPeerListUrls.size()) {
+	auto announceUrls = m_torrentInfo->announceUrlsList();
+	if(m_urlListCurrentIndex >= announceUrls.size()) {
 		// No more backup urls
 		m_urlListCurrentIndex = 0;
 	}
-	url.setUrl(fetchPeerListUrls[m_urlListCurrentIndex]);
+	url.setUrl(announceUrls[m_urlListCurrentIndex]);
 
 	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
 	qint64 bytesUploaded = m_torrent->bytesUploaded();
@@ -178,12 +178,12 @@ void TrackerClient::httpReadyRead() {
 }
 
 void TrackerClient::failedToConnect() {
-	auto fetchPeerListList = m_torrentInfo->fetchPeerListUrlsList();
-	if(m_urlListCurrentIndex + 1 >= fetchPeerListList.size()) {
+	auto announceList = m_torrentInfo->announceUrlsList();
+	if(m_urlListCurrentIndex + 1 >= announceList.size()) {
 		qDebug() << "No more backup URLs";
 		return;
 	}
 	m_urlListCurrentIndex++;
-	qDebug() << "Trying backup URL:" << fetchPeerListList[m_urlListCurrentIndex];
-	fetchPeerList(m_lastEvent);
+	qDebug() << "Trying backup URL:" << announceList[m_urlListCurrentIndex];
+	announce(m_lastEvent);
 }
