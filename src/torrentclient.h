@@ -22,6 +22,8 @@ public:
 	~TorrentClient();
 	void connectToPeer();
 	Peer* peer();
+	bool timedOut();
+	QList<Block*>& waitingForBlocks();
 	void cancelBlock(Block* block);
 public slots:
 	void connected();
@@ -43,6 +45,10 @@ private:
 	bool m_amInterested;
 	bool m_peerChoking;
 	bool m_peerInterested;
+
+	/* This flag will be set when the peer hasn't
+	 * responded to a request in a certain amount of time */
+	bool m_timedOut;
 
 	bool readHandshakeReply();
 	bool readPeerMessage();

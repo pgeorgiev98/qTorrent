@@ -28,6 +28,7 @@ public:
 	Torrent* torrent();
 	QByteArray& address();
 	int port();
+	TorrentClient* torrentClient();
 	void startConnection();
 	int& bitfieldSize();
 	bool*& bitfield();

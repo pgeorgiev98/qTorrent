@@ -9,7 +9,7 @@
 #include <QByteArray>
 #include <QDebug>
 
-const int REPLY_TIMEOUT_MSEC = 20000;
+const int REPLY_TIMEOUT_MSEC = 5000;
 const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 
 const int BLOCKS_TO_REQUEST = 5;
@@ -36,6 +36,7 @@ TorrentClient::TorrentClient(Peer* peer) :
 	m_peer->bitfield() = bitfield;
 	m_status = Created;
 	m_waitingForBlocks.clear();
+	m_timedOut = false;
 
 	// Connection events
 	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
@@ -57,6 +58,14 @@ Peer* TorrentClient::peer() {
 	return m_peer;
 }
 
+bool TorrentClient::timedOut() {
+	return m_timedOut;
+}
+
+QList<Block*>& TorrentClient::waitingForBlocks() {
+	return m_waitingForBlocks;
+}
+
 void TorrentClient::connectToPeer() {
 	m_status = Connecting;
 	qDebug() << "Connecting to" << m_peer->address() << ":" << m_peer->port();
@@ -71,6 +80,7 @@ void TorrentClient::connected() {
 	m_peerInterested = false;
 	m_waitingForBlocks.clear();
 	m_receivedData.clear();
+	m_timedOut = false;
 	qDebug() << "Connected to" << m_peer->address() << ":" << m_peer->port();
 	QByteArray dataToWrite;
 	dataToWrite.push_back(char(19));
@@ -140,7 +150,7 @@ void TorrentClient::finished() {
 void TorrentClient::replyTimeout() {
 	qDebug() << "Peer" << m_peer->address() << ":" << m_peer->port() << "took too long to reply!";
 	m_replyTimeoutTimer.stop();
-	disconnect();
+	m_timedOut = true;
 }
 
 void TorrentClient::handshakeTimeout() {
@@ -333,6 +343,7 @@ bool TorrentClient::readPeerMessage() {
 			break;
 		}
 		m_replyTimeoutTimer.stop();
+		m_timedOut = false;
 		const char* blockData = m_receivedData.data() + i;
 		torrent->blockSetData(this, block, blockData, blockLength);
 		m_waitingForBlocks.removeAt(blockIndex);

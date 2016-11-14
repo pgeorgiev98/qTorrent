@@ -119,6 +119,21 @@ Block* Torrent::requestBlock(TorrentClient *client, int size) {
 		}
 	}
 
+	if(block == nullptr) {
+		for(auto peer : m_peers) {
+			TorrentClient* client = peer->torrentClient();
+			if(client->timedOut()) {
+				for(auto bl : client->waitingForBlocks()) {
+					if(client->peer()->bitfield()[bl->piece()->pieceNumber()]) {
+						block = bl;
+						block->addAssignee(client);
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	m_accessMutex.unlock();
 	return block;
 }

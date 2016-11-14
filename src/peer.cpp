@@ -28,6 +28,10 @@ int Peer::port() {
 	return m_port;
 }
 
+TorrentClient* Peer::torrentClient() {
+	return m_torrentClient;
+}
+
 void Peer::startConnection() {
 	m_torrentClient->connectToPeer();
 }
