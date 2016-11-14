@@ -33,7 +33,7 @@ public:
 	int blockPieceNumber(Block* block);
 	int blockBeginIndex(Block* block);
 	int blockSize(Block* block);
-	void blockSetData(Block* block, const char* data, int length);
+	void blockSetData(TorrentClient* client, Block* block, const char* data, int length);
 
 	qint64 bytesDownloaded();
 	qint64 bytesUploaded();

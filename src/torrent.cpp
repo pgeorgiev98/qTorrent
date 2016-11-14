@@ -113,6 +113,7 @@ Block* Torrent::requestBlock(TorrentClient *client, int size) {
 		if(client->peer()->bitfield()[i] && !piece->downloaded()) {
 			block = piece->requestBlock(size);
 			if(block != nullptr) {
+				block->addAssignee(client);
 				break;
 			}
 		}
@@ -239,8 +240,18 @@ int Torrent::blockSize(Block *block) {
 	return block->size();
 }
 
-void Torrent::blockSetData(Block* block, const char *data, int length) {
-	block->setData(data, length);
+void Torrent::blockSetData(TorrentClient* client, Block* block, const char *data, int length) {
+	m_accessMutex.lock();
+	if(!block->downloaded()) {
+		block->setData(data, length);
+		for(auto peer : block->assignees()) {
+			if(client != peer) {
+				peer->cancelBlock(block);
+			}
+		}
+		block->clearAssignees();
+	}
+	m_accessMutex.unlock();
 }
 
 qint64 Torrent::bytesDownloaded() {

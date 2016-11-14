@@ -3,6 +3,7 @@
 #include "torrent.h"
 #include "block.h"
 #include "piece.h"
+#include "torrentmessage.h"
 #include <QTcpSocket>
 #include <QHostAddress>
 #include <QByteArray>
@@ -333,7 +334,7 @@ bool TorrentClient::readPeerMessage() {
 		}
 		m_replyTimeoutTimer.stop();
 		const char* blockData = m_receivedData.data() + i;
-		torrent->blockSetData(block, blockData, blockLength);
+		torrent->blockSetData(this, block, blockData, blockLength);
 		m_waitingForBlocks.removeAt(blockIndex);
 		break;
 	}
@@ -351,4 +352,18 @@ bool TorrentClient::readPeerMessage() {
 void TorrentClient::disconnect() {
 	qDebug() << "Disconnecting from" << m_peer->address() << ":" << m_peer->port();
 	m_socket->close();
+}
+
+void TorrentClient::cancelBlock(Block *block) {
+	if(!m_socket->isOpen()) {
+		return;
+	}
+	int index = m_peer->torrent()->blockPieceNumber(block);
+	int begin = m_peer->torrent()->blockBeginIndex(block);
+	int length = m_peer->torrent()->blockSize(block);
+	TorrentMessage message(TorrentMessage::Cancel);
+	message.addInt32(index);
+	message.addInt32(begin);
+	message.addInt32(length);
+	m_socket->write(message.getMessage());
 }

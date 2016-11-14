@@ -22,6 +22,7 @@ public:
 	~TorrentClient();
 	void connectToPeer();
 	Peer* peer();
+	void cancelBlock(Block* block);
 public slots:
 	void connected();
 	void readyRead();

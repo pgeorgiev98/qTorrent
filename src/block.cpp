@@ -46,3 +46,26 @@ void Block::setData(const char* data, int length) {
 	setDownloaded(true);
 	m_piece->updateInfo();
 }
+
+
+/* Assignee operations */
+
+void Block::addAssignee(TorrentClient *peer) {
+	m_assignees.push_back(peer);
+}
+
+void Block::removeAssignee(TorrentClient *peer) {
+	for(int i = m_assignees.size() - 1; i >= 0; i--) {
+		if(m_assignees[i] == peer) {
+			m_assignees.removeAt(i);
+		}
+	}
+}
+
+void Block::clearAssignees() {
+	m_assignees.clear();
+}
+
+QList<TorrentClient*>& Block::assignees() {
+	return m_assignees;
+}
