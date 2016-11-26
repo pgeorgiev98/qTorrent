@@ -54,6 +54,10 @@ TorrentClient::TorrentClient(Peer* peer) :
 TorrentClient::~TorrentClient() {
 }
 
+QTcpSocket* TorrentClient::socket() {
+	return m_socket;
+}
+
 Peer* TorrentClient::peer() {
 	return m_peer;
 }
@@ -370,9 +374,5 @@ void TorrentClient::cancelBlock(Block *block) {
 	int index = block->piece()->pieceNumber();
 	int begin = block->begin();
 	int length = block->size();
-	TorrentMessage message(TorrentMessage::Cancel);
-	message.addInt32(index);
-	message.addInt32(begin);
-	message.addInt32(length);
-	m_socket->write(message.getMessage());
+	TorrentMessage::cancel(m_socket, index, begin, length);
 }

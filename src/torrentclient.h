@@ -21,6 +21,7 @@ public:
 	TorrentClient(Peer* peer);
 	~TorrentClient();
 	void connectToPeer();
+	QTcpSocket* socket();
 	Peer* peer();
 	bool timedOut();
 	QList<Block*>& waitingForBlocks();
