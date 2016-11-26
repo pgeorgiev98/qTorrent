@@ -1,5 +1,6 @@
 #include "block.h"
 #include "piece.h"
+#include "torrentclient.h"
 #include <QDebug>
 
 Block::Block(Piece* piece, int begin, int size) :
@@ -26,24 +27,29 @@ int Block::size() const {
 }
 
 bool Block::downloaded() {
-	bool tmp = m_downloaded;
-	return tmp;
+	return m_downloaded;
 }
 
 void Block::setDownloaded(bool downloaded) {
 	m_downloaded = downloaded;
 }
 
-void Block::setData(const char* data, int length) {
-	if(length != m_size) {
-		qDebug() << "Error: Block::setData() - Data length " << length << ", expected " << m_size;
-		exit(1);
+void Block::setData(const TorrentClient* peer, const char* data) {
+	if(downloaded()) {
+		return;
 	}
+
 	char* p = m_piece->data() + m_begin;
-	for(int i = 0; i < length; i++) {
+	for(int i = 0; i < m_size; i++) {
 		p[i] = data[i];
 	}
 	setDownloaded(true);
+	for(auto p : m_assignees) {
+		if(p != peer) {
+			p->cancelBlock(this);
+		}
+	}
+	clearAssignees();
 	m_piece->updateInfo();
 }
 

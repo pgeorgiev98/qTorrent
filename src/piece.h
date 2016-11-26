@@ -2,7 +2,6 @@
 #define PIECE_H
 
 #include <QList>
-#include <QMutex>
 
 class Torrent;
 class Block;
@@ -17,9 +16,7 @@ class Piece {
 	QList<Block*> m_blocksDownloaded;
 	void addBlock(Block* block);
 	bool checkIfDownloaded();
-private: // Accessed through Torrent and Block classes
-	friend class Torrent;
-	friend class Block;
+public:
 	Piece(Torrent* torrent, int pieceNumber, int size);
 	~Piece();
 	bool downloading() const;

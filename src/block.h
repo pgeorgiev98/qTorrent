@@ -16,9 +16,7 @@ class Block {
 	/* The peers to which this Block is
 	 * assigned to be downloaded from. */
 	QList<TorrentClient*> m_assignees;
-private: // Accessed through Torrent and Block classes
-	friend class Torrent;
-	friend class Piece;
+public:
 	Block(Piece* piece, int begin, int size);
 	~Block();
 	Piece* piece();
@@ -26,7 +24,7 @@ private: // Accessed through Torrent and Block classes
 	int size() const;
 	bool downloaded();
 	void setDownloaded(bool downloaded);
-	void setData(const char* data, int length);
+	void setData(const TorrentClient* peer, const char* data);
 
 	/* Assignee operations */
 	void addAssignee(TorrentClient* peer);

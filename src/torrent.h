@@ -3,7 +3,6 @@
 
 #include <QString>
 #include <QList>
-#include <QMutex>
 
 class QTorrent;
 class Peer;
@@ -28,13 +27,6 @@ public:
 	Block* requestBlock(TorrentClient* client, int size);
 	bool savePiece(int pieceNumber);
 	int downloadedPieces();
-
-	void deleteBlock(Block* block);
-	int blockPieceNumber(Block* block);
-	int blockBeginIndex(Block* block);
-	int blockSize(Block* block);
-	void blockSetData(TorrentClient* client, Block* block, const char* data, int length);
-
 	qint64 bytesDownloaded();
 	qint64 bytesUploaded();
 	void addToBytesDownloaded(qint64 value);
@@ -46,7 +38,6 @@ private:
 	TorrentInfo* m_torrentInfo;
 	TrackerClient* m_trackerClient;
 	QList<QFile*> m_files;
-	QMutex m_accessMutex;
 
 	qint64 m_bytesDownloaded;
 	qint64 m_bytesUploaded;

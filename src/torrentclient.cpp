@@ -140,7 +140,7 @@ void TorrentClient::finished() {
 	m_handshakeTimeoutTimer.stop();
 	m_replyTimeoutTimer.stop();
 	for(auto block : m_waitingForBlocks) {
-		m_peer->torrent()->deleteBlock(block);
+		block->piece()->deleteBlock(block);
 	}
 	m_status = Created;
 	m_waitingForBlocks.clear();
@@ -190,10 +190,9 @@ bool TorrentClient::requestPiece() {
 		return false;
 	}
 	int len = 13;
-	Torrent* torrent = m_peer->torrent();
-	int index = torrent->blockPieceNumber(block);
-	int begin = torrent->blockBeginIndex(block);
-	int length = torrent->blockSize(block);
+	int index = block->piece()->pieceNumber();
+	int begin = block->begin();
+	int length = block->size();
 
 	QByteArray message;
 	for(int i = 0, var = len, div = 256*256*256; i < 4; i++) {
@@ -326,13 +325,12 @@ bool TorrentClient::readPeerMessage() {
 			out << "Error: was not waiting for block, but received piece!" << endl;
 			break;
 		}
-		Torrent* torrent = m_peer->torrent();
 		Block* block = nullptr;
 		int blockIndex = 0;
 		for(auto b : m_waitingForBlocks) {
-			if(torrent->blockPieceNumber(b) == index &&
-					torrent->blockBeginIndex(b) == begin &&
-					torrent->blockSize(b) == blockLength) {
+			if(b->piece()->pieceNumber() == index &&
+					b->begin() == begin &&
+					b->size() == blockLength) {
 				block = b;
 				break;
 			}
@@ -345,7 +343,7 @@ bool TorrentClient::readPeerMessage() {
 		m_replyTimeoutTimer.stop();
 		m_timedOut = false;
 		const char* blockData = m_receivedData.data() + i;
-		torrent->blockSetData(this, block, blockData, blockLength);
+		block->setData(this, blockData);
 		m_waitingForBlocks.removeAt(blockIndex);
 		break;
 	}
@@ -369,9 +367,9 @@ void TorrentClient::cancelBlock(Block *block) {
 	if(!m_socket->isOpen()) {
 		return;
 	}
-	int index = m_peer->torrent()->blockPieceNumber(block);
-	int begin = m_peer->torrent()->blockBeginIndex(block);
-	int length = m_peer->torrent()->blockSize(block);
+	int index = block->piece()->pieceNumber();
+	int begin = block->begin();
+	int length = block->size();
 	TorrentMessage message(TorrentMessage::Cancel);
 	message.addInt32(index);
 	message.addInt32(begin);
