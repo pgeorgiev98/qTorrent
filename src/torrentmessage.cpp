@@ -1,4 +1,5 @@
 #include "torrentmessage.h"
+#include <QAbstractSocket>
 
 TorrentMessage::TorrentMessage(Type type) {
 	for(int i = 0; i < 4; i++) {
@@ -31,10 +32,80 @@ void TorrentMessage::addByteArray(QByteArray value) {
 	m_data.push_back(value);
 }
 
-QByteArray TorrentMessage::keepAlive() {
+
+void TorrentMessage::keepAlive(QAbstractSocket* socket) {
 	QByteArray arr;
 	for(int i = 0; i < 4; i++) {
 		arr.push_back((char)0);
 	}
-	return arr;
+	socket->write(arr);
+}
+
+void TorrentMessage::choke(QAbstractSocket* socket) {
+	TorrentMessage msg(Choke);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::unchoke(QAbstractSocket* socket) {
+	TorrentMessage msg(Unchoke);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::interested(QAbstractSocket* socket) {
+	TorrentMessage msg(Interested);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::notInterested(QAbstractSocket* socket) {
+	TorrentMessage msg(NotInterested);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::have(QAbstractSocket* socket, int pieceIndex) {
+	TorrentMessage msg(Have);
+	msg.addInt32(pieceIndex);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::bitfield(QAbstractSocket *socket, const QList<bool> &bitfield) {
+	TorrentMessage msg(Bitfield);
+	for(int i = 0; i < bitfield.size(); ) {
+		unsigned char byte = 0;
+		for(int j = 7; j >= 0; j--) {
+			int state = bitfield[i++];
+			byte ^= (-state ^ byte) & (1 << j);
+		}
+		msg.addByte(byte);
+	}
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::request(QAbstractSocket* socket, int index, int begin, int length) {
+	TorrentMessage msg(Request);
+	msg.addInt32(index);
+	msg.addInt32(begin);
+	msg.addInt32(length);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::piece(QAbstractSocket* socket, int index, int begin, const QByteArray& block) {
+	TorrentMessage msg(Piece);
+	msg.addInt32(index);
+	msg.addInt32(begin);
+	msg.addByteArray(block);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::cancel(QAbstractSocket* socket, int index, int begin, int length) {
+	TorrentMessage msg(Cancel);
+	msg.addInt32(index);
+	msg.addInt32(begin);
+	msg.addInt32(length);
+	socket->write(msg.getMessage());
+}
+
+void TorrentMessage::port(QAbstractSocket* socket, int listenPort) {
+	TorrentMessage msg(Port);
+	msg.addInt32(listenPort);
+	socket->write(msg.getMessage());
 }
