@@ -10,7 +10,7 @@ TorrentMessage::TorrentMessage(Type type) {
 
 QByteArray& TorrentMessage::getMessage() {
 	int len = m_data.size() - 4;
-	for(int i = 0; i < 4; i++) {
+	for(int i = 3; i >= 0; i--) {
 		m_data[i] = (unsigned char)(len % 256);
 		len /= 256;
 	}
@@ -22,9 +22,13 @@ void TorrentMessage::addByte(unsigned char value) {
 }
 
 void TorrentMessage::addInt32(qint32 value) {
-	for(int i = 0; i < 4; i++) {
-		m_data.push_back((unsigned char)(value % 256));
+	unsigned char bytes[4];
+	for(int i = 3; i >= 0; i--) {
+		bytes[i] = (unsigned char)(value % 256);
 		value /= 256;
+	}
+	for(int i = 0; i < 4; i++) {
+		m_data.push_back(bytes[i]);
 	}
 }
 
