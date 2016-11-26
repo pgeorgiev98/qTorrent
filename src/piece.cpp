@@ -2,7 +2,11 @@
 #include "block.h"
 #include "torrent.h"
 #include "torrentinfo.h"
+#include "peer.h"
+#include "torrentclient.h"
+#include "torrentmessage.h"
 #include <QCryptographicHash>
+#include <QTcpSocket>
 #include <QDebug>
 
 Piece::Piece(Torrent* torrent, int pieceNumber, int size) :
@@ -129,6 +133,12 @@ void Piece::updateInfo() {
 			m_downloading = false;
 			m_torrent->addToBytesDownloaded(m_size);
 			unloadFromMemory();
+
+			// Send 'have' messages to all peers
+			for(auto peer : m_torrent->peers()) {
+				QTcpSocket* socket = peer->torrentClient()->socket();
+				TorrentMessage::have(socket, m_pieceNumber);
+			}
 		}
 	}
 }
