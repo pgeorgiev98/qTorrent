@@ -80,14 +80,16 @@ void TrackerClient::httpFinished() {
 	// Check for errors
 	if(m_reply->error()) {
 		qDebug() << "Error in httpFinished():" << m_reply->errorString();
+		failedToConnect();
+		return;
+	}
 
-		// Get HTTP status code
-		QVariant statusCodeVariant = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-		if(statusCodeVariant.isValid()) {
-			int statusCode = statusCodeVariant.toInt();
-			if(statusCode == 200) {
-				// What??
-			} else if(statusCode == 301) {
+	// Get HTTP status code
+	QVariant statusCodeVariant = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+	if(statusCodeVariant.isValid()) {
+		int statusCode = statusCodeVariant.toInt();
+		if(statusCode != 200) {
+			if(statusCode == 301) {
 				// Moved permanently
 				qDebug() << "Moved Permanently";
 				QUrl redirectUrl = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
@@ -105,9 +107,9 @@ void TrackerClient::httpFinished() {
 				QString reason = m_reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
 				qDebug() << "Error: Status code" << statusCode << ":" << reason;
 			}
+			failedToConnect();
+			return;
 		}
-		failedToConnect();
-		return;
 	}
 
 	QTextStream err(stderr);
