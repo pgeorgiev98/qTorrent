@@ -5,6 +5,7 @@
 #include "peer.h"
 #include "torrentclient.h"
 #include "torrentmessage.h"
+#include "trackerclient.h"
 #include <QCryptographicHash>
 #include <QTcpSocket>
 #include <QDebug>
@@ -138,6 +139,11 @@ void Piece::updateInfo() {
 			for(auto peer : m_torrent->peers()) {
 				QTcpSocket* socket = peer->torrentClient()->socket();
 				TorrentMessage::have(socket, m_pieceNumber);
+			}
+
+			if(totalPieces == downloadedPieces) {
+				// Torrent has benn fully downloaded
+				m_torrent->trackerClient()->announce(TrackerClient::Event::Completed);
 			}
 		}
 	}
