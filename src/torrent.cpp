@@ -118,7 +118,7 @@ Block* Torrent::requestBlock(TorrentClient *client, int size) {
 		for(auto peer : m_peers) {
 			TorrentClient* client = peer->torrentClient();
 			if(client->timedOut()) {
-				for(auto bl : client->waitingForBlocks()) {
+				for(auto bl : client->blocksQueue()) {
 					if(client->peer()->bitfield()[bl->piece()->pieceNumber()]) {
 						block = bl;
 						block->addAssignee(client);

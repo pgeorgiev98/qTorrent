@@ -24,7 +24,7 @@ public:
 	QTcpSocket* socket();
 	Peer* peer();
 	bool timedOut();
-	QList<Block*>& waitingForBlocks();
+	QList<Block*>& blocksQueue();
 	void cancelBlock(Block* block);
 public slots:
 	void connected();
@@ -40,7 +40,7 @@ private:
 	QByteArray m_receivedData;
 	Status m_status;
 
-	QList<Block*> m_waitingForBlocks;
+	QList<Block*> m_blocksQueue;
 
 	bool m_amChoking;
 	bool m_amInterested;

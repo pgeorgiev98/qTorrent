@@ -35,7 +35,7 @@ TorrentClient::TorrentClient(Peer* peer) :
 	}
 	m_peer->bitfield() = bitfield;
 	m_status = Created;
-	m_waitingForBlocks.clear();
+	m_blocksQueue.clear();
 	m_timedOut = false;
 
 	// Connection events
@@ -66,8 +66,8 @@ bool TorrentClient::timedOut() {
 	return m_timedOut;
 }
 
-QList<Block*>& TorrentClient::waitingForBlocks() {
-	return m_waitingForBlocks;
+QList<Block*>& TorrentClient::blocksQueue() {
+	return m_blocksQueue;
 }
 
 void TorrentClient::connectToPeer() {
@@ -82,7 +82,7 @@ void TorrentClient::connected() {
 	m_amInterested = false;
 	m_peerChoking = true;
 	m_peerInterested = false;
-	m_waitingForBlocks.clear();
+	m_blocksQueue.clear();
 	m_receivedData.clear();
 	m_timedOut = false;
 	qDebug() << "Connected to" << m_peer->address() << ":" << m_peer->port();
@@ -127,7 +127,7 @@ void TorrentClient::readyRead() {
 			m_socket->write(message);
 			qDebug() << "interested in" << m_socket->peerAddress().toString();
 		} else if(!m_peerChoking) {
-			while(m_waitingForBlocks.size() < BLOCKS_TO_REQUEST) {
+			while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
 				if(!requestPiece()) {
 					break;
 				}
@@ -143,11 +143,11 @@ void TorrentClient::readyRead() {
 void TorrentClient::finished() {
 	m_handshakeTimeoutTimer.stop();
 	m_replyTimeoutTimer.stop();
-	for(auto block : m_waitingForBlocks) {
+	for(auto block : m_blocksQueue) {
 		block->piece()->deleteBlock(block);
 	}
 	m_status = Created;
-	m_waitingForBlocks.clear();
+	m_blocksQueue.clear();
 	qDebug() << "Connection to" << m_peer->address() << ":" << m_peer->port() << "closed:" << m_socket->errorString();
 }
 
@@ -223,7 +223,7 @@ bool TorrentClient::requestPiece() {
 	//qDebug() << "sending request to" << m_socket->peerAddress().toString() << "index:" << index << "begin:" << begin << "length:" << length;
 	m_socket->write(message);
 	m_replyTimeoutTimer.start();
-	m_waitingForBlocks.push_back(block);
+	m_blocksQueue.push_back(block);
 	return true;
 }
 
@@ -325,13 +325,13 @@ bool TorrentClient::readPeerMessage() {
 			begin += (unsigned char)m_receivedData[i++];
 		}
 		//out << "piece index: " << index << " begin: " << begin << " length: " << blockLength << endl;
-		if(m_waitingForBlocks.isEmpty()) {
+		if(m_blocksQueue.isEmpty()) {
 			out << "Error: was not waiting for block, but received piece!" << endl;
 			break;
 		}
 		Block* block = nullptr;
 		int blockIndex = 0;
-		for(auto b : m_waitingForBlocks) {
+		for(auto b : m_blocksQueue) {
 			if(b->piece()->pieceNumber() == index &&
 					b->begin() == begin &&
 					b->size() == blockLength) {
@@ -348,7 +348,7 @@ bool TorrentClient::readPeerMessage() {
 		m_timedOut = false;
 		const char* blockData = m_receivedData.data() + i;
 		block->setData(this, blockData);
-		m_waitingForBlocks.removeAt(blockIndex);
+		m_blocksQueue.removeAt(blockIndex);
 		break;
 	}
 	case 8: // cancel
