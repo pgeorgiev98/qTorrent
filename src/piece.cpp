@@ -3,7 +3,6 @@
 #include "torrent.h"
 #include "torrentinfo.h"
 #include "peer.h"
-#include "torrentclient.h"
 #include "torrentmessage.h"
 #include "trackerclient.h"
 #include <QCryptographicHash>
@@ -137,8 +136,7 @@ void Piece::updateInfo() {
 
 			// Send 'have' messages to all peers
 			for(auto peer : m_torrent->peers()) {
-				QTcpSocket* socket = peer->torrentClient()->socket();
-				TorrentMessage::have(socket, m_pieceNumber);
+				TorrentMessage::have(peer->socket(), m_pieceNumber);
 			}
 
 			if(totalPieces == downloadedPieces) {

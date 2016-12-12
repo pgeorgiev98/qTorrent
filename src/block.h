@@ -5,7 +5,7 @@
 #include <QList>
 
 class Piece;
-class TorrentClient;
+class Peer;
 
 class Block {
 	Piece* m_piece;
@@ -15,7 +15,7 @@ class Block {
 
 	/* The peers to which this Block is
 	 * assigned to be downloaded from. */
-	QList<TorrentClient*> m_assignees;
+	QList<Peer*> m_assignees;
 public:
 	Block(Piece* piece, int begin, int size);
 	~Block();
@@ -24,13 +24,13 @@ public:
 	int size() const;
 	bool downloaded();
 	void setDownloaded(bool downloaded);
-	void setData(const TorrentClient* peer, const char* data);
+	void setData(const Peer* peer, const char* data);
 
 	/* Assignee operations */
-	void addAssignee(TorrentClient* peer);
-	void removeAssignee(TorrentClient* peer);
+	void addAssignee(Peer* peer);
+	void removeAssignee(Peer* peer);
 	void clearAssignees();
-	QList<TorrentClient*>& assignees();
+	QList<Peer*>& assignees();
 };
 
 #endif // BLOCK_H

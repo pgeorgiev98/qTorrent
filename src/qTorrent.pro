@@ -13,7 +13,6 @@ SOURCES += main.cpp \
     bencodevalue.cpp \
     torrentinfo.cpp \
     trackerclient.cpp \
-    torrentclient.cpp \
     qtorrent.cpp \
     torrent.cpp \
     peer.cpp \
@@ -26,7 +25,6 @@ HEADERS += \
     bencodevalue.h \
     torrentinfo.h \
     trackerclient.h \
-    torrentclient.h \
     qtorrent.h \
     torrent.h \
     peer.h \

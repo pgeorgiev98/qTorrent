@@ -2,7 +2,6 @@
 #include "torrent.h"
 #include "peer.h"
 #include "trackerclient.h"
-#include "torrentclient.h"
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>

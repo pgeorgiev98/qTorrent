@@ -8,7 +8,6 @@ class QTorrent;
 class Peer;
 class TorrentInfo;
 class TrackerClient;
-class TorrentClient;
 class Piece;
 class Block;
 class QFile;
@@ -24,7 +23,7 @@ public:
 	QList<Peer*>& peers();
 	TorrentInfo* torrentInfo();
 	TrackerClient* trackerClient();
-	Block* requestBlock(TorrentClient* client, int size);
+	Block* requestBlock(Peer* client, int size);
 	bool savePiece(int pieceNumber);
 	int downloadedPieces();
 	qint64 bytesDownloaded();

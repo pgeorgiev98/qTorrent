@@ -1,6 +1,6 @@
 #include "block.h"
 #include "piece.h"
-#include "torrentclient.h"
+#include "peer.h"
 #include <QDebug>
 
 Block::Block(Piece* piece, int begin, int size) :
@@ -34,7 +34,7 @@ void Block::setDownloaded(bool downloaded) {
 	m_downloaded = downloaded;
 }
 
-void Block::setData(const TorrentClient* peer, const char* data) {
+void Block::setData(const Peer* peer, const char* data) {
 	if(downloaded()) {
 		return;
 	}
@@ -56,11 +56,11 @@ void Block::setData(const TorrentClient* peer, const char* data) {
 
 /* Assignee operations */
 
-void Block::addAssignee(TorrentClient *peer) {
+void Block::addAssignee(Peer *peer) {
 	m_assignees.push_back(peer);
 }
 
-void Block::removeAssignee(TorrentClient *peer) {
+void Block::removeAssignee(Peer *peer) {
 	for(int i = m_assignees.size() - 1; i >= 0; i--) {
 		if(m_assignees[i] == peer) {
 			m_assignees.removeAt(i);
@@ -72,6 +72,6 @@ void Block::clearAssignees() {
 	m_assignees.clear();
 }
 
-QList<TorrentClient*>& Block::assignees() {
+QList<Peer*>& Block::assignees() {
 	return m_assignees;
 }

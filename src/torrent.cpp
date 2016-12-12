@@ -1,7 +1,6 @@
 #include "torrent.h"
 #include "peer.h"
 #include "torrentinfo.h"
-#include "torrentclient.h"
 #include "trackerclient.h"
 #include "piece.h"
 #include "block.h"
@@ -96,19 +95,19 @@ Peer* Torrent::addPeer(const QByteArray &address, int port) {
 			return nullptr;
 		}
 	}
-	Peer* peer = new Peer(this, address, port);
+	Peer* peer = new Peer(this, Peer::Server, address, port);
 	m_peers.push_back(peer);
 	return peer;
 }
 
-Block* Torrent::requestBlock(TorrentClient *client, int size) {
+Block* Torrent::requestBlock(Peer *peer, int size) {
 	Block* block = nullptr;
 	for(int i = 0; i < m_pieces.size(); i++) {
 		auto piece = m_pieces[i];
-		if(client->peer()->bitfield()[i] && !piece->downloaded()) {
+		if(peer->bitfield()[i] && !piece->downloaded()) {
 			block = piece->requestBlock(size);
 			if(block != nullptr) {
-				block->addAssignee(client);
+				block->addAssignee(peer);
 				break;
 			}
 		}
@@ -116,12 +115,11 @@ Block* Torrent::requestBlock(TorrentClient *client, int size) {
 
 	if(block == nullptr) {
 		for(auto peer : m_peers) {
-			TorrentClient* client = peer->torrentClient();
-			if(client->timedOut()) {
-				for(auto bl : client->blocksQueue()) {
-					if(client->peer()->bitfield()[bl->piece()->pieceNumber()]) {
+			if(peer->timedOut()) {
+				for(auto bl : peer->blocksQueue()) {
+					if(peer->bitfield()[bl->piece()->pieceNumber()]) {
 						block = bl;
-						block->addAssignee(client);
+						block->addAssignee(peer);
 						break;
 					}
 				}
