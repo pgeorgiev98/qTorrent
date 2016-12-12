@@ -266,11 +266,15 @@ bool Peer::readPeerMessage() {
 			qDebug() << "Error: received unrequested block from peer" << addressPort()
 					 << ". Block(" << index << begin << blockLength << ")";
 		} else {
-			m_replyTimeoutTimer.stop();
 			m_timedOut = false;
 			const char* blockData = m_receivedDataBuffer.data() + i;
 			block->setData(this, blockData);
 			m_blocksQueue.removeAt(blockIndex);
+			if(m_blocksQueue.isEmpty()) {
+				m_replyTimeoutTimer.stop();
+			} else {
+				m_replyTimeoutTimer.start();
+			}
 		}
 		break;
 	}
