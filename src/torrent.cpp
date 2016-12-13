@@ -114,9 +114,9 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 	}
 
 	if(block == nullptr) {
-		for(auto peer : m_peers) {
-			if(peer->timedOut()) {
-				for(auto bl : peer->blocksQueue()) {
+		for(auto p : m_peers) {
+			if(p->timedOut()) {
+				for(auto bl : p->blocksQueue()) {
 					if(peer->bitfield()[bl->piece()->pieceNumber()]) {
 						block = bl;
 						block->addAssignee(peer);
