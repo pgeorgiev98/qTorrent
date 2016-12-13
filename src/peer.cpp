@@ -353,7 +353,21 @@ void Peer::finished() {
 	m_handshakeTimeoutTimer.stop();
 	m_replyTimeoutTimer.stop();
 	for(auto block : m_blocksQueue) {
-		block->piece()->deleteBlock(block);
+		// Check if other peers have requested this block
+		bool othersHaveBlock = false;
+		for(Peer* peer : m_torrent->peers()) {
+			if(peer == this) {
+				continue;
+			}
+			if(peer->blocksQueue().contains(block)) {
+				othersHaveBlock = true;
+				break;
+			}
+		}
+		// Delete block if nobody has requested it
+		if(!othersHaveBlock) {
+			block->piece()->deleteBlock(block);
+		}
 	}
 	m_status = Created;
 	m_blocksQueue.clear();
