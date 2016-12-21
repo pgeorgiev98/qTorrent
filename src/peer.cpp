@@ -288,6 +288,9 @@ bool Peer::readPeerMessage() {
 		// TODO
 		break;
 	}
+	default:
+		qDebug() << "Error: Received unknown message with id =" << messageId << " and length =" << length << "from" << addressPort();
+		disconnect();
 	}
 	m_receivedDataBuffer.remove(0, 4 + length);
 	return true;
