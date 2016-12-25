@@ -102,9 +102,21 @@ private:
 	/* Reads all peer messages in the buffer */
 	bool readPeerMessage();
 
+	/* Connects all needed SIGNALs (from m_socket and for the timeouts) to the public slots */
+	void connectAll();
+
+	/* Creates the bitfield array and initializes it */
+	void initBitfield();
+
+	/* Initializes/Reinitializes connection with client */
+	void initClient();
+
+	/* Initializes/Reinitializes connection with server */
+	void initServer(Torrent* torrent, const QByteArray& address, int port);
+
 public:
 	/* Constructor and destructor */
-	Peer(Torrent* torrent, PeerType peerType, const QByteArray& address, int port);
+	Peer(PeerType peerType);
 	~Peer();
 
 	/* Attempt to connect to the peer */
@@ -119,6 +131,12 @@ public:
 
 	/* Drops the connection */
 	void disconnect();
+
+	/* Returns a newly-created peer object with peerType = Client (He downloads from us) */
+	static Peer* createClient(); // TODO
+
+	/* Returns a newly-created peer object with peerType = Server (We download from him) */
+	static Peer* createServer(Torrent* torrent, const QByteArray& address, int port);
 
 public slots:
 	void connected();

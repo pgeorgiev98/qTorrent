@@ -95,7 +95,7 @@ Peer* Torrent::addPeer(const QByteArray &address, int port) {
 			return nullptr;
 		}
 	}
-	Peer* peer = new Peer(this, Peer::Server, address, port);
+	Peer* peer = Peer::createServer(this, address, port);
 	m_peers.push_back(peer);
 	return peer;
 }

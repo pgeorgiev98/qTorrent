@@ -13,35 +13,14 @@ const int REPLY_TIMEOUT_MSEC = 5000;
 const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 const int BLOCKS_TO_REQUEST = 5;
 
-Peer::Peer(Torrent* torrent, PeerType peerType, const QByteArray &address, int port) :
-	m_torrent(torrent),
-	m_address(address),
-	m_port(port),
+Peer::Peer(PeerType peerType) :
+	m_torrent(nullptr),
+	m_bitfield(nullptr),
+	m_status(Created),
 	m_peerType(peerType),
-	m_socket(new QTcpSocket)
-{
-	int bitfieldSize = m_torrent->torrentInfo()->bitfieldSize();
-	m_bitfield = new bool[bitfieldSize*8];
-	for(int i = 0; i < bitfieldSize*8; i++) {
-		m_bitfield[i] = false;
-	}
+	m_socket(new QTcpSocket) {
 
-	m_status = Created;
-	m_blocksQueue.clear();
-	m_timedOut = false;
-
-	// Connection events
-	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
-	connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
-	connect(m_socket, SIGNAL(disconnected()), this, SLOT(finished()));
-
-	// Timeout callbacks
-	connect(&m_replyTimeoutTimer, SIGNAL(timeout()), this, SLOT(replyTimeout()));
-	connect(&m_handshakeTimeoutTimer, SIGNAL(timeout()), this, SLOT(handshakeTimeout()));
-
-	// Timeout intervals
-	m_replyTimeoutTimer.setInterval(REPLY_TIMEOUT_MSEC);
-	m_handshakeTimeoutTimer.setInterval(HANDSHAKE_TIMEOUT_MSEC);
+	connectAll();
 }
 
 Peer::~Peer() {
@@ -114,6 +93,17 @@ void Peer::disconnect() {
 	qDebug() << "Disconnecting from" << addressPort();
 	m_socket->close();
 	// The finished() slot should be called automatically
+}
+
+Peer* Peer::createClient() {
+	// TODO
+	return nullptr;
+}
+
+Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) {
+	Peer* peer = new Peer(Server);
+	peer->initServer(torrent, address, port);
+	return peer;
 }
 
 
@@ -283,6 +273,50 @@ bool Peer::readPeerMessage() {
 	}
 	m_receivedDataBuffer.remove(0, 4 + length);
 	return true;
+}
+
+void Peer::connectAll() {
+	// Connection events
+	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
+	connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+	connect(m_socket, SIGNAL(disconnected()), this, SLOT(finished()));
+
+	// Timeout callbacks
+	connect(&m_replyTimeoutTimer, SIGNAL(timeout()), this, SLOT(replyTimeout()));
+	connect(&m_handshakeTimeoutTimer, SIGNAL(timeout()), this, SLOT(handshakeTimeout()));
+
+	// Timeout intervals
+	m_replyTimeoutTimer.setInterval(REPLY_TIMEOUT_MSEC);
+	m_handshakeTimeoutTimer.setInterval(HANDSHAKE_TIMEOUT_MSEC);
+}
+
+void Peer::initBitfield() {
+	int bitfieldSize = m_torrent->torrentInfo()->bitfieldSize();
+	m_bitfield = new bool[bitfieldSize*8];
+	for(int i = 0; i < bitfieldSize*8; i++) {
+		m_bitfield[i] = false;
+	}
+}
+
+void Peer::initClient() {
+	// TODO
+}
+
+void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
+	m_torrent = torrent;
+	m_address = address;
+	m_port = port;
+	initBitfield();
+	m_status = Created;
+	m_amChoking = true;
+	m_amInterested = false;
+	m_peerChoking = true;
+	m_peerInterested = false;
+	m_receivedDataBuffer.clear();
+	m_replyTimeoutTimer.stop();
+	m_handshakeTimeoutTimer.stop();
+	m_timedOut = false;
+	m_blocksQueue.clear();
 }
 
 /* Slots */
