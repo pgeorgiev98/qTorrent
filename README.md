@@ -13,14 +13,23 @@ The goal for qTorrent is to be able to work on all major desktop operating syste
 
 You can build qTorrent with:
 
-	# cd to build directory (it could be anywhere)
-	cd /tmp
-	mkdir qTorrent-build
+	# Create build directory (name and path don't matter)
+	mkdir /tmp/qTorrent-build
 	cd $_
-	qmake -qt=5 /path/to/qTorrent/src/qTorrent.pro
+
+	# To create a release build
+	qmake /path/to/qTorrent/src/qTorrent.pro
+
+	# ... or debug build
+	qmake /path/to/qTorrent/src/qTorrent.pro CONFIG+=debug
+
 	make -j5
 	# The '-j5' means "Use up to 5 threads to build"
 	# which speeds up things quite a bit
+
+	# Make sure you're using the propper Qt5 version of qmake
+	# On some systems (ex. Gentoo) you may need to add the '-qt=5'
+	# option to the qmake command.
 
 ## Usage
 
