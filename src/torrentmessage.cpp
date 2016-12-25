@@ -71,7 +71,7 @@ void TorrentMessage::have(QAbstractSocket* socket, int pieceIndex) {
 	socket->write(msg.getMessage());
 }
 
-void TorrentMessage::bitfield(QAbstractSocket *socket, const QList<bool> &bitfield) {
+void TorrentMessage::bitfield(QAbstractSocket *socket, const QVector<bool> &bitfield) {
 	TorrentMessage msg(Bitfield);
 	for(int i = 0; i < bitfield.size(); ) {
 		unsigned char byte = 0;

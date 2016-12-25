@@ -55,6 +55,7 @@ public:
 	QByteArray infoHashPercentEncoded() const;
 
 	int numberOfPieces() const;
+	int bitfieldSize() const;
 
 	TorrentInfo();
 	~TorrentInfo();

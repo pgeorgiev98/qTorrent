@@ -189,6 +189,14 @@ int TorrentInfo::numberOfPieces() const {
 	return m_numberOfPieces;
 }
 
+int TorrentInfo::bitfieldSize() const {
+	int size = m_numberOfPieces/8;
+	if(m_numberOfPieces % 8 != 0) {
+		size++;
+	}
+	return size;
+}
+
 
 const QDateTime* TorrentInfo::creationDate() const {
 	return m_creationDate;

@@ -35,11 +35,9 @@ public:
 
 	/* Getter functions */
 	Torrent* torrent();
-	QString addressPort();
 
 	QByteArray& address();
 	int port();
-	int bitfieldSize();
 	bool* bitfield();
 	QByteArray& protocol();
 	QByteArray& reserved();
@@ -57,13 +55,15 @@ public:
 	bool timedOut();
 	QList<Block*>& blocksQueue();
 
+	QString addressPort();
+	bool hasPiece(int index);
+
 private:
 	Torrent* m_torrent;
 
 	/* Peer-specific information */
 	QByteArray m_address;
 	int m_port;
-	int m_bitfieldSize;
 	bool* m_bitfield;
 	QByteArray m_protocol;
 	QByteArray m_reserved;

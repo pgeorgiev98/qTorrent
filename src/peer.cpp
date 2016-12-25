@@ -20,23 +20,11 @@ Peer::Peer(Torrent* torrent, PeerType peerType, const QByteArray &address, int p
 	m_peerType(peerType),
 	m_socket(new QTcpSocket)
 {
-	auto torrentInfo = m_torrent->torrentInfo();
-	qint64 torrentLength = torrentInfo->length();
-	qint64 pieceLength = torrentInfo->pieceLength();
-	int bitfieldSize = torrentLength/pieceLength;
-	if(torrentLength%pieceLength != 0) {
-		bitfieldSize++;
+	int bitfieldSize = m_torrent->torrentInfo()->bitfieldSize();
+	m_bitfield = new bool[bitfieldSize*8];
+	for(int i = 0; i < bitfieldSize*8; i++) {
+		m_bitfield[i] = false;
 	}
-	if(bitfieldSize%8 != 0) {
-		bitfieldSize += 8 - bitfieldSize%8;
-	}
-	m_bitfieldSize = bitfieldSize;
-
-	bool* bitfield = new bool[bitfieldSize];
-	for(int i = 0; i < bitfieldSize; i++) {
-		bitfield[i] = false;
-	}
-	m_bitfield = bitfield;
 
 	m_status = Created;
 	m_blocksQueue.clear();
@@ -219,8 +207,9 @@ bool Peer::readPeerMessage() {
 	case TorrentMessage::Bitfield:
 	{
 		int bitfieldSize = length - 1;
-		if(bitfieldSize * 8 != m_bitfieldSize) {
-			qDebug() << "Error: Peer" << addressPort() << "sent bitfield of wrong size:" << bitfieldSize*8 << "expected" << m_bitfieldSize;
+		if(bitfieldSize != m_torrent->torrentInfo()->bitfieldSize()) {
+			qDebug() << "Error: Peer" << addressPort() << "sent bitfield of wrong size:" << bitfieldSize*8
+					 << "expected" << m_torrent->torrentInfo()->bitfieldSize();
 		} else {
 			for(int j = 0; j < bitfieldSize; j++) {
 				unsigned char byte = m_receivedDataBuffer[i++];
@@ -394,20 +383,12 @@ Torrent* Peer::torrent() {
 	return m_torrent;
 }
 
-QString Peer::addressPort() {
-	return QString(m_address) + ":" + QString::number(m_port);
-}
-
 QByteArray& Peer::address() {
 	return m_address;
 }
 
 int Peer::port() {
 	return m_port;
-}
-
-int Peer::bitfieldSize() {
-	return m_bitfieldSize;
 }
 
 bool* Peer::bitfield() {
@@ -464,4 +445,12 @@ bool Peer::timedOut() {
 
 QList<Block*>& Peer::blocksQueue() {
 	return m_blocksQueue;
+}
+
+QString Peer::addressPort() {
+	return QString(m_address) + ":" + QString::number(m_port);
+}
+
+bool Peer::hasPiece(int index) {
+	return m_bitfield[index];
 }

@@ -104,20 +104,24 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 	Block* block = nullptr;
 	for(int i = 0; i < m_pieces.size(); i++) {
 		auto piece = m_pieces[i];
-		if(peer->bitfield()[i] && !piece->downloaded()) {
-			block = piece->requestBlock(size);
-			if(block != nullptr) {
-				block->addAssignee(peer);
-				break;
+		if(!piece->downloaded()) {
+			if(peer->hasPiece(i)) {
+				block = piece->requestBlock(size);
+				if(block != nullptr) {
+					block->addAssignee(peer);
+					break;
+				}
 			}
 		}
 	}
 
+	// No unrequested blocks, try to find some timed-out blocks
 	if(block == nullptr) {
 		for(auto p : m_peers) {
 			if(p->timedOut()) {
 				for(auto bl : p->blocksQueue()) {
-					if(peer->bitfield()[bl->piece()->pieceNumber()]) {
+					int pieceIndex = bl->piece()->pieceNumber();
+					if(peer->hasPiece(pieceIndex)) {
 						block = bl;
 						block->addAssignee(peer);
 						break;

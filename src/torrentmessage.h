@@ -2,7 +2,7 @@
 #define TORRENTMESSAGE_H
 
 #include <QByteArray>
-#include <QList>
+#include <QVector>
 
 class QAbstractSocket;
 
@@ -31,7 +31,7 @@ public:
 	static void interested(QAbstractSocket* socket);
 	static void notInterested(QAbstractSocket* socket);
 	static void have(QAbstractSocket* socket, int pieceIndex);
-	static void bitfield(QAbstractSocket* socket, const QList<bool>& bitfield);
+	static void bitfield(QAbstractSocket* socket, const QVector<bool>& bitfield);
 	static void request(QAbstractSocket* socket, int index, int begin, int length);
 	static void piece(QAbstractSocket* socket, int index, int begin, const QByteArray& block);
 	static void cancel(QAbstractSocket* socket, int index, int begin, int length);
