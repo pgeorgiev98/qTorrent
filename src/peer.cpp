@@ -12,6 +12,7 @@ const int BLOCK_REQUEST_SIZE = 16384;
 const int REPLY_TIMEOUT_MSEC = 5000;
 const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 const int BLOCKS_TO_REQUEST = 5;
+const int MAX_MESSAGE_LENGTH = 65536;
 
 Peer::Peer(PeerType peerType) :
 	m_torrent(nullptr),
@@ -36,10 +37,11 @@ void Peer::startConnection() {
 		qDebug() << "Error in Peer::startConnection(): called on Client Peer";
 		return;
 	}
-	if(m_status != Created) {
+	if(m_socket->isOpen()) {
 		// Already connected/connecting
-		qDebug() << "Error in Peer::startConnection(): called m_status ==" << m_status
-				 << "Socket.isOpen() " << m_socket->isOpen();
+		qDebug() << "Error in Peer::startConnection(): Socket is open; m_status ==" << m_status;
+		fatalError();
+		return;
 	}
 	m_status = Connecting;
 	qDebug() << "Connecting to" << addressPort();
@@ -95,6 +97,12 @@ void Peer::disconnect() {
 	// The finished() slot should be called automatically
 }
 
+void Peer::fatalError() {
+	qDebug() << "Fatal error with" << addressPort() << "; Dropping connection";
+	m_status = Error;
+	m_socket->close();
+}
+
 Peer* Peer::createClient() {
 	// TODO
 	return nullptr;
@@ -107,7 +115,9 @@ Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) 
 }
 
 
-bool Peer::readHandshakeReply() {
+bool Peer::readHandshakeReply(bool *ok) {
+	*ok = true;
+
 	if(m_receivedDataBuffer.isEmpty()) {
 		return false;
 	}
@@ -116,6 +126,7 @@ bool Peer::readHandshakeReply() {
 	if(m_receivedDataBuffer.size() < 49 + protocolLength) {
 		return false;
 	}
+
 	for(int j = 0; j < protocolLength; j++) {
 		m_protocol.push_back(m_receivedDataBuffer[i++]);
 	}
@@ -129,10 +140,19 @@ bool Peer::readHandshakeReply() {
 		m_peerId.push_back(m_receivedDataBuffer[i++]);
 	}
 	m_receivedDataBuffer.remove(0, 49 + protocolLength);
+
+	if(m_infoHash != m_torrent->torrentInfo()->infoHash()) {
+		// Info hash does not match the expected one
+		qDebug() << "Info hash does not match expected one from peer" << addressPort();
+		*ok = false;
+		return false;
+	}
 	return true;
 }
 
-bool Peer::readPeerMessage() {
+bool Peer::readPeerMessage(bool* ok) {
+	*ok = true;
+
 	// Smallest message (keep-alive) has a size of 4
 	if(m_receivedDataBuffer.size() < 4) {
 		return false;
@@ -146,6 +166,11 @@ bool Peer::readPeerMessage() {
 	for(int j = 0; j < 4; j++) {
 		length *= 256;
 		length += (unsigned char)m_receivedDataBuffer[i++];
+	}
+
+	if(length > MAX_MESSAGE_LENGTH || length < 0) {
+		*ok = false;
+		return false;
 	}
 
 	if(length == 0) { // keep-alive
@@ -200,6 +225,8 @@ bool Peer::readPeerMessage() {
 		if(bitfieldSize != m_torrent->torrentInfo()->bitfieldSize()) {
 			qDebug() << "Error: Peer" << addressPort() << "sent bitfield of wrong size:" << bitfieldSize*8
 					 << "expected" << m_torrent->torrentInfo()->bitfieldSize();
+			*ok = false;
+			return false;
 		} else {
 			for(int j = 0; j < bitfieldSize; j++) {
 				unsigned char byte = m_receivedDataBuffer[i++];
@@ -268,8 +295,10 @@ bool Peer::readPeerMessage() {
 		break;
 	}
 	default:
-		qDebug() << "Error: Received unknown message with id =" << messageId << " and length =" << length << "from" << addressPort();
-		disconnect();
+		qDebug() << "Error: Received unknown message with id =" << messageId
+				 << " and length =" << length << "from" << addressPort();
+		*ok = false;
+		return false;
 	}
 	m_receivedDataBuffer.remove(0, 4 + length);
 	return true;
@@ -349,7 +378,11 @@ void Peer::readyRead() {
 
 	switch(m_status) {
 	case Handshaking:
-		if(!readHandshakeReply()) {
+		bool ok;
+		if(!readHandshakeReply(&ok)) {
+			if(!ok) {
+				fatalError();
+			}
 			break;
 		}
 		m_handshakeTimeoutTimer.stop();
@@ -357,7 +390,12 @@ void Peer::readyRead() {
 		m_status = ConnectionEstablished;
 		// Fall down
 	case ConnectionEstablished:
-		while(readPeerMessage());
+		while(readPeerMessage(&ok));
+		if(!ok) {
+			fatalError();
+			break;
+		}
+
 		if(!m_amInterested) {
 			m_amInterested = true;
 			TorrentMessage::interested(m_socket);
@@ -395,7 +433,9 @@ void Peer::finished() {
 			block->piece()->deleteBlock(block);
 		}
 	}
-	m_status = Created;
+	if(m_status != Error) {
+		m_status = Disconnected;
+	}
 	m_blocksQueue.clear();
 	qDebug() << "Connection to" << addressPort() << "closed" << m_socket->errorString();
 }

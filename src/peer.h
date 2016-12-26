@@ -24,7 +24,9 @@ public:
 		Created, /* Object was just created. Not connecting to the peer */
 		Connecting, /* Connecting. Waiting for the connected() slot. */
 		Handshaking, /* Connected. In the process of handshaking. */
-		ConnectionEstablished /* Handshaking completed. Exchanging messages */
+		ConnectionEstablished, /* Handshaking completed. Exchanging messages */
+		Disconnected, /* Disconnected from the peer */
+		Error /* An error has occurred */
 	};
 
 	/* The type of this peer */
@@ -96,11 +98,17 @@ private:
 	QList<Block*> m_blocksQueue;
 
 private:
-	/* Try to read handshake reply from the buffer */
-	bool readHandshakeReply();
+	/* Try to read handshake reply from the buffer
+	 * Returns true on successful message parse, false on
+	 * error or incomplete message.
+	 * On error, ok is set to false, otherwise - to true */
+	bool readHandshakeReply(bool* ok);
 
-	/* Reads all peer messages in the buffer */
-	bool readPeerMessage();
+	/* Reads all peer messages in the buffer
+	 * Returns true on successful message parse, false on
+	 * error or incomplete message.
+	 * On error, ok is set to false, otherwise - to true */
+	bool readPeerMessage(bool* ok);
 
 	/* Connects all needed SIGNALs (from m_socket and for the timeouts) to the public slots */
 	void connectAll();
@@ -131,6 +139,9 @@ public:
 
 	/* Drops the connection */
 	void disconnect();
+
+	/* An fatal error has occurred; drops the connection */
+	void fatalError();
 
 	/* Returns a newly-created peer object with peerType = Client (He downloads from us) */
 	static Peer* createClient(); // TODO
