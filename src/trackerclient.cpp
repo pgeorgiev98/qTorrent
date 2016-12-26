@@ -12,17 +12,21 @@
 TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
 	m_torrent(torrent),
 	m_torrentInfo(torrentInfo),
+	m_reply(nullptr),
 	m_bytesDownloadedAtStarted(-1),
 	m_bytesUploadedAtStarted(-1),
-	m_urlListCurrentIndex(0)
+	m_reannounceInterval(-1),
+	m_urlListCurrentIndex(0),
+	m_lastEvent(None)
 {
-	connect(&m_updatePeerListTimer, SIGNAL(timeout()), this, SLOT(updatePeerListTimeoutSlot()));
+	connect(&m_reannounceTimer, SIGNAL(timeout()), this, SLOT(reannounce()));
 }
 
 TrackerClient::~TrackerClient() {
 }
 
-void TrackerClient::updatePeerListTimeoutSlot() {
+
+void TrackerClient::reannounce() {
 	announce(Event::None);
 }
 
@@ -68,18 +72,23 @@ void TrackerClient::announce(Event event) {
 	/* TODO: Use non-hardcoded values */
 
 	url.setQuery(query);
+	qDebug() << "Announce" << url.toString();
+
 	QNetworkRequest request(url);
+	m_announceResponse.clear();
 	m_reply = m_accessManager.get(request);
 	connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
 	connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
 }
 
 void TrackerClient::httpFinished() {
+	m_reply->disconnect();
+	m_reply->deleteLater();
 
 	// Check for errors
 	if(m_reply->error()) {
 		qDebug() << "Error in httpFinished():" << m_reply->errorString();
-		failedToConnect();
+		failedToAnnounce();
 		return;
 	}
 
@@ -96,7 +105,7 @@ void TrackerClient::httpFinished() {
 					qDebug() << "Redirect URL is empty";
 				} else {
 					qDebug() << "Redirecting to" << redirectUrl;
-					m_peerListData.clear();
+					m_announceResponse.clear();
 					m_reply = m_accessManager.get(QNetworkRequest(redirectUrl));
 					connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
 					connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
@@ -106,38 +115,37 @@ void TrackerClient::httpFinished() {
 				QString reason = m_reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
 				qDebug() << "Error: Status code" << statusCode << ":" << reason;
 			}
-			failedToConnect();
+			failedToAnnounce();
 			return;
 		}
 	}
 
-	QTextStream err(stderr);
-	Bencode* bencodeParser = new Bencode();
-	if(!bencodeParser->loadFromByteArray(m_peerListData)) {
-		err << "Failed to parse reply: " << bencodeParser->errorString() << endl;
-		err << m_peerListData << endl;
-		failedToConnect();
+	Bencode bencodeParser;
+	if(!bencodeParser.loadFromByteArray(m_announceResponse)) {
+		qDebug() << "Failed to parse reply:" << bencodeParser.errorString();
+		qDebug() << m_announceResponse;
+		failedToAnnounce();
 		return;
 	}
-	const auto& values = bencodeParser->values();
+	const auto& values = bencodeParser.values();
 	if(values.size() != 1) {
-		err << "Bencode must have a size of 1" << endl;
-		failedToConnect();
+		qDebug() << "Bencode must have a size of 1";
+		failedToAnnounce();
 		return;
 	}
 	try {
 		auto mainDict = values[0]->castToEx<BencodeDictionary>();
 
 		// Update interval
-		m_interval = mainDict->valueEx("interval")->castToEx<BencodeInteger>()->value();
-		m_updatePeerListTimer.setInterval(m_interval*1000);
-		m_updatePeerListTimer.start();
+		m_reannounceInterval = mainDict->valueEx("interval")->castToEx<BencodeInteger>()->value();
+		m_reannounceTimer.setInterval(m_reannounceInterval*1000);
+		m_reannounceTimer.start();
 
 		// Peer list
 		QByteArray peersData = mainDict->valueEx("peers")->castToEx<BencodeString>()->value();
 		if(peersData.size() % 6 != 0) {
-			err << "Tracker response parse error: peers string length is not a multiple of 6; length = " << peersData.size() << endl;
-			failedToConnect();
+			qDebug() << "Tracker response parse error: peers string length is not a multiple of 6; length =" << peersData.size();
+			failedToAnnounce();
 			return;
 		}
 		int numberOfPeers = peersData.size() / 6;
@@ -157,28 +165,28 @@ void TrackerClient::httpFinished() {
 			peerPort += (unsigned char)peersData[counter++];
 			peerPort *= 256;
 			peerPort += (unsigned char)peersData[counter++];
-			err << "Peer " << peerIp << ":" << peerPort << endl;
 			Peer* peer = m_torrent->addPeer(peerIp, peerPort);
 			if(peer != nullptr) {
+				qDebug() << "New Peer" << peer->addressPort();
 				peer->startConnection();
 			}
 		}
 		if(m_torrent->peers().isEmpty()) {
-			err << "No peers" << endl;
+			qDebug() << "No peers";
 		}
 	} catch(BencodeException& ex) {
-		err << "Failed to parse: " << ex.what() << endl;
-		err << m_peerListData << endl;
-		failedToConnect();
+		qDebug() << "Failed to parse:" << ex.what();
+		qDebug() << m_announceResponse;
+		failedToAnnounce();
 		return;
 	}
 }
 
 void TrackerClient::httpReadyRead() {
-	m_peerListData.push_back(m_reply->readAll());
+	m_announceResponse.push_back(m_reply->readAll());
 }
 
-void TrackerClient::failedToConnect() {
+void TrackerClient::failedToAnnounce() {
 	auto announceList = m_torrentInfo->announceUrlsList();
 	if(m_urlListCurrentIndex + 1 >= announceList.size()) {
 		qDebug() << "No more backup URLs";
