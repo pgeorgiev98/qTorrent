@@ -3,7 +3,6 @@
 #include "torrent.h"
 #include "torrentinfo.h"
 #include "peer.h"
-#include "torrentmessage.h"
 #include "trackerclient.h"
 #include <QCryptographicHash>
 #include <QTcpSocket>
@@ -121,28 +120,11 @@ void Piece::updateInfo() {
 			m_downloaded = false;
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
-			//qDebug() << "Received piece" << m_pieceNumber << "/" << m_torrent->torrentInfo()->numberOfPieces();
-			int downloadedPieces = m_torrent->downloadedPieces();
-			int totalPieces = m_torrent->torrentInfo()->numberOfPieces();
-			float percentage = downloadedPieces;
-			percentage /= totalPieces;
-			percentage *= 100;
-			qDebug() << "Downloaded pieces" << downloadedPieces << "/" << totalPieces << "|" << percentage << "%";
 			m_torrent->savePiece(m_pieceNumber);
 			m_downloaded = true;
 			m_downloading = false;
-			m_torrent->addToBytesDownloaded(m_size);
 			unloadFromMemory();
-
-			// Send 'have' messages to all peers
-			for(auto peer : m_torrent->peers()) {
-				TorrentMessage::have(peer->socket(), m_pieceNumber);
-			}
-
-			if(totalPieces == downloadedPieces) {
-				// Torrent has benn fully downloaded
-				m_torrent->trackerClient()->announce(TrackerClient::Event::Completed);
-			}
+			m_torrent->downloadedPiece(this);
 		}
 	}
 }

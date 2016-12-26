@@ -4,13 +4,18 @@
 #include "trackerclient.h"
 #include "piece.h"
 #include "block.h"
+#include "torrentmessage.h"
 #include <QDir>
 #include <QFile>
 
 Torrent::Torrent(QTorrent *qTorrent) :
 	m_qTorrent(qTorrent),
 	m_torrentInfo(nullptr),
-	m_trackerClient(nullptr)
+	m_trackerClient(nullptr),
+	m_bytesDownloaded(0),
+	m_bytesUploaded(0),
+	m_downloadedPieces(0),
+	m_downloaded(false)
 {
 }
 
@@ -18,26 +23,31 @@ Torrent::~Torrent() {
 	for(auto peer : m_peers) {
 		delete peer;
 	}
-	if(m_torrentInfo) delete m_torrentInfo;
-	if(m_trackerClient) delete m_trackerClient;
+
+	if(m_torrentInfo) {
+		delete m_torrentInfo;
+	}
+
+	if(m_trackerClient) {
+		delete m_trackerClient;
+	}
 }
 
 bool Torrent::createFromFile(const QString &filename) {
 	m_torrentInfo = new TorrentInfo();
+
+	// Load torrent info from bencoded .torrent file
 	if(!m_torrentInfo->loadTorrentFile(filename)) {
 		qDebug() << "Failed to load torrent file" << m_torrentInfo->errorString();
-		delete m_torrentInfo;
-		m_torrentInfo = nullptr;
 		return false;
 	}
+
+	// Create all files and directories
 	if(!createFileTree(".")) {
 		return false;
 	}
-	TrackerClient* trackerClient = new TrackerClient(this, m_torrentInfo);
-	trackerClient->announce(TrackerClient::Started);
 
-	m_trackerClient = trackerClient;
-
+	// Create pieces
 	if(m_torrentInfo->length() % m_torrentInfo->pieceLength() == 0) {
 		// All pieces are the same size
 		for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
@@ -53,11 +63,17 @@ bool Torrent::createFromFile(const QString &filename) {
 		int lastPieceLength = m_torrentInfo->length() % m_torrentInfo->pieceLength();
 		m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces()-1, lastPieceLength));
 	}
+
+	// Create tracker client
+	m_trackerClient = new TrackerClient(this, m_torrentInfo);
+
+	// Send the first announce to the tracker
+	m_trackerClient->announce(TrackerClient::Started);
+
 	return true;
 }
 
 bool Torrent::createFileTree(const QString &directory) {
-	qDebug() << "Creating file tree for" << m_torrentInfo->torrentName();
 	const auto& files = m_torrentInfo->fileInfos();
 	QDir rootDir(directory);
 	for(auto& f : files) {
@@ -77,15 +93,13 @@ bool Torrent::createFileTree(const QString &directory) {
 			qDebug() << "Failed to open file" << file->errorString();
 			return false;
 		}
-		qDebug() << "file" << file->fileName();
 		if(!file->resize(f.length)) {
-			qDebug() << "Failed to resize" << file->errorString();
+			qDebug() << "Failed to resize file" << file->errorString();
 			return false;
 		}
 		file->close();
 		m_files.push_back(file);
 	}
-	qDebug() << "Successful";
 	return true;
 }
 
@@ -198,15 +212,8 @@ bool Torrent::savePiece(int pieceNumber) {
 	return true;
 }
 
-int Torrent::downloadedPieces() {
-	int ans = 0;
-	for(auto& p : m_pieces) {
-		if(p->downloaded()) {
-			ans++;
-		}
-	}
-	return ans;
-}
+
+/* Getters */
 
 QTorrent* Torrent::qTorrent() {
 	return m_qTorrent;
@@ -224,6 +231,7 @@ TrackerClient* Torrent::trackerClient() {
 	return m_trackerClient;
 }
 
+
 qint64 Torrent::bytesDownloaded() {
 	return m_bytesDownloaded;
 }
@@ -232,10 +240,51 @@ qint64 Torrent::bytesUploaded() {
 	return m_bytesUploaded;
 }
 
-void Torrent::addToBytesDownloaded(qint64 value) {
-	m_bytesDownloaded += value;
+int Torrent::downloadedPieces() {
+	return m_downloadedPieces;
 }
 
-void Torrent::addToBytesUploaded(qint64 value) {
-	m_bytesUploaded += value;
+bool Torrent::downloaded() {
+	return m_downloaded;
+}
+
+
+float Torrent::percentDownloaded() {
+	float percent = m_downloadedPieces;
+	percent /= m_torrentInfo->numberOfPieces();
+	percent *= 100.0f;
+	return percent;
+}
+
+
+/* signals */
+
+void Torrent::downloadedPiece(Piece *piece) {
+	// Increment some counters
+	m_downloadedPieces++;
+	m_bytesDownloaded += piece->size();
+
+	qDebug() << "Downloaded pieces"
+			 << m_downloadedPieces << "/" << m_torrentInfo->numberOfPieces()
+			 << "=" << percentDownloaded() << "%";
+
+	// Send 'have' messages to all peers
+	for(auto peer : m_peers) {
+		TorrentMessage::have(peer->socket(), piece->pieceNumber());
+	}
+
+	// Check if all pieces are downloaded
+	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
+		fullyDownloaded();
+	}
+}
+
+void Torrent::uploadedPiece(Piece *piece) {
+	m_bytesUploaded += piece->size();
+}
+
+void Torrent::fullyDownloaded() {
+	qDebug() << "Torrent fully downloaded!";
+	m_downloaded = true;
+	m_trackerClient->announce(TrackerClient::Completed);
 }
