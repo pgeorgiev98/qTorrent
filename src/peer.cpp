@@ -189,6 +189,12 @@ bool Peer::readPeerMessage(bool* ok) {
 	{
 		qDebug() << addressPort() << ": choke";
 		m_peerChoking = true;
+		for(auto block : m_blocksQueue) {
+			m_torrent->releaseBlock(this, block);
+		}
+		m_blocksQueue.clear();
+		m_replyTimeoutTimer.stop();
+		m_timedOut = false;
 		break;
 	}
 	case TorrentMessage::Unchoke:

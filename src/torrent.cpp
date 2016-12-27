@@ -147,6 +147,14 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 	return block;
 }
 
+void Torrent::releaseBlock(Peer *client, Block *block) {
+	Piece* piece = block->piece();
+	block->removeAssignee(client);
+	if(block->assignees().isEmpty()) {
+		piece->deleteBlock(block);
+	}
+}
+
 bool Torrent::savePiece(int pieceNumber) {
 	int pieceLength = m_torrentInfo->pieceLength();
 	int thisPieceLength = m_pieces[pieceNumber]->size();

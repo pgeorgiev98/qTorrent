@@ -32,6 +32,7 @@ public:
 	Peer* addPeer(const QByteArray& address, int port);
 
 	Block* requestBlock(Peer* client, int size);
+	void releaseBlock(Peer* client, Block* block);
 
 	bool savePiece(int pieceNumber);
 
