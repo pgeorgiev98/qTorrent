@@ -309,7 +309,7 @@ void Torrent::fullyDownloaded() {
 	// Disconnect from peers
 	for(auto peer : m_peers) {
 		peer->disconnect();
-		delete peer;
+		peer->deleteLater();
 	}
 	m_peers.clear();
 }
