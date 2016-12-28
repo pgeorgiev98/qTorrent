@@ -104,13 +104,21 @@ bool Torrent::createFileTree(const QString &directory) {
 }
 
 Peer* Torrent::addPeer(const QByteArray &address, int port) {
+	// Don't add the peer if he's already added
 	for(auto p : m_peers) {
 		if(p->port() == port || p->address() == address) {
 			return nullptr;
 		}
 	}
+
+	// Add the peer
 	Peer* peer = Peer::createServer(this, address, port);
 	m_peers.push_back(peer);
+
+	// Start connecting if torrent isn't downloaded yet
+	if(!m_downloaded) {
+		peer->startConnection();
+	}
 	return peer;
 }
 
@@ -294,5 +302,14 @@ void Torrent::uploadedPiece(Piece *piece) {
 void Torrent::fullyDownloaded() {
 	qDebug() << "Torrent fully downloaded!";
 	m_downloaded = true;
+
+	// Send announce
 	m_trackerClient->announce(TrackerClient::Completed);
+
+	// Disconnect from peers
+	for(auto peer : m_peers) {
+		peer->disconnect();
+		delete peer;
+	}
+	m_peers.clear();
 }

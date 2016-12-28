@@ -165,14 +165,7 @@ void TrackerClient::httpFinished() {
 			peerPort += (unsigned char)peersData[counter++];
 			peerPort *= 256;
 			peerPort += (unsigned char)peersData[counter++];
-			Peer* peer = m_torrent->addPeer(peerIp, peerPort);
-			if(peer != nullptr) {
-				qDebug() << "New Peer" << peer->addressPort();
-				peer->startConnection();
-			}
-		}
-		if(m_torrent->peers().isEmpty()) {
-			qDebug() << "No peers";
+			m_torrent->addPeer(peerIp, peerPort);
 		}
 	} catch(BencodeException& ex) {
 		qDebug() << "Failed to parse:" << ex.what();
