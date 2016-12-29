@@ -9,7 +9,7 @@
 #include <QDebug>
 
 const int BLOCK_REQUEST_SIZE = 16384;
-const int REPLY_TIMEOUT_MSEC = 5000;
+const int REPLY_TIMEOUT_MSEC = 10000;
 const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 const int BLOCKS_TO_REQUEST = 5;
 const int MAX_MESSAGE_LENGTH = 65536;
@@ -156,6 +156,13 @@ void Peer::sendCancel(Block* block) {
 	TorrentMessage::cancel(m_socket, index, begin, length);
 }
 
+void Peer::resendRequest(Block *block) {
+	int index = block->piece()->pieceNumber();
+	int begin = block->begin();
+	int length = block->size();
+	TorrentMessage::request(m_socket, index, begin, length);
+}
+
 bool Peer::requestBlock() {
 	Block* block = m_torrent->requestBlock(this, BLOCK_REQUEST_SIZE);
 	if(block == nullptr) {
@@ -201,6 +208,11 @@ void Peer::sendMessages() {
 	if(!m_amInterested) {
 		sendInterested();
 	} else if(!m_peerChoking) {
+		if(m_timedOut) {
+			for(Block* block : m_blocksQueue) {
+				resendRequest(block);
+			}
+		}
 		while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
 			if(!requestBlock()) {
 				break;
@@ -499,7 +511,7 @@ void Peer::readyRead() {
 		}
 
 		if(messagesReceived) {
-			m_torrent->sendMessages();
+			sendMessages();
 		}
 		break;
 	}
@@ -544,8 +556,8 @@ void Peer::error(QAbstractSocket::SocketError socketError) {
 
 void Peer::replyTimeout() {
 	qDebug() << "Peer" << addressPort() << "took too long to reply";
-	m_replyTimeoutTimer.stop();
 	m_timedOut = true;
+	sendMessages();
 }
 
 void Peer::handshakeTimeout() {

@@ -225,12 +225,6 @@ bool Torrent::savePiece(int pieceNumber) {
 	return true;
 }
 
-void Torrent::sendMessages() {
-	for(auto peer : m_peers) {
-		peer->sendMessages();
-	}
-}
-
 
 /* Getters */
 

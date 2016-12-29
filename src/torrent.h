@@ -36,9 +36,6 @@ public:
 
 	bool savePiece(int pieceNumber);
 
-	/* Calls SendMessages() for all peers */
-	void sendMessages();
-
 	/* Getters */
 
 	QTorrent* qTorrent();
