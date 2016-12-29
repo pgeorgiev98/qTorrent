@@ -46,7 +46,7 @@ void Block::setData(const Peer* peer, const char* data) {
 	setDownloaded(true);
 	for(auto p : m_assignees) {
 		if(p != peer) {
-			p->cancelBlock(this);
+			p->sendCancel(this);
 		}
 	}
 	clearAssignees();

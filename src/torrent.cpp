@@ -130,29 +130,26 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 			if(peer->hasPiece(i)) {
 				block = piece->requestBlock(size);
 				if(block != nullptr) {
-					block->addAssignee(peer);
-					break;
+					return block;
 				}
 			}
 		}
 	}
 
 	// No unrequested blocks, try to find some timed-out blocks
-	if(block == nullptr) {
-		for(auto p : m_peers) {
-			if(p->timedOut()) {
-				for(auto bl : p->blocksQueue()) {
-					int pieceIndex = bl->piece()->pieceNumber();
-					if(peer->hasPiece(pieceIndex)) {
-						block = bl;
-						block->addAssignee(peer);
-						break;
-					}
+	for(auto p : m_peers) {
+		if(p->timedOut()) {
+			for(auto bl : p->blocksQueue()) {
+				int pieceIndex = bl->piece()->pieceNumber();
+				if(peer->hasPiece(pieceIndex)) {
+					return bl;
 				}
 			}
 		}
 	}
-	return block;
+
+	// No blocks
+	return nullptr;
 }
 
 void Torrent::releaseBlock(Peer *client, Block *block) {
@@ -228,6 +225,12 @@ bool Torrent::savePiece(int pieceNumber) {
 	return true;
 }
 
+void Torrent::sendMessages() {
+	for(auto peer : m_peers) {
+		peer->sendMessages();
+	}
+}
+
 
 /* Getters */
 
@@ -286,7 +289,7 @@ void Torrent::downloadedPiece(Piece *piece) {
 
 	// Send 'have' messages to all peers
 	for(auto peer : m_peers) {
-		TorrentMessage::have(peer->socket(), piece->pieceNumber());
+		peer->sendHave(piece->pieceNumber());
 	}
 
 	// Check if all pieces are downloaded

@@ -13,6 +13,7 @@ const int REPLY_TIMEOUT_MSEC = 5000;
 const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 const int BLOCKS_TO_REQUEST = 5;
 const int MAX_MESSAGE_LENGTH = 65536;
+const int RECONNECT_INTERVAL_MSEC = 30000;
 
 Peer::Peer(PeerType peerType) :
 	m_torrent(nullptr),
@@ -39,43 +40,85 @@ void Peer::startConnection() {
 	}
 	if(m_socket->isOpen()) {
 		// Already connected/connecting
-		qDebug() << "Error in Peer::startConnection(): Socket is open; m_status ==" << m_status;
-		fatalError();
-		return;
+		m_socket->close();
 	}
+
+	for(int i = 0; i < m_torrent->torrentInfo()->bitfieldSize() * 8; i++) {
+		m_bitfield[i] = false;
+	}
+	m_protocol.clear();
+	m_reserved.clear();
+	m_infoHash.clear();
+	m_peerId.clear();
+
 	m_status = Connecting;
+	m_amChoking = true;
+	m_amInterested = false;
+	m_peerChoking = true;
+	m_peerInterested = false;
+
+	m_receivedDataBuffer.clear();
+	m_replyTimeoutTimer.stop();
+	m_handshakeTimeoutTimer.stop();
+	m_reconnectTimer.stop();
+
+	m_timedOut = false;
+	m_blocksQueue.clear();
+
 	qDebug() << "Connecting to" << addressPort();
 	m_socket->connectToHost(m_address, m_port);
 }
 
-void Peer::cancelBlock(Block* block) {
-	if(!m_socket->isOpen()) {
-		// Do nothing if the socket is already closed
+void Peer::sendChoke() {
+	if(m_status != ConnectionEstablished) {
 		return;
 	}
-	int	index = block->piece()->pieceNumber();
-	int begin = block->begin();
-	int length = block->size();
-	TorrentMessage::cancel(m_socket, index, begin, length);
+	m_amChoking = true;
+	TorrentMessage::choke(m_socket);
 }
 
-bool Peer::requestBlock() {
-	if(m_peerType == Client) {
-		// Can't request block from a client
-		qDebug() << "Error in Peer:requestBlock(): called on Client Peer";
-		return false;
+void Peer::sendUnchoke() {
+	if(m_status != ConnectionEstablished) {
+		return;
 	}
-	if(!m_socket->isOpen()) {
-		// Do nothing if the socket is closed;
-		return false;
+	m_amChoking = false;
+	TorrentMessage::unchoke(m_socket);
+}
+
+void Peer::sendInterested() {
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+	m_amInterested = true;
+	TorrentMessage::interested(m_socket);
+}
+
+void Peer::sendNotInterested() {
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+	m_amInterested = false;
+	TorrentMessage::notInterested(m_socket);
+}
+
+void Peer::sendHave(int index) {
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+	TorrentMessage::have(m_socket, index);
+}
+
+void Peer::sendBitfield() {
+	// TODO
+}
+
+void Peer::sendRequest(Block* block) {
+	if(m_status != ConnectionEstablished) {
+		return;
 	}
 
-	// Request block from Torrent object
-	Block* block = m_torrent->requestBlock(this, BLOCK_REQUEST_SIZE);
-	if(block == nullptr) {
-		// Torrent object didn't give us a block to request
-		return false;
-	}
+	// Assign this block to yourself
+	block->addAssignee(this);
 
 	// Send request
 	int index = block->piece()->pieceNumber();
@@ -88,13 +131,48 @@ bool Peer::requestBlock() {
 
 	// Insert requested block into the queue
 	m_blocksQueue.push_back(block);
+}
+
+void Peer::sendPiece(int index, int begin, const QByteArray &blockData) {
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+	// TODO
+	TorrentMessage::piece(m_socket, index, begin, blockData);
+}
+
+void Peer::sendCancel(Block* block) {
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+	for(int i = m_blocksQueue.size() - 1; i >= 0; i--) {
+		if(m_blocksQueue[i] == block) {
+			m_blocksQueue.removeAt(i);
+		}
+	}
+	int	index = block->piece()->pieceNumber();
+	int begin = block->begin();
+	int length = block->size();
+	TorrentMessage::cancel(m_socket, index, begin, length);
+}
+
+bool Peer::requestBlock() {
+	Block* block = m_torrent->requestBlock(this, BLOCK_REQUEST_SIZE);
+	if(block == nullptr) {
+		return false;
+	}
+	sendRequest(block);
 	return true;
 }
 
 void Peer::disconnect() {
 	qDebug() << "Disconnecting from" << addressPort();
-	m_socket->close();
-	// The finished() slot should be called automatically
+	if(isConnected()) {
+		m_socket->close();
+		// The finished() slot should be called automatically
+	} else {
+		finished();
+	}
 }
 
 void Peer::fatalError() {
@@ -112,6 +190,23 @@ Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) 
 	Peer* peer = new Peer(Server);
 	peer->initServer(torrent, address, port);
 	return peer;
+}
+
+void Peer::sendMessages() {
+	// Can't do anything if not connected
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+
+	if(!m_amInterested) {
+		sendInterested();
+	} else if(!m_peerChoking) {
+		while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
+			if(!requestBlock()) {
+				break;
+			}
+		}
+	}
 }
 
 
@@ -315,14 +410,17 @@ void Peer::connectAll() {
 	connect(m_socket, SIGNAL(connected()), this, SLOT(connected()));
 	connect(m_socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 	connect(m_socket, SIGNAL(disconnected()), this, SLOT(finished()));
+	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(error(QAbstractSocket::SocketError)));
 
 	// Timeout callbacks
 	connect(&m_replyTimeoutTimer, SIGNAL(timeout()), this, SLOT(replyTimeout()));
 	connect(&m_handshakeTimeoutTimer, SIGNAL(timeout()), this, SLOT(handshakeTimeout()));
+	connect(&m_reconnectTimer, SIGNAL(timeout()), this, SLOT(reconnect()));
 
 	// Timeout intervals
 	m_replyTimeoutTimer.setInterval(REPLY_TIMEOUT_MSEC);
 	m_handshakeTimeoutTimer.setInterval(HANDSHAKE_TIMEOUT_MSEC);
+	m_reconnectTimer.setInterval(RECONNECT_INTERVAL_MSEC);
 }
 
 void Peer::initBitfield() {
@@ -343,15 +441,6 @@ void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
 	m_port = port;
 	initBitfield();
 	m_status = Created;
-	m_amChoking = true;
-	m_amInterested = false;
-	m_peerChoking = true;
-	m_peerInterested = false;
-	m_receivedDataBuffer.clear();
-	m_replyTimeoutTimer.stop();
-	m_handshakeTimeoutTimer.stop();
-	m_timedOut = false;
-	m_blocksQueue.clear();
 }
 
 /* Slots */
@@ -396,23 +485,24 @@ void Peer::readyRead() {
 		m_status = ConnectionEstablished;
 		// Fall down
 	case ConnectionEstablished:
-		while(readPeerMessage(&ok));
+	{
+		// Read messages
+		int messagesReceived = 0;
+		while(readPeerMessage(&ok)) {
+			messagesReceived++;
+		}
+
+		// Check if any errors occured
 		if(!ok) {
 			fatalError();
 			break;
 		}
 
-		if(!m_amInterested) {
-			m_amInterested = true;
-			TorrentMessage::interested(m_socket);
-		} else if(!m_peerChoking) {
-			while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
-				if(!requestBlock()) {
-					break;
-				}
-			}
+		if(messagesReceived) {
+			m_torrent->sendMessages();
 		}
 		break;
+	}
 	default:
 		m_receivedDataBuffer.clear();
 		break;
@@ -442,8 +532,14 @@ void Peer::finished() {
 	if(m_status != Error) {
 		m_status = Disconnected;
 	}
+	m_reconnectTimer.start();
 	m_blocksQueue.clear();
 	qDebug() << "Connection to" << addressPort() << "closed" << m_socket->errorString();
+}
+
+void Peer::error(QAbstractSocket::SocketError socketError) {
+	qDebug() << "Socket error" << addressPort() << ":" << m_socket->errorString() << "(" << socketError << ")";
+	disconnect();
 }
 
 void Peer::replyTimeout() {
@@ -455,6 +551,12 @@ void Peer::replyTimeout() {
 void Peer::handshakeTimeout() {
 	qDebug() << "Peer" << addressPort() << "took too long to handshake";
 	m_handshakeTimeoutTimer.stop();
+}
+
+void Peer::reconnect() {
+	qDebug() << "Reconnecting to" << addressPort();
+	m_reconnectTimer.stop();
+	startConnection();
 }
 
 /* Getter functions */
@@ -533,4 +635,8 @@ QString Peer::addressPort() {
 
 bool Peer::hasPiece(int index) {
 	return m_bitfield[index];
+}
+
+bool Peer::isConnected() {
+	return m_socket->state() == QAbstractSocket::ConnectedState;
 }

@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QTimer>
 #include <QObject>
+#include <QAbstractSocket>
 
 class Torrent;
 class Block;
@@ -59,6 +60,7 @@ public:
 
 	QString addressPort();
 	bool hasPiece(int index);
+	bool isConnected();
 
 private:
 	Torrent* m_torrent;
@@ -85,6 +87,7 @@ private:
 	QByteArray m_receivedDataBuffer;
 	QTimer m_replyTimeoutTimer;
 	QTimer m_handshakeTimeoutTimer;
+	QTimer m_reconnectTimer;
 
 	/* This flag will be set when the peer hasn't
 	 * responded to a request in a certain amount of time */
@@ -130,8 +133,16 @@ public:
 	/* Attempt to connect to the peer */
 	void startConnection();
 
-	/* Cancel request for block */
-	void cancelBlock(Block* block);
+	/* Send message */
+	void sendChoke();
+	void sendUnchoke();
+	void sendInterested();
+	void sendNotInterested();
+	void sendHave(int index);
+	void sendBitfield();
+	void sendRequest(Block* block);
+	void sendPiece(int index, int begin, const QByteArray& blockData);
+	void sendCancel(Block* block);
 
 	/* Attempt to request a block from the Torrent object
 	 * and send that request to the peer */
@@ -149,12 +160,17 @@ public:
 	/* Returns a newly-created peer object with peerType = Server (We download from him) */
 	static Peer* createServer(Torrent* torrent, const QByteArray& address, int port);
 
+	/* Attempts to send messages to the peer */
+	void sendMessages();
+
 public slots:
 	void connected();
 	void readyRead();
 	void finished();
+	void error(QAbstractSocket::SocketError socketError);
 	void replyTimeout();
 	void handshakeTimeout();
+	void reconnect();
 };
 
 #endif // PEER_H
