@@ -144,8 +144,6 @@ public:
 	void sendPiece(int index, int begin, const QByteArray& blockData);
 	void sendCancel(Block* block);
 
-	void resendRequest(Block* block);
-
 	/* Attempt to request a block from the Torrent object
 	 * and send that request to the peer */
 	bool requestBlock();
