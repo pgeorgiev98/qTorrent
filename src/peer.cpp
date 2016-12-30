@@ -495,6 +495,7 @@ void Peer::readyRead() {
 		m_handshakeTimeoutTimer.stop();
 		qDebug() << "Handshaking completed with peer" << addressPort();
 		m_status = ConnectionEstablished;
+		TorrentMessage::bitfield(m_socket, m_torrent->bitfield());
 		// Fall down
 	case ConnectionEstablished:
 	{

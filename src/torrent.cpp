@@ -269,6 +269,14 @@ float Torrent::percentDownloaded() {
 	return percent;
 }
 
+QVector<bool> Torrent::bitfield() {
+	QVector<bool> bf;
+	for(auto p : m_pieces) {
+		bf.push_back(p->downloaded());
+	}
+	return bf;
+}
+
 
 /* signals */
 

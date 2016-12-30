@@ -48,7 +48,10 @@ public:
 	int downloadedPieces();
 	bool downloaded();
 
+	/* Calculates the current percentage of the downloaded pieces */
 	float percentDownloaded();
+	/* Returns this torrent's current bitfield */
+	QVector<bool> bitfield();
 
 
 	/* Signals */
