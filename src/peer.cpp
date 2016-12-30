@@ -109,7 +109,10 @@ void Peer::sendHave(int index) {
 }
 
 void Peer::sendBitfield() {
-	// TODO
+	if(m_status != ConnectionEstablished) {
+		return;
+	}
+	TorrentMessage::bitfield(m_socket, m_torrent->bitfield());
 }
 
 void Peer::sendRequest(Block* block) {
@@ -124,6 +127,7 @@ void Peer::sendRequest(Block* block) {
 	int index = block->piece()->pieceNumber();
 	int begin = block->begin();
 	int length = block->size();
+	qDebug() << "Request" << index << begin << length << "from" << addressPort();
 	TorrentMessage::request(m_socket, index, begin, length);
 
 	// Start/Reset the replyTimeoutTimer
@@ -483,7 +487,7 @@ void Peer::readyRead() {
 		m_handshakeTimeoutTimer.stop();
 		qDebug() << "Handshaking completed with peer" << addressPort();
 		m_status = ConnectionEstablished;
-		TorrentMessage::bitfield(m_socket, m_torrent->bitfield());
+		sendBitfield();
 		// Fall down
 	case ConnectionEstablished:
 	{
