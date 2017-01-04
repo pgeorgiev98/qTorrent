@@ -41,6 +41,7 @@ public:
 
 	QByteArray& address();
 	int port();
+	int piecesDownloaded();
 	bool* bitfield();
 	QByteArray& protocol();
 	QByteArray& reserved();
@@ -59,6 +60,7 @@ public:
 	QList<Block*>& blocksQueue();
 
 	QString addressPort();
+	bool downloaded();
 	bool hasPiece(int index);
 	bool isConnected();
 
@@ -68,6 +70,7 @@ private:
 	/* Peer-specific information */
 	QByteArray m_address;
 	int m_port;
+	int m_piecesDownloaded;
 	bool* m_bitfield;
 	QByteArray m_protocol;
 	QByteArray m_reserved;

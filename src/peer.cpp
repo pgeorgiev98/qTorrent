@@ -43,6 +43,7 @@ void Peer::startConnection() {
 		m_socket->close();
 	}
 
+	m_piecesDownloaded = 0;
 	for(int i = 0; i < m_torrent->torrentInfo()->bitfieldSize() * 8; i++) {
 		m_bitfield[i] = false;
 	}
@@ -321,7 +322,10 @@ bool Peer::readPeerMessage(bool* ok) {
 			pieceNumber *= 256;
 			pieceNumber += (unsigned char)m_receivedDataBuffer[i++];
 		}
-		m_bitfield[pieceNumber] = true;
+		if(!m_bitfield[pieceNumber]) {
+			m_bitfield[pieceNumber] = true;
+			m_piecesDownloaded++;
+		}
 		break;
 	}
 	case TorrentMessage::Bitfield:
@@ -333,12 +337,21 @@ bool Peer::readPeerMessage(bool* ok) {
 			*ok = false;
 			return false;
 		} else {
+			// Set the bitfield
 			for(int j = 0; j < bitfieldSize; j++) {
 				unsigned char byte = m_receivedDataBuffer[i++];
 				unsigned char pos = 0b10000000;
 				for(int q = 0; q < 8; q++) {
 					m_bitfield[j*8 + q] = ((byte & pos) != 0);
 					pos = pos >> 1;
+				}
+			}
+
+			// Recount the pieces
+			m_piecesDownloaded = 0;
+			for(int j = 0; j < bitfieldSize; j++) {
+				if(m_bitfield[j]) {
+					m_piecesDownloaded++;
 				}
 			}
 		}
@@ -443,6 +456,7 @@ void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
 	m_torrent = torrent;
 	m_address = address;
 	m_port = port;
+	m_piecesDownloaded = 0;
 	initBitfield();
 	m_status = Created;
 }
@@ -578,6 +592,10 @@ int Peer::port() {
 	return m_port;
 }
 
+int Peer::piecesDownloaded() {
+	return m_piecesDownloaded;
+}
+
 bool* Peer::bitfield() {
 	return m_bitfield;
 }
@@ -636,6 +654,10 @@ QList<Block*>& Peer::blocksQueue() {
 
 QString Peer::addressPort() {
 	return QString(m_address) + ":" + QString::number(m_port);
+}
+
+bool Peer::downloaded() {
+	return m_piecesDownloaded == m_torrent->torrentInfo()->numberOfPieces();
 }
 
 bool Peer::hasPiece(int index) {
