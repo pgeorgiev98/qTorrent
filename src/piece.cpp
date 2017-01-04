@@ -6,6 +6,7 @@
 #include "trackerclient.h"
 #include <QCryptographicHash>
 #include <QTcpSocket>
+#include <QFile>
 #include <QDebug>
 
 Piece::Piece(Torrent* torrent, int pieceNumber, int size) :
@@ -19,14 +20,13 @@ Piece::Piece(Torrent* torrent, int pieceNumber, int size) :
 }
 
 Piece::~Piece() {
-	for(auto b : m_blocksDownloaded) {
+	for(auto b : m_blocks) {
 		delete b;
 	}
 	if(m_pieceData != nullptr) {
 		delete[] m_pieceData;
 	}
 }
-
 
 bool Piece::downloading() const {
 	return m_downloading;
@@ -48,29 +48,28 @@ int Piece::size() const {
 	return m_size;
 }
 
-
 void Piece::addBlock(Block *block) {
 	int insertPos = 0;
-	for(int i = 0; i < m_blocksDownloaded.size(); i++) {
-		if(block->begin() < m_blocksDownloaded[i]->begin()) {
+	for(int i = 0; i < m_blocks.size(); i++) {
+		if(block->begin() < m_blocks[i]->begin()) {
 			break;
 		}
 		insertPos++;
 	}
-	m_blocksDownloaded.insert(insertPos, block);
+	m_blocks.insert(insertPos, block);
 }
 
 void Piece::deleteBlock(Block* block) {
 	int blockNumber = -1;
-	for(int i = 0; i < m_blocksDownloaded.size(); i++) {
-		if(m_blocksDownloaded[i] == block) {
+	for(int i = 0; i < m_blocks.size(); i++) {
+		if(m_blocks[i] == block) {
 			blockNumber = i;
 			break;
 		}
 	}
 	if(blockNumber != -1) {
-		delete m_blocksDownloaded[blockNumber];
-		m_blocksDownloaded.removeAt(blockNumber);
+		delete m_blocks[blockNumber];
+		m_blocks.removeAt(blockNumber);
 	}
 }
 
@@ -83,7 +82,7 @@ bool Piece::checkIfDownloaded() {
 		exit(1);
 	}
 	int pos = 0;
-	for(auto b : m_blocksDownloaded) {
+	for(auto b : m_blocks) {
 		if(b->begin() == pos && b->downloaded()) {
 			pos += b->size();
 		} else {
@@ -113,10 +112,10 @@ void Piece::updateInfo() {
 			}
 		}
 		if(!isValid) {
-			for(auto b : m_blocksDownloaded) {
+			for(auto b : m_blocks) {
 				delete b;
 			}
-			m_blocksDownloaded.clear();
+			m_blocks.clear();
 			m_downloaded = false;
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
@@ -134,7 +133,7 @@ Block* Piece::requestBlock(int size) {
 	int s = size;
 	Block* block = nullptr;
 
-	for(auto b : m_blocksDownloaded) {
+	for(auto b : m_blocks) {
 		if(tmp < b->begin()) {
 			s = b->begin() - tmp;
 			if(s > size) {
@@ -172,4 +171,81 @@ void Piece::unloadFromMemory() {
 	}
 	delete m_pieceData;
 	m_pieceData = nullptr;
+}
+
+bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
+	blockData.clear();
+
+	// Check if piece is loaded in memory (unlikely)
+	if(m_pieceData) {
+		blockData.append(m_pieceData + begin, size);
+		return true;
+	}
+
+	const QList<FileInfo>& fileInfos = m_torrent->torrentInfo()->fileInfos();
+	QList<QFile*>& files = m_torrent->files();
+
+	// Store output here
+	QByteArray data;
+
+	// Find this block's absolute indexes
+	qint64 blockBegin = 0;
+	for(const Piece* piece : m_torrent->pieces()) {
+		if(piece == this) {
+			break;
+		}
+		blockBegin += piece->size();
+	}
+	blockBegin += begin;
+	qint64 blockEnd = blockBegin + size;
+
+	// For each file
+	qint64 fileBegin = 0;
+	for(int i = 0; i < fileInfos.size(); i++) {
+		const FileInfo& fileInfo = fileInfos[i];
+		QFile* file = files[i];
+
+		qint64 fileEnd = fileBegin + fileInfo.length;
+
+		// Does this file have any of the needed data?
+		if(fileEnd > blockBegin && fileBegin < blockEnd) {
+			qint64 seek = blockBegin - fileBegin;
+			qint64 bytesToRead = fileInfo.length;
+
+			// Is this the last file?
+			if(fileEnd >= blockEnd) {
+				// Read until the end of the block
+				bytesToRead = blockEnd - fileBegin;
+			}
+
+			// Open file
+			if(!file->open(QFile::ReadOnly)) {
+				qDebug() << "Failed to open file" << file->fileName() << ":" << file->errorString();
+				return false;
+			}
+
+			// Seek in the file if needed
+			if(seek) {
+				if(!file->seek(seek)) {
+					qDebug() << "Failed to seek" << seek << "bytes in file" << file->fileName() << ":" << file->errorString();
+					file->close();
+					return false;
+				}
+			}
+
+			// Read bytesToRead bytes
+			blockData.append(file->read(bytesToRead));
+
+			// Close the file
+			file->close();
+
+			// Return if this is the last file
+			if(fileEnd >= blockEnd) {
+				return true;
+			}
+		}
+
+		fileBegin += fileInfo.length;
+	}
+	return true;
 }

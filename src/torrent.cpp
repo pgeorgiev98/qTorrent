@@ -236,12 +236,20 @@ QList<Peer*>& Torrent::peers() {
 	return m_peers;
 }
 
+QList<Piece*>& Torrent::pieces() {
+	return m_pieces;
+}
+
 TorrentInfo* Torrent::torrentInfo() {
 	return m_torrentInfo;
 }
 
 TrackerClient* Torrent::trackerClient() {
 	return m_trackerClient;
+}
+
+QList<QFile*>& Torrent::files() {
+	return m_files;
 }
 
 

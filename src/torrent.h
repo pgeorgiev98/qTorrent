@@ -40,8 +40,10 @@ public:
 
 	QTorrent* qTorrent();
 	QList<Peer*>& peers();
+	QList<Piece*>& pieces();
 	TorrentInfo* torrentInfo();
 	TrackerClient* trackerClient();
+	QList<QFile*>& files();
 
 	qint64 bytesDownloaded();
 	qint64 bytesUploaded();
