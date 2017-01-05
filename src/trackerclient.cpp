@@ -142,30 +142,43 @@ void TrackerClient::httpFinished() {
 		m_reannounceTimer.start();
 
 		// Peer list
-		QByteArray peersData = mainDict->valueEx("peers")->castToEx<BencodeString>()->value();
-		if(peersData.size() % 6 != 0) {
-			qDebug() << "Tracker response parse error: peers string length is not a multiple of 6; length =" << peersData.size();
-			failedToAnnounce();
-			return;
-		}
-		int numberOfPeers = peersData.size() / 6;
-		for(int i = 0, counter = 0; i < numberOfPeers; i++)  {
-			// Address
-			QByteArray peerIp;
-			peerIp += QString::number((unsigned char)peersData[counter++]);
-			peerIp += '.';
-			peerIp += QString::number((unsigned char)peersData[counter++]);
-			peerIp += '.';
-			peerIp += QString::number((unsigned char)peersData[counter++]);
-			peerIp += '.';
-			peerIp += QString::number((unsigned char)peersData[counter++]);
+		BencodeValue* peers = mainDict->valueEx("peers");
+		if(peers->castTo<BencodeString>()) {
+			// Compact format
+			QByteArray peersData = peers->castToEx<BencodeString>()->value();
+			if(peersData.size() % 6 != 0) {
+				qDebug() << "Tracker response parse error: peers string length is not a multiple of 6; length =" << peersData.size();
+				failedToAnnounce();
+				return;
+			}
+			int numberOfPeers = peersData.size() / 6;
+			for(int i = 0, counter = 0; i < numberOfPeers; i++)  {
+				// Address
+				QByteArray peerIp;
+				peerIp += QString::number((unsigned char)peersData[counter++]);
+				peerIp += '.';
+				peerIp += QString::number((unsigned char)peersData[counter++]);
+				peerIp += '.';
+				peerIp += QString::number((unsigned char)peersData[counter++]);
+				peerIp += '.';
+				peerIp += QString::number((unsigned char)peersData[counter++]);
 
-			// Port
-			int peerPort = 0;
-			peerPort += (unsigned char)peersData[counter++];
-			peerPort *= 256;
-			peerPort += (unsigned char)peersData[counter++];
-			m_torrent->addPeer(peerIp, peerPort);
+				// Port
+				int peerPort = 0;
+				peerPort += (unsigned char)peersData[counter++];
+				peerPort *= 256;
+				peerPort += (unsigned char)peersData[counter++];
+				m_torrent->addPeer(peerIp, peerPort);
+			}
+		} else {
+			// Non-compact format
+			QList<BencodeDictionary*> peersDictList = peers->castToEx<BencodeList>()->values<BencodeDictionary>();
+			qDebug() << peersDictList.size();
+			for(BencodeDictionary* peerDict : peersDictList) {
+				QByteArray ip = peerDict->valueEx("ip")->castToEx<BencodeString>()->value();
+				int port = peerDict->valueEx("port")->castToEx<BencodeInteger>()->value();
+				m_torrent->addPeer(ip, port);
+			}
 		}
 	} catch(BencodeException& ex) {
 		qDebug() << "Failed to parse:" << ex.what();
