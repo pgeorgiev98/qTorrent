@@ -185,9 +185,6 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 	const QList<FileInfo>& fileInfos = m_torrent->torrentInfo()->fileInfos();
 	QList<QFile*>& files = m_torrent->files();
 
-	// Store output here
-	QByteArray data;
-
 	// Find this block's absolute indexes
 	qint64 blockBegin = 0;
 	for(const Piece* piece : m_torrent->pieces()) {
@@ -215,7 +212,11 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 			// Is this the last file?
 			if(fileEnd >= blockEnd) {
 				// Read until the end of the block
-				bytesToRead = blockEnd - fileBegin;
+				if(blockBegin > fileBegin) {
+					bytesToRead = size;
+				} else {
+					bytesToRead = blockEnd - fileBegin;
+				}
 			}
 
 			// Open file

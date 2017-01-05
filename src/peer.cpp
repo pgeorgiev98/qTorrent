@@ -560,7 +560,7 @@ void Peer::finished() {
 	}
 
 	// If we both have the full torrent, dont reconnect later
-	if(downloaded() && m_torrent->downloaded()) {
+	if(!downloaded() || !m_torrent->downloaded()) {
 		m_reconnectTimer.start();
 	}
 	m_blocksQueue.clear();
