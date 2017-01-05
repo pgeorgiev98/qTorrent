@@ -319,10 +319,10 @@ void Torrent::fullyDownloaded() {
 	// Send announce
 	m_trackerClient->announce(TrackerClient::Completed);
 
-	// Disconnect from peers
+	// Disconnect from all peers that have the full torrent
 	for(auto peer : m_peers) {
-		peer->disconnect();
-		peer->deleteLater();
+		if(peer->downloaded()) {
+			peer->disconnect();
+		}
 	}
-	m_peers.clear();
 }

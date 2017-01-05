@@ -203,9 +203,16 @@ void Peer::sendMessages() {
 		return;
 	}
 
+	// If both of us have the full torrent, disconnect
+	if(m_torrent->downloaded() && downloaded()) {
+		disconnect();
+		return;
+	}
+
 	if(!m_amInterested) {
 		sendInterested();
-	} else if(!m_peerChoking) {
+	}
+	if(!m_peerChoking) {
 		while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
 			if(!requestBlock()) {
 				break;
@@ -551,7 +558,11 @@ void Peer::finished() {
 	if(m_status != Error) {
 		m_status = Disconnected;
 	}
-	m_reconnectTimer.start();
+
+	// If we both have the full torrent, dont reconnect later
+	if(downloaded() && m_torrent->downloaded()) {
+		m_reconnectTimer.start();
+	}
 	m_blocksQueue.clear();
 	qDebug() << "Connection to" << addressPort() << "closed" << m_socket->errorString();
 }
