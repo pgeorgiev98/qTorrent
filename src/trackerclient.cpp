@@ -1,6 +1,8 @@
 #include "bencode.h"
+#include "qtorrent.h"
 #include "torrent.h"
 #include "peer.h"
+#include "torrentserver.h"
 #include "trackerclient.h"
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -43,6 +45,7 @@ void TrackerClient::announce(Event event) {
 	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
 	qint64 bytesUploaded = m_torrent->bytesUploaded();
 	qint64 torrentLength = m_torrentInfo->length();
+	int port = m_torrent->qTorrent()->server()->port();
 
 	if(event == Event::Started) {
 		m_bytesDownloadedAtStarted = bytesDownloaded;
@@ -52,12 +55,13 @@ void TrackerClient::announce(Event event) {
 	QString bytesDownloadedString = QString::number(bytesDownloaded - m_bytesDownloadedAtStarted);
 	QString bytesUploadedString = QString::number(bytesUploaded - m_bytesUploadedAtStarted);
 	QString bytesLeftString = QString::number(torrentLength - bytesDownloaded);
+	QString portString = QString::number(port);
 
 	QUrlQuery query(url);
 	auto hash = m_torrentInfo->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
 	query.addQueryItem("peer_id", "ThisIsNotAFakePeerId");
-	query.addQueryItem("port", "6881");
+	query.addQueryItem("port", portString);
 	query.addQueryItem("uploaded", bytesUploadedString);
 	query.addQueryItem("downloaded", bytesDownloadedString);
 	query.addQueryItem("left", bytesLeftString);
@@ -173,7 +177,6 @@ void TrackerClient::httpFinished() {
 		} else {
 			// Non-compact format
 			QList<BencodeDictionary*> peersDictList = peers->castToEx<BencodeList>()->values<BencodeDictionary>();
-			qDebug() << peersDictList.size();
 			for(BencodeDictionary* peerDict : peersDictList) {
 				QByteArray ip = peerDict->valueEx("ip")->castToEx<BencodeString>()->value();
 				int port = peerDict->valueEx("port")->castToEx<BencodeInteger>()->value();

@@ -1,13 +1,20 @@
 #include "qtorrent.h"
 #include "torrent.h"
+#include "torrentserver.h"
 
 QTorrent::QTorrent() {
+	m_server = new TorrentServer(this);
 }
 
 QTorrent::~QTorrent() {
 	for(auto torrent : m_torrents) {
 		delete torrent;
 	}
+	delete m_server;
+}
+
+bool QTorrent::startServer() {
+	return m_server->startServer();
 }
 
 bool QTorrent::addTorrent(const QString &filename) {
@@ -18,4 +25,12 @@ bool QTorrent::addTorrent(const QString &filename) {
 	}
 	m_torrents.push_back(torrent);
 	return true;
+}
+
+QList<Torrent*>& QTorrent::torrents() {
+	return m_torrents;
+}
+
+TorrentServer* QTorrent::server() {
+	return m_server;
 }

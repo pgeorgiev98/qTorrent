@@ -18,7 +18,8 @@ SOURCES += main.cpp \
     peer.cpp \
     piece.cpp \
     block.cpp \
-    torrentmessage.cpp
+    torrentmessage.cpp \
+    torrentserver.cpp
 
 HEADERS += \
     bencode.h \
@@ -30,4 +31,5 @@ HEADERS += \
     peer.h \
     piece.h \
     block.h \
-    torrentmessage.h
+    torrentmessage.h \
+    torrentserver.h

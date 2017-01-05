@@ -29,7 +29,10 @@ public:
 	bool createFromFile(const QString& filename);
 	bool createFileTree(const QString& directory);
 
+	/* Creates a peer and connects to him */
 	Peer* addPeer(const QByteArray& address, int port);
+	/* Add a peer that has connected to us to the list */
+	void addPeer(Peer* peer);
 
 	Block* requestBlock(Peer* client, int size);
 	void releaseBlock(Peer* client, Block* block);

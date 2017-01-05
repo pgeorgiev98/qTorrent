@@ -1,10 +1,12 @@
 #include "peer.h"
 #include "block.h"
 #include "piece.h"
+#include "qtorrent.h"
 #include "torrent.h"
 #include "torrentinfo.h"
 #include "torrentmessage.h"
 #include <QTcpSocket>
+#include <QHostAddress>
 #include <QTimer>
 #include <QDebug>
 
@@ -15,12 +17,12 @@ const int BLOCKS_TO_REQUEST = 5;
 const int MAX_MESSAGE_LENGTH = 65536;
 const int RECONNECT_INTERVAL_MSEC = 30000;
 
-Peer::Peer(PeerType peerType) :
+Peer::Peer(PeerType peerType, QTcpSocket* socket) :
 	m_torrent(nullptr),
 	m_bitfield(nullptr),
 	m_status(Created),
 	m_peerType(peerType),
-	m_socket(new QTcpSocket) {
+	m_socket(socket) {
 
 	connectAll();
 }
@@ -68,6 +70,18 @@ void Peer::startConnection() {
 
 	qDebug() << "Connecting to" << addressPort();
 	m_socket->connectToHost(m_address, m_port);
+}
+
+void Peer::sendHandshake() {
+	QByteArray dataToWrite;
+	dataToWrite.push_back(char(19));
+	dataToWrite.push_back("BitTorrent protocol");
+	for(int i = 0; i < 8; i++) {
+		dataToWrite.push_back(char(0));
+	}
+	dataToWrite.push_back(m_torrent->torrentInfo()->infoHash());
+	dataToWrite.push_back("ThisIsNotAFakePeerId"); // TODO
+	m_socket->write(dataToWrite);
 }
 
 void Peer::sendChoke() {
@@ -186,13 +200,14 @@ void Peer::fatalError() {
 	m_socket->close();
 }
 
-Peer* Peer::createClient() {
-	// TODO
-	return nullptr;
+Peer* Peer::createClient(QTorrent *qTorrent, QTcpSocket *socket) {
+	Peer* peer = new Peer(Client, socket);
+	peer->initClient(qTorrent);
+	return peer;
 }
 
 Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) {
-	Peer* peer = new Peer(Server);
+	Peer* peer = new Peer(Server, new QTcpSocket);
 	peer->initServer(torrent, address, port);
 	return peer;
 }
@@ -251,11 +266,29 @@ bool Peer::readHandshakeReply(bool *ok) {
 	}
 	m_receivedDataBuffer.remove(0, 49 + protocolLength);
 
-	if(m_infoHash != m_torrent->torrentInfo()->infoHash()) {
-		// Info hash does not match the expected one
-		qDebug() << "Info hash does not match expected one from peer" << addressPort();
-		*ok = false;
-		return false;
+	if(m_peerType == Server) {
+		// Check if info hash matches expected one
+		if(m_infoHash != m_torrent->torrentInfo()->infoHash()) {
+			// Info hash does not match the expected one
+			qDebug() << "Info hash does not match expected one from peer" << addressPort();
+			*ok = false;
+			return false;
+		}
+	} else {
+		// Find torrent with correct info hash
+		m_torrent = nullptr;
+		for(auto torrent : m_qTorrent->torrents()) {
+			if(torrent->torrentInfo()->infoHash() == m_infoHash) {
+				m_torrent = torrent;
+				break;
+			}
+		}
+
+		if(m_torrent == nullptr) {
+			qDebug() << "No torrents matching info hash" << m_infoHash.toHex() << "for" << addressPort();
+			*ok = false;
+			return false;
+		}
 	}
 	return true;
 }
@@ -278,6 +311,7 @@ bool Peer::readPeerMessage(bool* ok) {
 		length += (unsigned char)m_receivedDataBuffer[i++];
 	}
 
+	// Check for errors
 	if(length > MAX_MESSAGE_LENGTH || length < 0) {
 		*ok = false;
 		return false;
@@ -289,6 +323,7 @@ bool Peer::readPeerMessage(bool* ok) {
 		return true;
 	}
 
+	// Have we received the whole message?
 	if(m_receivedDataBuffer.size() < 4 + length) {
 		return false;
 	}
@@ -359,7 +394,7 @@ bool Peer::readPeerMessage(bool* ok) {
 
 			// Recount the pieces
 			m_piecesDownloaded = 0;
-			for(int j = 0; j < bitfieldSize; j++) {
+			for(int j = 0; j < bitfieldSize*8; j++) {
 				if(m_bitfield[j]) {
 					m_piecesDownloaded++;
 				}
@@ -508,11 +543,18 @@ void Peer::initBitfield() {
 	}
 }
 
-void Peer::initClient() {
-	// TODO
+void Peer::initClient(QTorrent *qTorrent) {
+	m_qTorrent = qTorrent;
+	m_torrent = nullptr;
+	m_address = QByteArray(m_socket->peerAddress().toString().toUtf8());
+	m_port = m_socket->peerPort();
+	m_piecesDownloaded = 0;
+	m_bitfield = nullptr;
+	m_status = Handshaking;
 }
 
 void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
+	m_qTorrent = torrent->qTorrent();
 	m_torrent = torrent;
 	m_address = address;
 	m_port = port;
@@ -534,15 +576,7 @@ void Peer::connected() {
 	m_timedOut = false;
 	qDebug() << "Connected to" << addressPort();
 
-	QByteArray dataToWrite;
-	dataToWrite.push_back(char(19));
-	dataToWrite.push_back("BitTorrent protocol");
-	for(int i = 0; i < 8; i++) {
-		dataToWrite.push_back(char(0));
-	}
-	dataToWrite.push_back(m_torrent->torrentInfo()->infoHash());
-	dataToWrite.push_back("ThisIsNotAFakePeerId"); // TODO
-	m_socket->write(dataToWrite);
+	sendHandshake();
 	m_handshakeTimeoutTimer.start();
 }
 
@@ -552,7 +586,19 @@ void Peer::readyRead() {
 	switch(m_status) {
 	case Handshaking:
 		bool ok;
-		if(!readHandshakeReply(&ok)) {
+		if(readHandshakeReply(&ok)) {
+			if(m_peerType == Client) {
+				// Initialize peer's bitfield array.
+				// Must be done after receiving handshake
+				initBitfield();
+
+				// Send our handshake message
+				sendHandshake();
+
+				// Add this peer to the torrent object
+				m_torrent->addPeer(this);
+			}
+		} else {
 			if(!ok) {
 				fatalError();
 			}
@@ -612,9 +658,11 @@ void Peer::finished() {
 		m_status = Disconnected;
 	}
 
-	// If we both have the full torrent, dont reconnect later
-	if(!downloaded() || !m_torrent->downloaded()) {
-		m_reconnectTimer.start();
+	if(m_peerType == Server) {
+		// If we both have the full torrent, dont reconnect later
+		if(!downloaded() || !m_torrent->downloaded()) {
+			m_reconnectTimer.start();
+		}
 	}
 	m_blocksQueue.clear();
 	qDebug() << "Connection to" << addressPort() << "closed" << m_socket->errorString();

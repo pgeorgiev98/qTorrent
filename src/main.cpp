@@ -11,6 +11,10 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
+	if(!qTorrent.startServer()) {
+		qDebug() << "Failed to start server";
+	}
+
 	if(!qTorrent.addTorrent(argv[1])) {
 		qDebug() << "Failed to add torrent";
 	} else {

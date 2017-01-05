@@ -119,7 +119,23 @@ Peer* Torrent::addPeer(const QByteArray &address, int port) {
 	if(!m_downloaded) {
 		peer->startConnection();
 	}
+	qDebug() << "Added peer" << peer->addressPort();
 	return peer;
+}
+
+void Torrent::addPeer(Peer *peer) {
+	// If there's another identical peer - replace it
+	for(Peer*& p : m_peers) {
+		if(p->port() == peer->port() && p->address() == peer->address()) {
+			p->deleteLater();
+			p = peer;
+			return;
+		}
+	}
+
+	// Else - add it to the list
+	m_peers.push_back(peer);
+	qDebug() << "Added peer" << peer->addressPort();
 }
 
 Block* Torrent::requestBlock(Peer *peer, int size) {

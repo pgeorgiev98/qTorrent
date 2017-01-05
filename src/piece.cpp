@@ -206,7 +206,11 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 
 		// Does this file have any of the needed data?
 		if(fileEnd > blockBegin && fileBegin < blockEnd) {
-			qint64 seek = blockBegin - fileBegin;
+			qint64 seek = 0;
+			if(blockBegin - fileBegin > 0) {
+				seek = blockBegin - fileBegin;
+			}
+
 			qint64 bytesToRead = fileInfo.length;
 
 			// Is this the last file?
