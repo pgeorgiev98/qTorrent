@@ -43,7 +43,6 @@ This will download the torrent 'file.torrent' in the current working directory.
 Currently, qTorrent:
 * Does **Not** have a GUI
 * Does **Not** support multiple parallel torrent downloads
-* Does **Not** support seeding
 * Does **Not** support any extensions
 * Can **Not** pause/resume downloads
 * Lacks a lot of other stuff
