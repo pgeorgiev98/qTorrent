@@ -337,7 +337,7 @@ void Torrent::fullyDownloaded() {
 
 	// Disconnect from all peers that have the full torrent
 	for(auto peer : m_peers) {
-		if(peer->downloaded()) {
+		if(peer->downloaded() || peer->isConnected()) {
 			peer->disconnect();
 		}
 	}
