@@ -142,7 +142,7 @@ void Peer::sendPiece(int index, int begin, const QByteArray &blockData) {
 	if(m_status != ConnectionEstablished) {
 		return;
 	}
-	// TODO
+	qDebug() << "Sending piece" << index << begin << blockData.size() << "to" << addressPort();
 	TorrentMessage::piece(m_socket, index, begin, blockData);
 }
 
@@ -211,6 +211,9 @@ void Peer::sendMessages() {
 
 	if(!m_amInterested) {
 		sendInterested();
+	}
+	if(m_peerInterested && m_amChoking) {
+		sendUnchoke();
 	}
 	if(!m_peerChoking) {
 		while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
@@ -366,7 +369,57 @@ bool Peer::readPeerMessage(bool* ok) {
 	}
 	case TorrentMessage::Request:
 	{
-		// TODO
+		unsigned int index = 0;
+		unsigned int begin = 0;
+		unsigned int blockLength = 0;
+
+		for(int j = 0; j < 4; j++) {
+			index *= 256;
+			index += (unsigned char)m_receivedDataBuffer[i++];
+		}
+		for(int j = 0; j < 4; j++) {
+			begin *= 256;
+			begin += (unsigned char)m_receivedDataBuffer[i++];
+		}
+		for(int j = 0; j < 4; j++) {
+			blockLength *= 256;
+			blockLength += (unsigned char)m_receivedDataBuffer[i++];
+		}
+
+		QList<Piece*>& pieces = m_torrent->pieces();
+
+		// Check for invalid ranges
+		if(index >= (unsigned)pieces.size() || blockLength > MAX_MESSAGE_LENGTH) {
+			qDebug() << "Invalid request (" << index << begin << blockLength << ")"
+					 << "from" << addressPort();
+			disconnect();
+			*ok = false;
+			return false;
+		}
+
+		Piece* piece = pieces[index];
+
+		// Check for invalid begin + blockLength combination
+		if(begin + blockLength > (unsigned)piece->size() || begin > (unsigned)piece->size()) {
+			qDebug() << "Invalid request (" << index << begin << blockLength << ")"
+					 << "from" << addressPort();
+			disconnect();
+			*ok = false;
+			return false;
+		}
+
+		// Get the data
+		QByteArray blockData;
+		if(!piece->getBlockData(begin, blockLength, blockData)) {
+			qDebug() << "Failed to get block (" << index << begin << blockLength << ")"
+					 << "for" << addressPort();
+			disconnect();
+			*ok = false;
+			return false;
+		}
+
+		sendPiece(index, begin, blockData);
+
 		break;
 	}
 	case TorrentMessage::Piece:
