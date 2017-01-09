@@ -1,6 +1,6 @@
 #include "qtorrent.h"
-#include "torrent.h"
-#include "torrentserver.h"
+#include "core/torrent.h"
+#include "core/torrentserver.h"
 
 QTorrent::QTorrent() {
 	m_server = new TorrentServer(this);

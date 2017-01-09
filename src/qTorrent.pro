@@ -9,27 +9,27 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    bencode.cpp \
-    bencodevalue.cpp \
-    torrentinfo.cpp \
-    trackerclient.cpp \
     qtorrent.cpp \
-    torrent.cpp \
-    peer.cpp \
-    piece.cpp \
-    block.cpp \
-    torrentmessage.cpp \
-    torrentserver.cpp
+    core/bencode.cpp \
+    core/bencodevalue.cpp \
+    core/torrentinfo.cpp \
+    core/trackerclient.cpp \
+    core/torrent.cpp \
+    core/peer.cpp \
+    core/piece.cpp \
+    core/block.cpp \
+    core/torrentmessage.cpp \
+    core/torrentserver.cpp
 
 HEADERS += \
-    bencode.h \
-    bencodevalue.h \
-    torrentinfo.h \
-    trackerclient.h \
     qtorrent.h \
-    torrent.h \
-    peer.h \
-    piece.h \
-    block.h \
-    torrentmessage.h \
-    torrentserver.h
+    core/bencode.h \
+    core/bencodevalue.h \
+    core/torrentinfo.h \
+    core/trackerclient.h \
+    core/torrent.h \
+    core/peer.h \
+    core/piece.h \
+    core/block.h \
+    core/torrentmessage.h \
+    core/torrentserver.h
