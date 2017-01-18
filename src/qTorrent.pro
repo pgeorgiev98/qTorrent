@@ -19,7 +19,11 @@ SOURCES += main.cpp \
     core/piece.cpp \
     core/block.cpp \
     core/torrentmessage.cpp \
-    core/torrentserver.cpp
+    core/torrentserver.cpp \
+    ui/mainwindow.cpp \
+    ui/panel.cpp \
+    ui/torrentslist.cpp \
+    ui/torrentslistitem.cpp
 
 HEADERS += \
     qtorrent.h \
@@ -32,4 +36,11 @@ HEADERS += \
     core/piece.h \
     core/block.h \
     core/torrentmessage.h \
-    core/torrentserver.h
+    core/torrentserver.h \
+    ui/mainwindow.h \
+    ui/panel.h \
+    ui/torrentslist.h \
+    ui/torrentslistitem.h
+
+RESOURCES += \
+    resources.qrc

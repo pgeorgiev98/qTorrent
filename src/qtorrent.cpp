@@ -1,9 +1,13 @@
 #include "qtorrent.h"
 #include "core/torrent.h"
 #include "core/torrentserver.h"
+#include "ui/mainwindow.h"
 
-QTorrent::QTorrent() {
-	m_server = new TorrentServer(this);
+QTorrent::QTorrent()
+	: m_server(new TorrentServer(this))
+	, m_mainWindow(new MainWindow(this))
+{
+
 }
 
 QTorrent::~QTorrent() {
@@ -12,6 +16,7 @@ QTorrent::~QTorrent() {
 	}
 	delete m_server;
 }
+
 
 bool QTorrent::startServer() {
 	return m_server->startServer();
@@ -24,8 +29,16 @@ bool QTorrent::addTorrent(const QString &filename) {
 		return false;
 	}
 	m_torrents.push_back(torrent);
+	m_mainWindow->addTorrent(torrent);
 	return true;
 }
+
+
+void QTorrent::showMainWindow() {
+	m_mainWindow->show();
+}
+
+
 
 QList<Torrent*>& QTorrent::torrents() {
 	return m_torrents;
@@ -33,4 +46,9 @@ QList<Torrent*>& QTorrent::torrents() {
 
 TorrentServer* QTorrent::server() {
 	return m_server;
+}
+
+
+MainWindow* QTorrent::mainWindow() {
+	return m_mainWindow;
 }

@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+	<file alias="button-all.png">../res/icons/buttons/all.png</file>
+	<file alias="button-all-active.png">../res/icons/buttons/all-active.png</file>
+	<file alias="button-completed.png">../res/icons/buttons/completed.png</file>
+	<file alias="button-completed-active.png">../res/icons/buttons/completed-active.png</file>
+	<file alias="button-downloading.png">../res/icons/buttons/downloading.png</file>
+	<file alias="button-downloading-active.png">../res/icons/buttons/downloading-active.png</file>
+	<file alias="button-uploading.png">../res/icons/buttons/uploading.png</file>
+	<file alias="button-uploading-active.png">../res/icons/buttons/uploading-active.png</file>
+</qresource>
+</RCC>
