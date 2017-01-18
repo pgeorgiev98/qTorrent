@@ -28,21 +28,21 @@ You can build qTorrent with:
 	# which speeds up things quite a bit
 
 	# Make sure you're using the propper Qt5 version of qmake
-	# On some systems (ex. Gentoo) you may need to add the '-qt=5'
+	# On some systems (e.g. Gentoo) you may need to add a '-qt=5'
 	# option to the qmake command.
 
 ## Usage
 
 Just call
 
-	./qTorrent /path/to/torrent/file.torrent
-This will download the torrent 'file.torrent' in the current working directory.
+	./qTorrent
 
 ## Current state
 
 Currently, qTorrent:
-* Does **Not** have a GUI
-* Does **Not** support multiple parallel torrent downloads
+* Can fully download torrents
+* Can seed torrents (more testing needed)
+* Has a very basic GUI
 * Does **Not** support any extensions
 * Can **Not** pause/resume downloads
 * Lacks a lot of other stuff
