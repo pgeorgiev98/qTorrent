@@ -3,6 +3,7 @@
 #include "torrentslist.h"
 #include "panel.h"
 #include <QGuiApplication>
+#include <QScreen>
 #include <QStackedWidget>
 #include <QMenuBar>
 #include <QFileDialog>
@@ -13,6 +14,11 @@ MainWindow::MainWindow(QTorrent *qTorrent)
 	, m_panel(new Panel)
 	, m_torrentsList(new TorrentsList(qTorrent))
 {
+	// Set the main window size to 3/4 of the screen size
+	int width = QGuiApplication::primaryScreen()->size().width()*3/4;
+	int height = QGuiApplication::primaryScreen()->size().height()*3/4;
+	resize(width, height);
+
 	addToolBar(Qt::LeftToolBarArea, m_panel);
 	QStackedWidget* stackedWidget = new QStackedWidget;
 	stackedWidget->addWidget(m_torrentsList);
