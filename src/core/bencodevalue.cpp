@@ -267,6 +267,9 @@ BencodeList::BencodeList() : BencodeValue(Type::List) {
 }
 
 BencodeList::~BencodeList() {
+	for(auto value : m_values) {
+		delete value;
+	}
 }
 
 QList<BencodeValue*> BencodeList::toList() {
@@ -315,6 +318,10 @@ BencodeDictionary::BencodeDictionary() : BencodeValue(Type::Dictionary) {
 }
 
 BencodeDictionary::~BencodeDictionary() {
+	for(auto pair : m_values) {
+		delete pair.first;
+		delete pair.second;
+	}
 }
 
 QList<BencodeValue*> BencodeDictionary::keys() const {
