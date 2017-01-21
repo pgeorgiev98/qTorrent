@@ -1,4 +1,4 @@
-#include "bencode.h"
+#include "bencodeparser.h"
 #include "qtorrent.h"
 #include "torrent.h"
 #include "peer.h"
@@ -124,36 +124,39 @@ void TrackerClient::httpFinished() {
 		}
 	}
 
-	Bencode bencodeParser;
-	if(!bencodeParser.loadFromByteArray(m_announceResponse)) {
-		qDebug() << "Failed to parse reply:" << bencodeParser.errorString();
-		qDebug() << m_announceResponse;
-		failedToAnnounce();
-		return;
-	}
-	const auto& values = bencodeParser.values();
-	if(values.size() != 1) {
-		qDebug() << "Bencode must have a size of 1";
-		failedToAnnounce();
-		return;
-	}
+	BencodeParser bencodeParser;
+
 	try {
-		auto mainDict = values[0]->castToEx<BencodeDictionary>();
+		// No statement can catch the ChuckNorrisException
+		BencodeException ex("TrackerClient::httpFinished(): ");
+
+		// Try to parse
+		if(!bencodeParser.parse(m_announceResponse)) {
+			throw ex << "Parse failed" << endl << bencodeParser.errorString();
+		}
+
+		// Main list of the response
+		QList<BencodeValue*> responseMainList = bencodeParser.toList();
+		if(responseMainList.isEmpty()) {
+			throw ex << "Tracker sent an empty response";
+		} else if(responseMainList.size() > 1) {
+			throw ex << "Tracker response main list has a size of " << responseMainList.size() << ". Expected 1";
+		}
+
+		BencodeDictionary* mainDict = responseMainList[0]->toBencodeDictionary();
 
 		// Update interval
-		m_reannounceInterval = mainDict->valueEx("interval")->castToEx<BencodeInteger>()->value();
+		m_reannounceInterval = mainDict->value("interval")->toInt();
 		m_reannounceTimer.setInterval(m_reannounceInterval*1000);
 		m_reannounceTimer.start();
 
 		// Peer list
-		BencodeValue* peers = mainDict->valueEx("peers");
-		if(peers->castTo<BencodeString>()) {
+		BencodeValue* peers = mainDict->value("peers");
+		if(peers->isString()) {
 			// Compact format
-			QByteArray peersData = peers->castToEx<BencodeString>()->value();
+			QByteArray peersData = peers->toByteArray();
 			if(peersData.size() % 6 != 0) {
-				qDebug() << "Tracker response parse error: peers string length is not a multiple of 6; length =" << peersData.size();
-				failedToAnnounce();
-				return;
+				throw ex << "Peers string length is " << peersData.size() << ". Expected a multiple of 6";
 			}
 			int numberOfPeers = peersData.size() / 6;
 			for(int i = 0, counter = 0; i < numberOfPeers; i++)  {
@@ -176,16 +179,19 @@ void TrackerClient::httpFinished() {
 			}
 		} else {
 			// Non-compact format
-			QList<BencodeDictionary*> peersDictList = peers->castToEx<BencodeList>()->values<BencodeDictionary>();
-			for(BencodeDictionary* peerDict : peersDictList) {
-				QByteArray ip = peerDict->valueEx("ip")->castToEx<BencodeString>()->value();
-				int port = peerDict->valueEx("port")->castToEx<BencodeInteger>()->value();
+			QList<BencodeValue*> peersDictList = peers->toList();
+			for(BencodeValue* peerDictValue : peersDictList) {
+				BencodeDictionary* peerDict = peerDictValue->toBencodeDictionary();
+				QByteArray ip = peerDict->value("ip")->toByteArray();
+				int port = peerDict->value("port")->toInt();
 				m_torrent->addPeer(ip, port);
 			}
 		}
 	} catch(BencodeException& ex) {
-		qDebug() << "Failed to parse:" << ex.what();
-		qDebug() << m_announceResponse;
+		qDebug() << "Failed to parse tracker response:" << ex.what() << endl
+				 << ">>>>>>>>>>>>>>>>>>>>" << endl
+				 << m_announceResponse << endl
+				 << "<<<<<<<<<<<<<<<<<<<<";
 		failedToAnnounce();
 		return;
 	}

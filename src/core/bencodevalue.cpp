@@ -1,47 +1,123 @@
 #include "bencodevalue.h"
 #include <QDebug>
 
-BencodeValue::BencodeValue(Type type) : m_type(type) {
+BencodeValue::BencodeValue(Type type)
+	: m_type(type)
+	, m_dataPosBegin(0)
+	, m_dataPosEnd(0)
+	, m_bencodeData(nullptr)
+{
 }
 
 BencodeValue::~BencodeValue() {
 }
 
-QString BencodeValue::errorString() const {
-	return m_errorString;
-}
 
 BencodeValue::Type BencodeValue::type() const {
 	return m_type;
 }
 
-void BencodeValue::setErrorString(QString errorString) {
-	m_errorString = errorString;
+
+bool BencodeValue::isInteger() const {
+	return m_type == Type::Integer;
 }
 
-void BencodeValue::clearErrorString() {
-	m_errorString.clear();
+bool BencodeValue::isString() const {
+	return m_type == Type::String;
 }
 
-QByteArray BencodeValue::getBencodeData(bool includeBeginAndEnd) {
+bool BencodeValue::isList() const {
+	return m_type == Type::List;
+}
+
+bool BencodeValue::isDictionary() const {
+	return m_type == Type::Dictionary;
+}
+
+
+BencodeInteger* BencodeValue::toBencodeInteger() {
+	if(!isInteger()) {
+		QString errorString;
+		QTextStream err(&errorString);
+		err << "BencodeValue::toBencodeInteger(): Value is not an integer: ";
+		print(err);
+		throw BencodeException(errorString);
+	}
+	return static_cast<BencodeInteger*>(this);
+}
+
+BencodeString* BencodeValue::toBencodeString() {
+	if(!isString()) {
+		QString errorString;
+		QTextStream err(&errorString);
+		err << "bencodeValue::toBencodeString(): Value is not an string: ";
+		print(err);
+		throw BencodeException(errorString);
+	}
+	return static_cast<BencodeString*>(this);
+}
+
+BencodeList* BencodeValue::toBencodeList() {
+	if(!isList()) {
+		QString errorString;
+		QTextStream err(&errorString);
+		err << "BencodeValue::toBencodeList(): Value is not an list: ";
+		print(err);
+		throw BencodeException(errorString);
+	}
+	return static_cast<BencodeList*>(this);
+}
+
+BencodeDictionary* BencodeValue::toBencodeDictionary() {
+	if(!isDictionary()) {
+		QString errorString;
+		QTextStream err(&errorString);
+		err << "BencodeValue::toBencodeDictionary(): Value is not an dictionary";
+		print(err);
+		throw BencodeException(errorString);
+	}
+	return static_cast<BencodeDictionary*>(this);
+}
+
+
+qint64 BencodeValue::toInt() {
+	return toBencodeInteger()->toInt();
+}
+
+QByteArray BencodeValue::toByteArray() {
+	return toBencodeString()->toByteArray();
+}
+
+QList<BencodeValue*> BencodeValue::toList() {
+	return toBencodeList()->toList();
+}
+
+
+QByteArray BencodeValue::getRawBencodeData(bool includeBeginAndEnd) {
 	QByteArray returnData;
 	int begin = m_dataPosBegin;
 	int end = m_dataPosEnd;
+
 	if(!includeBeginAndEnd) {
 		begin++;
 		end--;
 	}
+
 	for(int i = begin; i < end; i++) {
 		returnData.push_back(m_bencodeData->at(i));
 	}
+
 	return returnData;
 }
 
 
 BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &position) {
+	BencodeException ex("BencodeValue::createFromByteArray(): ");
+
 	if(position >= data.size()) {
-		return nullptr;
+		throw ex << "Unexpectedly reached end of the data stream";
 	}
+
 	BencodeValue *value;
 	char firstByte = data[position];
 	if(firstByte == 'i') {
@@ -53,11 +129,16 @@ BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &pos
 	} else if(firstByte == 'd') {
 		value = new BencodeDictionary;
 	} else {
-		return nullptr;
+		throw ex << "Invalid begining character for bencode value: "
+				 << "'" << firstByte << "'."
+				 << "Expected 'i', 'l', 'd' or a digit.";
 	}
-	if(!value -> loadFromByteArray(data, position)) {
+	try {
+		value->loadFromByteArray(data, position);
+	} catch(BencodeException& ex2) {
 		delete value;
-		return nullptr;
+		throw ex << "Failed to load value" << endl
+				 << ex2.what();
 	}
 	return value;
 }
@@ -67,49 +148,54 @@ BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &pos
 BencodeInteger::BencodeInteger() : BencodeValue(Type::Integer) {
 }
 
-BencodeInteger::BencodeInteger(qint64 value) : BencodeValue(Type::Integer), m_value(value) {
+BencodeInteger::BencodeInteger(qint64 value)
+	: BencodeValue(Type::Integer)
+	, m_value(value)
+{
 }
 
 BencodeInteger::~BencodeInteger() {
 }
 
-qint64 BencodeInteger::value() const {
+qint64 BencodeInteger::toInt() {
 	return m_value;
 }
 
-bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
-	setErrorString("Failed to parse bencode data");
+void BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
+	BencodeException ex("BencodeInteger::loadFromByteArray(): ");
+
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int &i = position;
 	if(i >= data.size()) {
-		return false;
+		throw ex << "Unexpectedly reached end of the data stream";
 	}
+
 	char firstByte = data[i++];
 	if(firstByte != 'i') {
-		return false;
+		throw ex << "First byte of Integer must be 'i', insted got '" << firstByte << "'";
 	}
+
 	QString valueString;
 	for(;;) {
 		if(i == data.size()) {
-			return false;
+			throw ex << "Unexpectedly reached end of the data stream";
 		}
 		char byte = data[i++];
 		if(byte == 'e') {
 			break;
 		}
 		if((byte < '0' || byte > '9') && byte != '-') {
-			return false;
+			throw ex << "Illegal character: '" << byte << "'";
 		}
 		valueString += byte;
 	}
 	bool ok;
 	m_value = valueString.toLongLong(&ok);
 	m_dataPosEnd = i;
-	if(ok) {
-		clearErrorString();
+	if(!ok) {
+		throw ex << "Value not an integer: '" << valueString << "'";
 	}
-	return ok;
 }
 
 
@@ -117,62 +203,62 @@ bool BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
 BencodeString::BencodeString() : BencodeValue(Type::String) {
 }
 
-BencodeString::BencodeString(const QByteArray& value) : BencodeValue(Type::String), m_value(value) {
+BencodeString::BencodeString(const QByteArray& value)
+	: BencodeValue(Type::String)
+	, m_value(value)
+{
 }
 
 BencodeString::~BencodeString() {
 }
 
-const QByteArray& BencodeString::value() const {
+QByteArray BencodeString::toByteArray() {
 	return m_value;
 }
 
-QByteArray BencodeString::value() {
-	return m_value;
-}
+void BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
+	BencodeException ex("BencodeString::loadFromByteArray(): ");
 
-bool BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
-	setErrorString("Failed to parse bencode data");
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
 	if(i >= data.size()) {
-		return false;
+		throw ex << "Unexpectedly reached end of the data stream";
 	}
+
 	char firstByte = data[i];
 	if(firstByte < '0' || firstByte > '9') {
-		return false;
+		throw ex << "First byte must be a digit, but got '" << firstByte << "'";
 	}
+
 	QString lengthString;
 	for(;;) {
 		if(i == data.size()) {
-			return false;
+			throw ex << "Unexpectedly reached end of the data stream";
 		}
 		char byte = data[i++];
 		if(byte == ':') {
 			break;
 		}
 		if((byte < '0' || byte > '9') && byte != '-') {
-			return false;
+			throw ex << "Illegal character: '" << byte << "'";
 		}
 		lengthString += byte;
 	}
 	bool ok;
 	int length = lengthString.toInt(&ok);
 	if(!ok) {
-		return false;
+		throw ex << "Length not an integer: '" << lengthString << "'";
 	}
 
 	for(int j = 0; j < length; j++) {
 		if(i == data.size()) {
-			return false;
+			throw ex << "Unexpectedly reached end of the data stream";
 		}
 		char byte = data[i++];
 		m_value += byte;
 	}
 	m_dataPosEnd = i;
-	clearErrorString();
-	return true;
 }
 
 
@@ -183,43 +269,44 @@ BencodeList::BencodeList() : BencodeValue(Type::List) {
 BencodeList::~BencodeList() {
 }
 
-const QList<BencodeValue*>& BencodeList::values() const {
+QList<BencodeValue*> BencodeList::toList() {
 	return m_values;
 }
 
-QList<BencodeValue*> BencodeList::values() {
-	return m_values;
-}
+void BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
+	BencodeException ex("BencodeList::loadFromByteArray(): ");
 
-bool BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
-	setErrorString("Failed to parse bencode data");
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
 	if(i >= data.size()) {
-		return false;
+		throw ex << "Unexpectedly reached end of the data stream";
 	}
+
 	char firstByte = data[i++];
 	if(firstByte != 'l') {
-		return false;
+		throw ex << "First byte of list must be 'l', instead got '" << firstByte << "'";
 	}
+
 	for(;;) {
 		if(i >= data.size()) {
-			return false;
+			throw ex << "Unexpectedly reached end of the data stream";
 		}
 		if(data[i] == 'e') {
 			i++;
 			break;
 		}
-		BencodeValue* element = BencodeValue::createFromByteArray(data, i);
-		if(element == nullptr) {
-			return false;
+
+		BencodeValue* element;
+		try {
+			element = BencodeValue::createFromByteArray(data, i);
+		} catch(BencodeException& ex2) {
+			throw ex << "Failed to create element" << endl << ex2.what();
 		}
+
 		m_values.push_back(element);
 	}
 	m_dataPosEnd = i;
-	clearErrorString();
-	return true;
 }
 
 
@@ -230,48 +317,87 @@ BencodeDictionary::BencodeDictionary() : BencodeValue(Type::Dictionary) {
 BencodeDictionary::~BencodeDictionary() {
 }
 
-const QList< QPair<BencodeValue*, BencodeValue*> >& BencodeDictionary::values() const {
-	return m_values;
+QList<BencodeValue*> BencodeDictionary::keys() const {
+	QList<BencodeValue*> keys;
+	for(auto pair : m_values) {
+		keys.push_back(pair.first);
+	}
+	return keys;
 }
 
-QList< QPair<BencodeValue*, BencodeValue*> > BencodeDictionary::values() {
-	return m_values;
+bool BencodeDictionary::keyExists(BencodeValue* key) const {
+	for(auto pair : m_values) {
+		if(pair.first == key) {
+			return true;
+		}
+		if(pair.first->equalTo(key)) {
+			return true;
+		}
+	}
+	return false;
 }
 
-bool BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position) {
-	setErrorString("Failed to parse bencode data");
+bool BencodeDictionary::keyExists(const QByteArray& key) const {
+	BencodeString convertedKey(key);
+	return keyExists(&convertedKey);
+}
+
+BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
+	for(auto pair : m_values) {
+		if(pair.first == key) {
+			return pair.second;
+		}
+		if(pair.first -> equalTo(key)) {
+			return pair.second;
+		}
+	}
+	throw BencodeException("BencodeDictionary::value(): No such key");
+}
+
+BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
+	BencodeString convertedKey(key);
+	return value(&convertedKey);
+}
+
+void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position) {
+	BencodeException ex("BencodeDictionary::loadFromByteArray(): ");
+
 	m_bencodeData = &data;
 	m_dataPosBegin = position;
 	int& i = position;
 	if(i == data.size()) {
-		return false;
+		throw ex << "Unexpectedly reached end of the data stream";
 	}
 	char firstByte = data[i++];
 	if(firstByte != 'd') {
-		return false;
+		throw ex << "First byte of a dictionary must be 'd', instead got '" << firstByte << "'";
 	}
 	for(;;) {
 		if(i >= data.size()) {
-			return false;
+			throw ex << "Unexpectedly reached end of the data stream";
 		}
 		if(data[i] == 'e') {
 			i++;
 			break;
 		}
-		BencodeValue* first = BencodeValue::createFromByteArray(data, i);
-		if(first == nullptr) {
-			return false;
+		BencodeValue* first;
+		BencodeValue* second;
+		try {
+			first = BencodeValue::createFromByteArray(data, i);
+		} catch(BencodeException& ex2) {
+			throw ex << "Failed to load first value" << endl << ex2.what();
 		}
-		BencodeValue* second = BencodeValue::createFromByteArray(data, i);
-		if(second == nullptr) {
-			return false;
+
+		try {
+			second = BencodeValue::createFromByteArray(data, i);
+		} catch(BencodeException& ex2) {
+			throw ex << "Failed to load second value" << endl << ex2.what();
 		}
+
 		QPair<BencodeValue*, BencodeValue*> pair(first, second);
 		m_values.push_back(pair);
 	}
 	m_dataPosEnd = i;
-	clearErrorString();
-	return true;
 }
 
 
@@ -316,94 +442,54 @@ void BencodeDictionary::print(QTextStream& out) const {
 	out << "}";
 }
 
-QList<BencodeValue*> BencodeDictionary::keys() const {
-	QList<BencodeValue*> keys;
-	for(auto pair : m_values) {
-		keys.push_back(pair.first);
-	}
-	return keys;
-}
-
-bool BencodeDictionary::keyExists(BencodeValue* key) const {
-	return (value(key) != nullptr);
-}
-
-bool BencodeDictionary::keyExists(const QByteArray& key) const {
-	return (value(key) != nullptr);
-}
-
-
-BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
-	for(auto pair : m_values) {
-		if(pair.first == key) {
-			return pair.second;
-		}
-		if(pair.first -> equalTo(key)) {
-			return pair.second;
-		}
-	}
-	return nullptr;
-}
-
-BencodeValue* BencodeList::getValue(int index) {
-	if(m_values.size() <= index) {
-		return nullptr;
-	}
-	return m_values[index];
-}
-
-BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
-	BencodeString convertedKey(key);
-	return value(&convertedKey);
-}
-
-
 
 bool BencodeInteger::equalTo(BencodeValue *other) const {
-	BencodeInteger* otherInt = other -> castTo<BencodeInteger>();
-	if(otherInt == nullptr) {
+	try {
+		return other->toInt() == m_value;
+	} catch(BencodeException& ex) {
 		return false;
 	}
-	return m_value == otherInt -> m_value;
 }
 
 bool BencodeString::equalTo(BencodeValue *other) const {
-	BencodeString* otherString = other -> castTo<BencodeString>();
-	if(otherString == nullptr) {
+	try {
+		return other->toByteArray() == m_value;
+	} catch(BencodeException& ex) {
 		return false;
 	}
-	return m_value == otherString -> m_value;
 }
 
 bool BencodeList::equalTo(BencodeValue *other) const {
-	BencodeList* otherList = other -> castTo<BencodeList>();
-	if(otherList == nullptr) {
-		return false;
-	}
-	if(m_values.size() != otherList -> m_values.size()) {
-		return false;
-	}
-	for(int i = 0; i < m_values.size(); i++) {
-		if(!m_values[i]->equalTo(otherList->m_values[i])) {
+	try {
+		auto list = other->toList();
+		if(list.size() != m_values.size()) {
 			return false;
 		}
+		for(int i = 0; i < list.size(); i++) {
+			if(!list[i]->equalTo(m_values[i])) {
+				return false;
+			}
+		}
+		return true;
+	} catch(BencodeException& ex) {
+		return false;
 	}
-	return true;
 }
 
 bool BencodeDictionary::equalTo(BencodeValue *other) const {
-	BencodeDictionary* otherDictionary = other -> castTo<BencodeDictionary>();
-	if(otherDictionary == nullptr) {
-		return false;
-	}
-	if(m_values.size() != otherDictionary -> m_values.size()) {
-		return false;
-	}
-	for(int i = 0; i < m_values.size(); i++) {
-		if(!m_values[i].first->equalTo(otherDictionary->m_values[i].first) ||
-				!m_values[i].second->equalTo(otherDictionary->m_values[i].second)) {
+	try {
+		BencodeDictionary* otherDict = other->toBencodeDictionary();
+		if(m_values.size() != otherDict->m_values.size()) {
 			return false;
 		}
+		for(int i = 0; i < m_values.size(); i++) {
+			if(!m_values[i].first->equalTo(otherDict->m_values[i].first) ||
+				!m_values[i].second->equalTo(otherDict->m_values[i].second)) {
+				return false;
+			}
+		}
+		return true;
+	} catch(BencodeException& ex) {
+		return false;
 	}
-	return true;
 }

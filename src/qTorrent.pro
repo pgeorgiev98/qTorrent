@@ -10,7 +10,7 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     qtorrent.cpp \
-    core/bencode.cpp \
+    core/bencodeparser.cpp \
     core/bencodevalue.cpp \
     core/torrentinfo.cpp \
     core/trackerclient.cpp \
@@ -27,7 +27,7 @@ SOURCES += main.cpp \
 
 HEADERS += \
     qtorrent.h \
-    core/bencode.h \
+    core/bencodeparser.h \
     core/bencodevalue.h \
     core/torrentinfo.h \
     core/trackerclient.h \

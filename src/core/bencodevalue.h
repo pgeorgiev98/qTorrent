@@ -6,7 +6,7 @@
 #include <QString>
 #include <QList>
 
-class Bencode;
+class BencodeParser;
 class BencodeInteger;
 class BencodeString;
 class BencodeList;
@@ -15,8 +15,16 @@ class BencodeDictionary;
 class BencodeException {
 	QString m_errorString;
 public:
-	BencodeException(const QString& errorString) : m_errorString(errorString) {
+	BencodeException(const QString& errorString) : m_errorString(errorString) {}
+	BencodeException() {}
+
+	template<typename T>
+	BencodeException& operator<<(const T& toAppend) {
+		QTextStream stream(&m_errorString);
+		stream << toAppend;
+		return *this;
 	}
+
 	const QString& what() const {
 		return m_errorString;
 	}
@@ -25,55 +33,66 @@ public:
 class BencodeValue {
 public:
 	enum class Type { Integer, String, List, Dictionary };
+
 protected:
+	// Stores the type of the value
 	Type m_type;
-	QString m_errorString;
+
+	// The location of this value in the main byte array
 	int m_dataPosBegin;
 	int m_dataPosEnd;
 	const QByteArray* m_bencodeData;
-	void setErrorString(QString errorString);
-	void clearErrorString();
+
+	// Loads this value by reading from data, starting from position index
+	// Throws BencodeException on error
+	virtual void loadFromByteArray(const QByteArray& data, int& position) = 0;
 public:
 	BencodeValue(Type type);
 	virtual ~BencodeValue();
+
+	// Returns the type of the value
 	Type type() const;
-	QString errorString() const;
-	QByteArray getBencodeData(bool includeBeginAndEnd = true);
-	virtual bool loadFromByteArray(const QByteArray& data, int& position) = 0;
+
+	bool isInteger() const;
+	bool isString() const;
+	bool isList() const;
+	bool isDictionary() const;
+
+	// Conversion functions
+	// All of these throw BencodeException on error
+
+	BencodeInteger* toBencodeInteger();
+	BencodeString* toBencodeString();
+	BencodeList* toBencodeList();
+	BencodeDictionary* toBencodeDictionary();
+
+	virtual qint64 toInt();
+	virtual QByteArray toByteArray();
+	virtual QList<BencodeValue*> toList();
+
+	// Returns the bencoded version of this value (used for calculating torrents info_hash)
+	QByteArray getRawBencodeData(bool includeBeginAndEnd = true);
+
+	// Creates a new BencodeValue by reading from data from position index
+	// Throws BencodeException on error
 	static BencodeValue* createFromByteArray(const QByteArray& data, int& position);
+
 	virtual void print(QTextStream& out) const = 0;
 	virtual bool equalTo(BencodeValue* other) const = 0;
-
-	void loadFromByteArrayEx(const QByteArray &data, int &position) {
-		if(!loadFromByteArray(data, position)) {
-			throw BencodeException(m_errorString);
-		}
-	}
-
-	template<typename T>
-	T* castTo() {
-		return dynamic_cast<T*>(this);
-	}
-
-	template<typename T>
-	T* castToEx() {
-		auto casted = dynamic_cast<T*>(this);
-		if(casted == nullptr) {
-			throw BencodeException("Dynamic cast failed");
-		}
-		return casted;
-	}
 };
 
 class BencodeInteger : public BencodeValue {
 protected:
 	qint64 m_value;
+
+	void loadFromByteArray(const QByteArray& data, int& position);
+
 public:
 	BencodeInteger();
 	BencodeInteger(qint64 value);
 	~BencodeInteger();
-	qint64 value() const;
-	bool loadFromByteArray(const QByteArray& data, int& position);
+
+	qint64 toInt();
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
 };
@@ -81,13 +100,15 @@ public:
 class BencodeString : public BencodeValue {
 protected:
 	QByteArray m_value;
+
+	void loadFromByteArray(const QByteArray& data, int& position);
+
 public:
 	BencodeString();
 	BencodeString(const QByteArray& value);
 	~BencodeString();
-	const QByteArray& value() const;
-	QByteArray value();
-	bool loadFromByteArray(const QByteArray& data, int& position);
+
+	QByteArray toByteArray();
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
 };
@@ -95,79 +116,36 @@ public:
 class BencodeList : public BencodeValue {
 protected:
 	QList<BencodeValue*> m_values;
+
+	void loadFromByteArray(const QByteArray& data, int& position);
+
 public:
 	BencodeList();
 	~BencodeList();
-	const QList<BencodeValue*>& values() const;
-	QList<BencodeValue*> values();
-	bool loadFromByteArray(const QByteArray& data, int& position);
+
+	QList<BencodeValue*> toList();
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
-	BencodeValue* getValue(int index);
-	BencodeValue* getValueEx(int index) {
-		auto val = getValue(index);
-		if(val == nullptr) {
-			throw BencodeException("Out of range");
-		}
-		return val;
-	}
-
-	template<typename T>
-	QList<T*> values() const {
-		QList<T*> values;
-		for(auto value : m_values) {
-			T* v = value -> castTo<T>();
-			if(v != nullptr) {
-				values.push_back(v);
-			}
-		}
-		return values;
-	}
 };
 
 class BencodeDictionary : public BencodeValue {
 protected:
 	QList< QPair<BencodeValue*, BencodeValue*> > m_values;
+
+	void loadFromByteArray(const QByteArray& data, int& position);
+
 public:
 	BencodeDictionary();
 	~BencodeDictionary();
-	const QList< QPair<BencodeValue*, BencodeValue*> >& values() const;
-	QList< QPair<BencodeValue*, BencodeValue*> > values();
-	bool loadFromByteArray(const QByteArray& data, int& position);
+
 	void print(QTextStream& out) const;
+	bool equalTo(BencodeValue *other) const;
+
 	QList<BencodeValue*> keys() const;
 	bool keyExists(BencodeValue* key) const;
 	bool keyExists(const QByteArray& key) const;
 	BencodeValue* value(BencodeValue* key) const;
 	BencodeValue* value(const QByteArray& key) const;
-	bool equalTo(BencodeValue *other) const;
-
-
-	BencodeValue* valueEx(BencodeValue* key) const {
-		auto val = value(key);
-		if(val == nullptr) {
-			throw BencodeException("Key does not exist in dictionary");
-		}
-		return val;
-	}
-	BencodeValue* valueEx(const QByteArray& key) const {
-		auto val = value(key);
-		if(val == nullptr) {
-			throw BencodeException("Key '" + key + "' does not exist in dictionary");
-		}
-		return val;
-	}
-	template<typename T>
-	QList<T*> keys() const {
-		QList<T*> keys;
-		for(auto pair : m_values) {
-			T* key = pair.first -> castTo<T>();
-			if(key != nullptr) {
-				keys.push_back(key);
-			}
-		}
-		return keys;
-	}
 };
 
 #endif // BENCODEVALUE_H

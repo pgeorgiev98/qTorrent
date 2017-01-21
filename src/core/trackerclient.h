@@ -5,7 +5,7 @@
 #include <QNetworkAccessManager>
 #include <QTimer>
 
-class Bencode;
+class BencodeParser;
 class Torrent;
 
 /*

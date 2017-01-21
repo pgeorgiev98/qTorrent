@@ -1,5 +1,5 @@
 #include "torrentinfo.h"
-#include "bencode.h"
+#include "bencodeparser.h"
 #include <QFile>
 #include <QString>
 #include <QCryptographicHash>
@@ -28,52 +28,74 @@ TorrentInfo::~TorrentInfo() {
 }
 
 bool TorrentInfo::loadTorrentFile(QString filename) {
-	Bencode bencodeParser;
-	if(!bencodeParser.loadFromFile(filename)) {
-		setError("Failed to open parse file " + filename + ": " + bencodeParser.errorString());
+	BencodeParser bencodeParser;
+
+	/* Read torrent file */
+	if(!bencodeParser.readFile(filename)) {
+		setError("Failed to read file " + filename + ": " + bencodeParser.errorString());
 		return false;
 	}
+
+	/* Parse torrent file */
+	if(!bencodeParser.parse()) {
+		setError("Failed to parse file " + filename + ": " + bencodeParser.errorString());
+		return false;
+	}
+
 	try {
+		/* Just in case we need to throw stuff */
+		BencodeException ex("TorrentInfo::loadTorrentFile(): ");
+
 		/* Required parameters */
 
+		// Main list
+		QList<BencodeValue*> mainList = bencodeParser.toList();
+
+		// The main list must have only one element - the main dictionary
+		if(mainList.isEmpty()) {
+			throw ex << "Torrent file is empty";
+		} else if(mainList.size() > 1) {
+			throw ex << "Main list size is " << mainList.size() << ". Expected 1";
+		}
+
 		// Main dictionary
-		auto mainDict = bencodeParser.getValueEx(0)->castToEx<BencodeDictionary>();
+		BencodeDictionary* mainDict = mainList[0]->toBencodeDictionary();
 
 		// The Info dictionary
-		auto infoDict = mainDict->valueEx("info")->castToEx<BencodeDictionary>();
+		BencodeDictionary* infoDict = mainDict->value("info")->toBencodeDictionary();
 
 		// Announce URL
 		try {
 			QList<QByteArray> announceUrlsList;
-			QList<BencodeList*> announceList = mainDict->valueEx("announce-list")->castToEx<BencodeList>()->values<BencodeList>();
-			for(auto announceSubList : announceList) {
-				QList<BencodeString*> stringsList = announceSubList->values<BencodeString>();
-				for(auto announceUrl : stringsList) {
+			QList<BencodeValue*> announceList = mainDict->value("announce-list")->toList();
+			for(BencodeValue* announceListValue : announceList) {
+				QList<BencodeValue*> announceSubList = announceListValue->toList();
+				for(BencodeValue* announceUrl : announceSubList) {
 					// [TODO] Support shuffling
 					// http://bittorrent.org/beps/bep_0012.html
-					announceUrlsList.push_back(announceUrl->value());
+					announceUrlsList.push_back(announceUrl->toByteArray());
 				}
 			}
 			m_announceUrlsList = announceUrlsList;
 		} catch(BencodeException& ex) {
 			m_announceUrlsList.clear();
-			QByteArray url = mainDict->valueEx("announce")->castToEx<BencodeString>()->value();
+			QByteArray url = mainDict->value("announce")->toByteArray();
 			m_announceUrlsList.push_back(url);
 		}
 
 		// Torrent name
-		m_torrentName = infoDict->valueEx("name")->castToEx<BencodeString>()->value();
+		m_torrentName = infoDict->value("name")->toByteArray();
 
 		// Piece length
-		m_pieceLength = infoDict->valueEx("piece length")->castToEx<BencodeInteger>()->value();
+		m_pieceLength = infoDict->value("piece length")->toInt();
 
 		// SHA-1 hash sums of the pieces
-		m_pieces = infoDict->valueEx("pieces")->castToEx<BencodeString>()->value();
+		m_pieces = infoDict->value("pieces")->toByteArray();
 
 		// Information about all files in the torrent
 		if(infoDict->keyExists("length")) {
 			// Single file torrent
-			m_length = infoDict->valueEx("length")->castToEx<BencodeInteger>()->value();
+			m_length = infoDict->value("length")->toInt();
 			FileInfo fileInfo;
 			fileInfo.length = m_length;
 			fileInfo.path = QList<QString>({m_torrentName});
@@ -81,14 +103,15 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		} else {
 			// Multi file torrent
 			m_length = 0;
-			auto filesList = infoDict->valueEx("files")->castToEx<BencodeList>();
-			for(auto file : filesList->values<BencodeDictionary>()) {
+			QList<BencodeValue*> filesList = infoDict->value("files")->toList();
+			for(BencodeValue* file : filesList) {
+				BencodeDictionary* fileDict = file->toBencodeDictionary();
 				FileInfo fileInfo;
-				fileInfo.length = file->valueEx("length")->castToEx<BencodeInteger>()->value();
-				auto pathList = file->valueEx("path")->castToEx<BencodeList>()->values<BencodeString>();
+				fileInfo.length = fileDict->value("length")->toInt();
+				QList<BencodeValue*> pathList = fileDict->value("path")->toList();
 				fileInfo.path = QList<QString>({m_torrentName});
-				for(auto v : pathList) {
-					fileInfo.path.push_back(v->value());
+				for(auto path : pathList) {
+					fileInfo.path.push_back(path->toByteArray());
 				}
 				m_length += fileInfo.length;
 				m_fileInfos.push_back(fileInfo);
@@ -100,7 +123,8 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		// Creation date
 		try {
 			m_creationDate = new QDateTime;
-			*m_creationDate = QDateTime::fromMSecsSinceEpoch(1000*mainDict->valueEx("creation date")->castToEx<BencodeInteger>()->value());
+			qint64 creation = mainDict->value("creation date")->toInt();
+			*m_creationDate = QDateTime::fromMSecsSinceEpoch(1000*creation);
 		} catch(BencodeException& ex) {
 			delete m_creationDate;
 			m_creationDate = nullptr;
@@ -109,7 +133,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		// Comment
 		try {
 			m_comment = new QString;
-			*m_comment = mainDict->valueEx("comment")->castToEx<BencodeString>()->value();
+			*m_comment = mainDict->value("comment")->toByteArray();
 		} catch(BencodeException& ex) {
 			delete m_comment;
 			m_comment = nullptr;
@@ -118,7 +142,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		// Created by
 		try {
 			m_createdBy = new QString;
-			*m_createdBy = mainDict->valueEx("created by")->castToEx<BencodeString>()->value();
+			*m_createdBy = mainDict->value("created by")->toByteArray();
 		} catch(BencodeException& ex) {
 			delete m_createdBy;
 			m_createdBy = nullptr;
@@ -126,14 +150,15 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 
 		// Encoding
 		try {
-			m_encoding = new QString(mainDict->valueEx("encoding")->castToEx<BencodeString>()->value());
+			m_encoding = new QString;
+			*m_encoding = mainDict->value("encoding")->toByteArray();
 		} catch(BencodeException& ex) {
 			// Default to UTF-8 encoding
 			m_encoding = new QString("UTF-8");
 		}
 
 		/* Calculate torrent file info hash */
-		m_infoHash = QCryptographicHash::hash(infoDict->getBencodeData(), QCryptographicHash::Sha1);
+		m_infoHash = QCryptographicHash::hash(infoDict->getRawBencodeData(), QCryptographicHash::Sha1);
 
 		/* Calculate total number of pieces */
 		m_numberOfPieces = m_length / m_pieceLength;
