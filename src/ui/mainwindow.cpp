@@ -8,6 +8,7 @@
 #include <QMenuBar>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 MainWindow::MainWindow(QTorrent *qTorrent)
 	: m_qTorrent(qTorrent)
@@ -72,10 +73,17 @@ void MainWindow::addTorrentAction() {
 													QDir::homePath(), tr("Torrent Files (*.torrent)"));
 
 	// String is empty if user canceled the dialog box
-	if(!filePath.isEmpty()) {
-		// This one's obvious
-		if(filePath.endsWith(".torrent", Qt::CaseInsensitive)) {
-			m_qTorrent->addTorrent(filePath);
-		}
+	if(filePath.isEmpty()) {
+		return;
 	}
+	// This one's obvious
+	if(!filePath.endsWith(".torrent", Qt::CaseInsensitive)) {
+		m_qTorrent->warning(tr("Not a torrent file: %1").arg(filePath));
+		return;
+	}
+	// Open a dialog box to select the download directory
+	QString downloadPath;
+	downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+	downloadPath = QFileDialog::getExistingDirectory(this, tr("Select download directory"), downloadPath);
+	m_qTorrent->addTorrent(filePath, downloadPath);
 }

@@ -24,9 +24,9 @@ bool QTorrent::startServer() {
 	return m_server->startServer();
 }
 
-bool QTorrent::addTorrent(const QString &filename) {
+bool QTorrent::addTorrent(const QString &filename, const QString& downloadPath) {
 	Torrent* torrent = new Torrent(this);
-	if(!torrent->createFromFile(filename)) {
+	if(!torrent->createFromFile(filename, downloadPath)) {
 		delete torrent;
 		return false;
 	}

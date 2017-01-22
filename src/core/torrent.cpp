@@ -33,7 +33,7 @@ Torrent::~Torrent() {
 	}
 }
 
-bool Torrent::createFromFile(const QString &filename) {
+bool Torrent::createFromFile(const QString &filename, const QString& downloadPath) {
 	m_torrentInfo = new TorrentInfo();
 
 	// Load torrent info from bencoded .torrent file
@@ -43,7 +43,7 @@ bool Torrent::createFromFile(const QString &filename) {
 	}
 
 	// Create all files and directories
-	if(!createFileTree(".")) {
+	if(!createFileTree(downloadPath)) {
 		return false;
 	}
 

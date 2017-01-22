@@ -14,7 +14,7 @@ public:
 	~QTorrent();
 
 	bool startServer();
-	bool addTorrent(const QString& filename);
+	bool addTorrent(const QString& filename, const QString& downloadPath);
 
 	void showMainWindow();
 

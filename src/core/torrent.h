@@ -26,7 +26,7 @@ public:
 
 	/* Operations */
 
-	bool createFromFile(const QString& filename);
+	bool createFromFile(const QString& filename, const QString& downloadPath);
 	bool createFileTree(const QString& directory);
 
 	/* Creates a peer and connects to him */
