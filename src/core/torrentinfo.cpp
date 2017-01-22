@@ -17,7 +17,15 @@ QString TorrentInfo::errorString() const {
 	return m_errorString;
 }
 
-TorrentInfo::TorrentInfo() {
+TorrentInfo::TorrentInfo()
+	: m_length(0)
+	, m_pieceLength(0)
+	, m_creationDate(nullptr)
+	, m_comment(nullptr)
+	, m_createdBy(nullptr)
+	, m_encoding(nullptr)
+	, m_numberOfPieces(0)
+{
 }
 
 TorrentInfo::~TorrentInfo() {
