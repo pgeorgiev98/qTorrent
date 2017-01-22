@@ -58,6 +58,9 @@ public:
 	/* Returns this torrent's current bitfield */
 	QVector<bool> bitfield();
 
+	// Returns m_torrentInfo->errorString();
+	QString errorString() const;
+
 
 	/* Signals */
 
@@ -86,6 +89,11 @@ private:
 
 	/* This flag is set when the torrent is completely downloaded */
 	bool m_downloaded;
+
+	/* Contains last error */
+	QString m_errorString;
+	void clearError();
+	void setError(const QString& errorString);
 };
 
 #endif // TORRENT_H

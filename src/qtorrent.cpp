@@ -27,6 +27,7 @@ bool QTorrent::startServer() {
 bool QTorrent::addTorrent(const QString &filename, const QString& downloadPath) {
 	Torrent* torrent = new Torrent(this);
 	if(!torrent->createFromFile(filename, downloadPath)) {
+		warning("Failed to read torrent file\n" + torrent->errorString());
 		delete torrent;
 		return false;
 	}

@@ -34,11 +34,12 @@ Torrent::~Torrent() {
 }
 
 bool Torrent::createFromFile(const QString &filename, const QString& downloadPath) {
+	clearError();
 	m_torrentInfo = new TorrentInfo();
 
 	// Load torrent info from bencoded .torrent file
 	if(!m_torrentInfo->loadTorrentFile(filename)) {
-		qDebug() << "Failed to load torrent file" << m_torrentInfo->errorString();
+		setError(m_torrentInfo->errorString());
 		return false;
 	}
 
@@ -81,7 +82,7 @@ bool Torrent::createFileTree(const QString &directory) {
 		for(int i = 0; i < f.path.size() - 1; i++) {
 			if(!dir.exists(f.path[i])) {
 				if(!dir.mkdir(f.path[i])) {
-					qDebug() << "Failed to create directory" << f.path[i];
+					setError("Failed to create directory " + f.path[i]);
 					return false;
 				}
 			}
@@ -90,11 +91,11 @@ bool Torrent::createFileTree(const QString &directory) {
 		QFile* file = new QFile();
 		file->setFileName(dir.absoluteFilePath(f.path.last()));
 		if(!file->open(QFile::ReadWrite)) {
-			qDebug() << "Failed to open file" << file->errorString();
+			setError("Failed to open file " + file->fileName() + ": " + file->errorString());
 			return false;
 		}
 		if(!file->resize(f.length)) {
-			qDebug() << "Failed to resize file" << file->errorString();
+			setError("Failed to resize file " + file->fileName() + ": " + file->errorString());
 			return false;
 		}
 		file->close();
@@ -302,6 +303,11 @@ QVector<bool> Torrent::bitfield() {
 }
 
 
+QString Torrent::errorString() const {
+	return m_errorString;
+}
+
+
 /* signals */
 
 void Torrent::downloadedPiece(Piece *piece) {
@@ -341,4 +347,12 @@ void Torrent::fullyDownloaded() {
 			peer->disconnect();
 		}
 	}
+}
+
+void Torrent::clearError() {
+	m_errorString.clear();
+}
+
+void Torrent::setError(const QString &errorString) {
+	m_errorString = errorString;
 }
