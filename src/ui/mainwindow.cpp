@@ -85,5 +85,9 @@ void MainWindow::addTorrentAction() {
 	QString downloadPath;
 	downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 	downloadPath = QFileDialog::getExistingDirectory(this, tr("Select download directory"), downloadPath);
+	// String is empty if user canceled the dialog box
+	if(downloadPath.isEmpty()) {
+		return;
+	}
 	m_qTorrent->addTorrent(filePath, downloadPath);
 }
