@@ -18,6 +18,15 @@ public:
 
 	void showMainWindow();
 
+	/* Opens a critical MessageBox */
+	void critical(const QString& text);
+	/* Opens an information MessageBox */
+	void information(const QString& text);
+	/* Opens question MessageBox. Returns true on 'yes' */
+	bool question(const QString& text);
+	/* Opens a warning MessageBox */
+	void warning(const QString& text);
+
 	QList<Torrent*>& torrents();
 	TorrentServer* server();
 	MainWindow* mainWindow();
