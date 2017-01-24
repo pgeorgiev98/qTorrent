@@ -4,6 +4,7 @@
 #include "ui/mainwindow.h"
 #include <QGuiApplication>
 #include <QMessageBox>
+#include <QUrlQuery>
 
 QTorrent::QTorrent()
 	: m_server(new TorrentServer(this))
@@ -36,12 +37,55 @@ bool QTorrent::addTorrent(const QString &filename, const QString& downloadPath) 
 	return true;
 }
 
+bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
+	QUrlQuery query(url);
+
+	QString infoHashString;
+	QByteArray infoHash;
+
+	QByteArray trackerUrl;
+
+	QString displayName;
+
+	// Every magnet link must have an info hash
+	if(!query.hasQueryItem("xt")) {
+		return false;
+	}
+
+	// We can only support magnet links with trackers
+	// Because those without trackers require DHT
+	if(!query.hasQueryItem("tr")) {
+		return false;
+	}
+
+	// Read info hash
+	infoHashString = query.queryItemValue("xt");
+	if(!infoHashString.startsWith("urn:btih:")) {
+		return false;
+	}
+	infoHashString.remove(0, strlen("urn:btih:"));
+	infoHash = QByteArray::fromHex(infoHashString.toLatin1());
+
+	// Read the tracker url
+	trackerUrl = QByteArray::fromPercentEncoding(query.queryItemValue("tr").toLatin1());
+
+	// Read display name
+	displayName = query.queryItemValue("dn");
+
+	// TODO
+	return false;
+}
+
 bool QTorrent::addTorrentFromUrl(QUrl url) {
 	if(url.isLocalFile()) {
+		// It's a local file
 		QString downloadLocation = m_mainWindow->getDownloadLocation();
 		if(!downloadLocation.isEmpty()) {
 			return addTorrent(url.toLocalFile(), downloadLocation);
 		}
+	} else if(url.scheme() == "magnet") {
+		// It's a magnet link
+		return addTorrentFromMagnetLink(url);
 	}
 	return false;
 }
