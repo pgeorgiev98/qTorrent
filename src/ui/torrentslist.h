@@ -30,6 +30,12 @@ public slots:
 	void showDownloading();
 	void showUploading();
 
+protected:
+	// For the drag and drop functionality
+	void dragEnterEvent(QDragEnterEvent *event);
+	void dragMoveEvent(QDragMoveEvent *event);
+	void dropEvent(QDropEvent *event);
+
 private:
 	QTorrent* m_qTorrent;
 	QList<TorrentsListItem*> m_items;

@@ -3,6 +3,7 @@
 
 #include <QList>
 #include <QString>
+#include <QUrl>
 
 class Torrent;
 class TorrentServer;
@@ -15,6 +16,7 @@ public:
 
 	bool startServer();
 	bool addTorrent(const QString& filename, const QString& downloadPath);
+	bool addTorrentFromUrl(QUrl url);
 
 	void showMainWindow();
 

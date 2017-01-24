@@ -67,6 +67,15 @@ void MainWindow::createMenus() {
 }
 
 
+QString MainWindow::getDownloadLocation() {
+	// Open a dialog box to select the download directory
+	QString downloadPath;
+	downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+	downloadPath = QFileDialog::getExistingDirectory(this, tr("Select download directory"), downloadPath);
+	// String is empty if user canceled the dialog box
+	return downloadPath;
+}
+
 void MainWindow::addTorrentAction() {
 	// Open a dialog box that accepts only torrent files
 	QString filePath = QFileDialog::getOpenFileName(this, tr("Open torrent"),
@@ -76,18 +85,18 @@ void MainWindow::addTorrentAction() {
 	if(filePath.isEmpty()) {
 		return;
 	}
+
 	// This one's obvious
 	if(!filePath.endsWith(".torrent", Qt::CaseInsensitive)) {
 		m_qTorrent->warning(tr("Not a torrent file: %1").arg(filePath));
 		return;
 	}
-	// Open a dialog box to select the download directory
-	QString downloadPath;
-	downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-	downloadPath = QFileDialog::getExistingDirectory(this, tr("Select download directory"), downloadPath);
-	// String is empty if user canceled the dialog box
+
+	// Get download location
+	QString downloadPath = getDownloadLocation();
 	if(downloadPath.isEmpty()) {
 		return;
 	}
+
 	m_qTorrent->addTorrent(filePath, downloadPath);
 }

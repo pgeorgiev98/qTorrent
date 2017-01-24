@@ -22,6 +22,8 @@ public:
 	void addTorrent(Torrent* torrent);
 	void removeTorrent(Torrent* torrent);
 
+	QString getDownloadLocation();
+
 private:
 	QTorrent* m_qTorrent;
 

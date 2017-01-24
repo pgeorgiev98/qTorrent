@@ -36,6 +36,16 @@ bool QTorrent::addTorrent(const QString &filename, const QString& downloadPath) 
 	return true;
 }
 
+bool QTorrent::addTorrentFromUrl(QUrl url) {
+	if(url.isLocalFile()) {
+		QString downloadLocation = m_mainWindow->getDownloadLocation();
+		if(!downloadLocation.isEmpty()) {
+			return addTorrent(url.toLocalFile(), downloadLocation);
+		}
+	}
+	return false;
+}
+
 
 void QTorrent::showMainWindow() {
 	m_mainWindow->show();

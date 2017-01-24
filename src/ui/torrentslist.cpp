@@ -4,6 +4,9 @@
 #include "torrentslist.h"
 #include "torrentslistitem.h"
 #include <QHeaderView>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
 
 const int UI_REFRESH_INTERVAL = 300;
 
@@ -22,6 +25,7 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 	setRootIsDecorated(false);
 	setSortingEnabled(true);
 	setExpandsOnDoubleClick(true);
+	setAcceptDrops(true);
 
 	headerView->setSectionsMovable(true);
 	headerView->setSectionsClickable(true);
@@ -106,4 +110,22 @@ TorrentsListItem* TorrentsList::torrentItem(const QString &name) {
 		}
 	}
 	return nullptr;
+}
+
+void TorrentsList::dragEnterEvent(QDragEnterEvent *event) {
+	event->acceptProposedAction();
+}
+
+void TorrentsList::dragMoveEvent(QDragMoveEvent *event) {
+	event->acceptProposedAction();
+}
+
+void TorrentsList::dropEvent(QDropEvent *event) {
+	const QMimeData* mimeData = event->mimeData();
+	if(mimeData->hasUrls()) {
+		QList<QUrl> urlList = mimeData->urls();
+		for(QUrl url : urlList) {
+			m_qTorrent->addTorrentFromUrl(url);
+		}
+	}
 }
