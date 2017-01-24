@@ -57,7 +57,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 		/* Required parameters */
 
 		// Main list
-		QList<BencodeValue*> mainList = bencodeParser.toList();
+		QList<BencodeValue*> mainList = bencodeParser.list();
 
 		// The main list must have only one element - the main dictionary
 		if(mainList.isEmpty()) {

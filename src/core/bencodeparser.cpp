@@ -17,6 +17,12 @@ BencodeParser::BencodeParser() {
 BencodeParser::~BencodeParser() {
 }
 
+
+QString BencodeParser::errorString() const {
+	return m_errorString;
+}
+
+
 void BencodeParser::setData(const QByteArray &data) {
 	m_bencodeData = data;
 }
@@ -52,23 +58,18 @@ bool BencodeParser::parse() {
 			return false;
 		}
 
-		m_values.push_back(value);
+		m_mainList.push_back(value);
 	}
 
 	return true;
 }
 
-void BencodeParser::print(QTextStream &out) const {
-	for(auto v : m_values) {
-		v -> print(out);
-		out << endl;
-	}
-}
-
-QString BencodeParser::errorString() const {
-	return m_errorString;
-}
 
 const QByteArray& BencodeParser::rawBencodeData() const {
 	return m_bencodeData;
+}
+
+
+QList<BencodeValue*> BencodeParser::list() const {
+	return m_mainList;
 }

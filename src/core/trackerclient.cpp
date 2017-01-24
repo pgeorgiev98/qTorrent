@@ -136,7 +136,7 @@ void TrackerClient::httpFinished() {
 		}
 
 		// Main list of the response
-		QList<BencodeValue*> responseMainList = bencodeParser.toList();
+		QList<BencodeValue*> responseMainList = bencodeParser.list();
 		if(responseMainList.isEmpty()) {
 			throw ex << "Tracker sent an empty response";
 		} else if(responseMainList.size() > 1) {
