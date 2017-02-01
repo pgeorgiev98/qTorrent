@@ -70,8 +70,11 @@ public:
 	virtual QByteArray toByteArray();
 	virtual QList<BencodeValue*> toList();
 
+	// Bencodes the value
+	virtual QByteArray bencode(bool includeMetadata = true) const = 0;
+
 	// Returns the bencoded version of this value (used for calculating torrents info_hash)
-	QByteArray getRawBencodeData(bool includeBeginAndEnd = true);
+	QByteArray getRawBencodeData(bool includeMetadata = true);
 
 	// Creates a new BencodeValue by reading from data from position index
 	// Throws BencodeException on error
@@ -93,6 +96,7 @@ public:
 	~BencodeInteger();
 
 	qint64 toInt();
+	QByteArray bencode(bool includeMetadata) const;
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
 };
@@ -109,6 +113,7 @@ public:
 	~BencodeString();
 
 	QByteArray toByteArray();
+	QByteArray bencode(bool includeMetadata) const;
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
 };
@@ -124,6 +129,7 @@ public:
 	~BencodeList();
 
 	QList<BencodeValue*> toList();
+	QByteArray bencode(bool includeMetadata) const;
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
 };
@@ -146,6 +152,7 @@ public:
 	bool keyExists(const QByteArray& key) const;
 	BencodeValue* value(BencodeValue* key) const;
 	BencodeValue* value(const QByteArray& key) const;
+	QByteArray bencode(bool includeMetadata) const;
 };
 
 #endif // BENCODEVALUE_H

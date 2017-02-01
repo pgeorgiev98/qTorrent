@@ -93,12 +93,12 @@ QList<BencodeValue*> BencodeValue::toList() {
 }
 
 
-QByteArray BencodeValue::getRawBencodeData(bool includeBeginAndEnd) {
+QByteArray BencodeValue::getRawBencodeData(bool includeMetadata) {
 	QByteArray returnData;
 	int begin = m_dataPosBegin;
 	int end = m_dataPosEnd;
 
-	if(!includeBeginAndEnd) {
+	if(!includeMetadata) {
 		begin++;
 		end--;
 	}
@@ -405,6 +405,59 @@ void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 		m_values.push_back(pair);
 	}
 	m_dataPosEnd = i;
+}
+
+
+QByteArray BencodeInteger::bencode(bool includeMetadata) const {
+	QString data;
+	QTextStream out(&data);
+	if(includeMetadata) {
+		out << 'i' << QString::number(m_value) << 'e';
+	} else {
+		out << QString::number(m_value);
+	}
+	return data.toUtf8();
+}
+
+QByteArray BencodeString::bencode(bool includeMetadata) const {
+	QString data;
+	QTextStream out(&data);
+	if(includeMetadata) {
+		out << QString::number(m_value.size()) << ':' << m_value;
+	} else {
+		out << m_value;
+	}
+	return data.toUtf8();
+}
+
+QByteArray BencodeList::bencode(bool includeMetadata) const {
+	QString data;
+	QTextStream out(&data);
+	if(includeMetadata) {
+		out << 'l';
+	}
+	for(BencodeValue* value : m_values) {
+		out << value->bencode();
+	}
+	if(includeMetadata) {
+		out << 'e';
+	}
+	return data.toUtf8();
+}
+
+QByteArray BencodeDictionary::bencode(bool includeMetadata) const {
+	QString data;
+	QTextStream out(&data);
+	if(includeMetadata) {
+		out << 'd';
+	}
+	for(auto pair : m_values) {
+		out << pair.first << pair.second;
+	}
+	if(includeMetadata) {
+		out << 'e';
+	}
+	return data.toUtf8();
 }
 
 
