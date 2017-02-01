@@ -38,42 +38,15 @@ bool QTorrent::addTorrent(const QString &filename, const QString& downloadPath) 
 }
 
 bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
-	QUrlQuery query(url);
-
-	QString infoHashString;
-	QByteArray infoHash;
-
-	QByteArray trackerUrl;
-
-	QString displayName;
-
-	// Every magnet link must have an info hash
-	if(!query.hasQueryItem("xt")) {
+	Torrent* torrent = new Torrent(this);
+	if(!torrent->createFromMagnetLink(url)) {
+		warning("Failed to load torrent from magnet link\n" + torrent->errorString());
+		delete torrent;
 		return false;
 	}
-
-	// We can only support magnet links with trackers
-	// Because those without trackers require DHT
-	if(!query.hasQueryItem("tr")) {
-		return false;
-	}
-
-	// Read info hash
-	infoHashString = query.queryItemValue("xt");
-	if(!infoHashString.startsWith("urn:btih:")) {
-		return false;
-	}
-	infoHashString.remove(0, strlen("urn:btih:"));
-	infoHash = QByteArray::fromHex(infoHashString.toLatin1());
-
-	// Read the tracker url
-	trackerUrl = QByteArray::fromPercentEncoding(query.queryItemValue("tr").toLatin1());
-
-	// Read display name
-	displayName = query.queryItemValue("dn");
-
-	// TODO
-	return false;
+	m_torrents.push_back(torrent);
+	m_mainWindow->addTorrent(torrent);
+	return true;
 }
 
 bool QTorrent::addTorrentFromUrl(QUrl url) {

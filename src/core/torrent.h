@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QList>
+#include <QUrl>
 
 class QTorrent;
 class Peer;
@@ -27,6 +28,7 @@ public:
 	/* Operations */
 
 	bool createFromFile(const QString& filename, const QString& downloadPath);
+	bool createFromMagnetLink(QUrl url);
 	bool createFileTree(const QString& directory);
 
 	/* Creates a peer and connects to him */
