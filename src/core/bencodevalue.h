@@ -157,7 +157,7 @@ public:
 	BencodeValue* value(BencodeValue* key) const;
 	BencodeValue* value(const QByteArray& key) const;
 	void setPairs(const QList< QPair<BencodeValue*, BencodeValue*> >& pairs);
-	void add(QPair<BencodeValue*, BencodeValue*> pair);
+	void add(BencodeValue* key, BencodeValue* value);
 	QByteArray bencode(bool includeMetadata) const;
 };
 

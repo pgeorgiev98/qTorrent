@@ -428,8 +428,8 @@ void BencodeDictionary::setPairs(const QList<QPair<BencodeValue *, BencodeValue 
 	m_values = pairs;
 }
 
-void BencodeDictionary::add(QPair<BencodeValue *, BencodeValue *> pair) {
-	m_values.push_back(pair);
+void BencodeDictionary::add(BencodeValue* key, BencodeValue* value) {
+	m_values.push_back(QPair<BencodeValue*,BencodeValue*>(key, value));
 }
 
 
@@ -477,7 +477,7 @@ QByteArray BencodeDictionary::bencode(bool includeMetadata) const {
 		out << 'd';
 	}
 	for(auto pair : m_values) {
-		out << pair.first << pair.second;
+		out << pair.first->bencode() << pair.second->bencode();
 	}
 	if(includeMetadata) {
 		out << 'e';
