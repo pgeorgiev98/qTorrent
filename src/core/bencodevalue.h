@@ -96,6 +96,7 @@ public:
 	~BencodeInteger();
 
 	qint64 toInt();
+	void setValue(qint64 value);
 	QByteArray bencode(bool includeMetadata) const;
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
@@ -113,6 +114,7 @@ public:
 	~BencodeString();
 
 	QByteArray toByteArray();
+	void setValue(const QByteArray& value);
 	QByteArray bencode(bool includeMetadata) const;
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
@@ -129,6 +131,8 @@ public:
 	~BencodeList();
 
 	QList<BencodeValue*> toList();
+	void setValues(const QList<BencodeValue*>& values);
+	void add(BencodeValue* value);
 	QByteArray bencode(bool includeMetadata) const;
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
@@ -152,6 +156,8 @@ public:
 	bool keyExists(const QByteArray& key) const;
 	BencodeValue* value(BencodeValue* key) const;
 	BencodeValue* value(const QByteArray& key) const;
+	void setPairs(const QList< QPair<BencodeValue*, BencodeValue*> >& pairs);
+	void add(QPair<BencodeValue*, BencodeValue*> pair);
 	QByteArray bencode(bool includeMetadata) const;
 };
 

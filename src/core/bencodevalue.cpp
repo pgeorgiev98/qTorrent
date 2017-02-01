@@ -408,6 +408,31 @@ void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 }
 
 
+void BencodeInteger::setValue(qint64 value) {
+	m_value = value;
+}
+
+void BencodeString::setValue(const QByteArray &value) {
+	m_value = value;
+}
+
+void BencodeList::setValues(const QList<BencodeValue *> &values) {
+	m_values = values;
+}
+
+void BencodeList::add(BencodeValue *value) {
+	m_values.push_back(value);
+}
+
+void BencodeDictionary::setPairs(const QList<QPair<BencodeValue *, BencodeValue *> > &pairs) {
+	m_values = pairs;
+}
+
+void BencodeDictionary::add(QPair<BencodeValue *, BencodeValue *> pair) {
+	m_values.push_back(pair);
+}
+
+
 QByteArray BencodeInteger::bencode(bool includeMetadata) const {
 	QString data;
 	QTextStream out(&data);
