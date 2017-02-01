@@ -25,9 +25,14 @@ bool QTorrent::startServer() {
 	return m_server->startServer();
 }
 
-bool QTorrent::addTorrent(const QString &filename, const QString& downloadPath) {
+bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
+	QString downloadLocation = m_mainWindow->getDownloadLocation();
+	if(downloadLocation.isEmpty()) {
+		return false;
+	}
+
 	Torrent* torrent = new Torrent(this);
-	if(!torrent->createFromFile(filename, downloadPath)) {
+	if(!torrent->createFromFile(filename, downloadLocation)) {
 		warning("Failed to read torrent file\n" + torrent->errorString());
 		delete torrent;
 		return false;
@@ -52,10 +57,7 @@ bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
 bool QTorrent::addTorrentFromUrl(QUrl url) {
 	if(url.isLocalFile()) {
 		// It's a local file
-		QString downloadLocation = m_mainWindow->getDownloadLocation();
-		if(!downloadLocation.isEmpty()) {
-			return addTorrent(url.toLocalFile(), downloadLocation);
-		}
+		return addTorrentFromLocalFile(url.toLocalFile());
 	} else if(url.scheme() == "magnet") {
 		// It's a magnet link
 		return addTorrentFromMagnetLink(url);

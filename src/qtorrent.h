@@ -15,7 +15,7 @@ public:
 	~QTorrent();
 
 	bool startServer();
-	bool addTorrent(const QString& filename, const QString& downloadPath);
+	bool addTorrentFromLocalFile(const QString& filename);
 	bool addTorrentFromMagnetLink(QUrl url);
 	bool addTorrentFromUrl(QUrl url);
 

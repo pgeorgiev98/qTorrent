@@ -92,11 +92,5 @@ void MainWindow::addTorrentAction() {
 		return;
 	}
 
-	// Get download location
-	QString downloadPath = getDownloadLocation();
-	if(downloadPath.isEmpty()) {
-		return;
-	}
-
-	m_qTorrent->addTorrent(filePath, downloadPath);
+	m_qTorrent->addTorrentFromLocalFile(filePath);
 }
