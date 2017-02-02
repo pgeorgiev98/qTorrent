@@ -96,7 +96,7 @@ void Peer::sendHandshake() {
 		dataToWrite.push_back(char(0));
 	}
 	dataToWrite.push_back(m_torrent->torrentInfo()->infoHash());
-	dataToWrite.push_back("ThisIsNotAFakePeerId"); // TODO
+	dataToWrite.push_back(m_qTorrent->peerId());
 	m_socket->write(dataToWrite);
 }
 

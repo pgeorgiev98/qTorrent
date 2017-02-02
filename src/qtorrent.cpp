@@ -11,7 +11,12 @@ QTorrent::QTorrent()
 	: m_server(new TorrentServer(this))
 	, m_mainWindow(new MainWindow(this))
 {
-
+	// Generate random peer id that starts with 'qT'
+	qsrand(QDateTime::currentMSecsSinceEpoch());
+	m_peerId.push_back("qT");
+	while(m_peerId.size() < 20) {
+		m_peerId.push_back(char(qrand() % 256));
+	}
 }
 
 QTorrent::~QTorrent() {
@@ -102,6 +107,11 @@ bool QTorrent::question(const QString &text) {
 
 void QTorrent::warning(const QString &text) {
 	QMessageBox::warning(m_mainWindow, QGuiApplication::applicationDisplayName(), text);
+}
+
+
+const QByteArray& QTorrent::peerId() const {
+	return m_peerId;
 }
 
 

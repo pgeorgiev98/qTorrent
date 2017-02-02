@@ -60,7 +60,7 @@ void TrackerClient::announce(Event event) {
 	QUrlQuery query(url);
 	auto hash = m_torrentInfo->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
-	query.addQueryItem("peer_id", "ThisIsNotAFakePeerId");
+	query.addQueryItem("peer_id", m_torrent->qTorrent()->peerId());
 	query.addQueryItem("port", portString);
 	query.addQueryItem("uploaded", bytesUploadedString);
 	query.addQueryItem("downloaded", bytesDownloadedString);
@@ -73,7 +73,6 @@ void TrackerClient::announce(Event event) {
 	} else if(event == Event::Completed) {
 		query.addQueryItem("event", "completed");
 	}
-	/* TODO: Use non-hardcoded values */
 
 	url.setQuery(query);
 	qDebug() << "Announce" << url.toString();

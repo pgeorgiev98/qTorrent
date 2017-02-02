@@ -30,11 +30,14 @@ public:
 	/* Opens a warning MessageBox */
 	void warning(const QString& text);
 
+	const QByteArray& peerId() const;
 	QList<Torrent*>& torrents();
 	TorrentServer* server();
 	MainWindow* mainWindow();
 
 private:
+	QByteArray m_peerId;
+
 	QList<Torrent*> m_torrents;
 	TorrentServer* m_server;
 
