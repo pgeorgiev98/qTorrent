@@ -111,3 +111,11 @@ void TorrentsListItem::setUploaded(qint64 value) {
 	setText(Uploaded, toPrettySize(value));
 	setSortData(Uploaded, value);
 }
+
+void TorrentsListItem::onPauseAction() {
+	m_torrent->pause();
+}
+
+void TorrentsListItem::onStartAction() {
+	m_torrent->start();
+}

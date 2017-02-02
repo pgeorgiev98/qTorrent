@@ -7,6 +7,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QMenu>
 
 const int UI_REFRESH_INTERVAL = 300;
 
@@ -26,6 +27,7 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 	setSortingEnabled(true);
 	setExpandsOnDoubleClick(true);
 	setAcceptDrops(true);
+	setContextMenuPolicy(Qt::CustomContextMenu);
 
 	headerView->setSectionsMovable(true);
 	headerView->setSectionsClickable(true);
@@ -43,7 +45,9 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 
 	m_refreshTimer.setInterval(UI_REFRESH_INTERVAL);
 	m_refreshTimer.start();
+
 	connect(&m_refreshTimer, SIGNAL(timeout()), this, SLOT(refresh()));
+	connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(openContextMenu(QPoint)));
 }
 
 TorrentsList::~TorrentsList() {
@@ -65,6 +69,32 @@ void TorrentsList::refresh() {
 	for(TorrentsListItem* item : m_items) {
 		item->refresh();
 	}
+}
+
+void TorrentsList::openContextMenu(const QPoint &pos) {
+	TorrentsListItem* item = dynamic_cast<TorrentsListItem*>(itemAt(pos));
+
+	if(item == nullptr) {
+		// This shouldn't happen at all
+		return;
+	}
+
+	QAction* pauseAct = new QAction(tr("&Pause"), this);
+	QAction* startAct = new QAction(tr("&Start"), this);
+
+	if(item->torrent()->isPaused()) {
+		pauseAct->setEnabled(false);
+	}
+
+	QMenu menu(this);
+
+	menu.addAction(pauseAct);
+	menu.addAction(startAct);
+
+	connect(pauseAct, SIGNAL(triggered()), item, SLOT(onPauseAction()));
+	connect(startAct, SIGNAL(triggered()), item, SLOT(onStartAction()));
+
+	menu.exec(mapToGlobal(pos));
 }
 
 void TorrentsList::showAll() {
