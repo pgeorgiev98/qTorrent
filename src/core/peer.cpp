@@ -77,7 +77,8 @@ void Peer::start() {
 	m_paused = false;
 	if(m_status == ConnectionEstablished) {
 		sendMessages();
-	} else if(!isConnected()) {
+	} else if(m_socket->state() == QAbstractSocket::UnconnectedState) {
+		// UnconnectedState - Not connected/connecting
 		startConnection();
 	}
 }
