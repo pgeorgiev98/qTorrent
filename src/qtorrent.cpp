@@ -1,5 +1,6 @@
 #include "qtorrent.h"
 #include "core/torrent.h"
+#include "core/torrentinfo.h"
 #include "core/torrentserver.h"
 #include "ui/mainwindow.h"
 #include <QGuiApplication>
@@ -37,6 +38,18 @@ bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
 		delete torrent;
 		return false;
 	}
+
+	// Check if torrent already added to list
+	for(Torrent* t : m_torrents) {
+		if(t->torrentInfo()->infoHash() == torrent->torrentInfo()->infoHash()) {
+			warning("The torrent you're trying to add is already in the torrents list.");
+			delete torrent;
+			return false;
+		}
+	}
+
+	torrent->start();
+
 	m_torrents.push_back(torrent);
 	m_mainWindow->addTorrent(torrent);
 	return true;

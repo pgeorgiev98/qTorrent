@@ -18,7 +18,7 @@ Torrent::Torrent(QTorrent *qTorrent)
 	, m_bytesUploaded(0)
 	, m_downloadedPieces(0)
 	, m_downloaded(false)
-	, m_paused(false)
+	, m_paused(true)
 {
 }
 
@@ -73,9 +73,6 @@ bool Torrent::createFromFile(const QString &filename, const QString& downloadPat
 	m_trackerClient = new TrackerClient(this, m_torrentInfo);
 
 	m_status = Ready;
-
-	// Start downloading/uploading
-	start();
 
 	return true;
 }
