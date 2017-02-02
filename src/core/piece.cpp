@@ -134,6 +134,9 @@ Block* Piece::requestBlock(int size) {
 	Block* block = nullptr;
 
 	for(auto b : m_blocks) {
+		if(!b->downloaded() && b->assignees().isEmpty()) {
+			return b;
+		}
 		if(tmp < b->begin()) {
 			s = b->begin() - tmp;
 			if(s > size) {

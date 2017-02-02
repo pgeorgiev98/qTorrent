@@ -253,6 +253,7 @@ void Peer::sendMessages() {
 		// Cancel all blocks
 		for(Block* block : m_blocksQueue) {
 			sendCancel(block);
+			block->removeAssignee(this);
 		}
 
 	} else {
