@@ -74,9 +74,6 @@ bool Torrent::createFromFile(const QString &filename, const QString& downloadPat
 
 	m_status = Ready;
 
-	// Send the first announce to the tracker
-	m_trackerClient->announce(TrackerClient::Started);
-
 	// Start downloading/uploading
 	start();
 
@@ -159,6 +156,12 @@ bool Torrent::createFileTree(const QString &directory) {
 }
 
 void Torrent::start() {
+	if(!m_hasAnnouncedStarted) {
+		// Send the first announce to the tracker
+		m_trackerClient->announce(TrackerClient::Started);
+		m_hasAnnouncedStarted = true;
+	}
+
 	// Start all peers
 	for(Peer* peer :  m_peers) {
 		peer->start();
@@ -362,6 +365,10 @@ bool Torrent::downloaded() {
 
 bool Torrent::isPaused() const {
 	return m_paused;
+}
+
+bool Torrent::hasAnnouncedStarted() const {
+	return m_hasAnnouncedStarted;
 }
 
 

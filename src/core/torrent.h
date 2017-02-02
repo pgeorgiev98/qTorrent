@@ -66,6 +66,8 @@ public:
 
 	bool isPaused() const;
 
+	bool hasAnnouncedStarted() const;
+
 	/* Calculates the current percentage of the downloaded pieces */
 	float percentDownloaded();
 	/* Returns this torrent's current bitfield */
@@ -106,6 +108,9 @@ private:
 
 	/* Is the downloading/uploading paused? */
 	bool m_paused;
+
+	/* Have we sent a 'Started' announce to the tracker */
+	bool m_hasAnnouncedStarted;
 
 	/* Contains last error */
 	QString m_errorString;
