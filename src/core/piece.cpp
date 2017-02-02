@@ -257,3 +257,12 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 	}
 	return true;
 }
+
+Block* Piece::getBlock(int begin, int size) const {
+	for(Block* block : m_blocks) {
+		if(block->begin() == begin && block->size() == size) {
+			return block;
+		}
+	}
+	return nullptr;
+}

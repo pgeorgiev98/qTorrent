@@ -523,14 +523,25 @@ bool Peer::readPeerMessage(bool* ok) {
 			}
 			blockIndex++;
 		}
+
+		// If we weren't waiting for this block, check if it exists
+		if(block == nullptr) {
+			QList<Piece*> pieces = m_torrent->pieces();
+			if(index >= 0 && index < pieces.size()) {
+				block = pieces[index]->getBlock(begin, blockLength);
+			}
+		}
+
 		if(block == nullptr) {
 			qDebug() << "Error: received unrequested block from peer" << addressPort()
 					 << ". Block(" << index << begin << blockLength << ")";
 		} else {
 			m_timedOut = false;
 			const char* blockData = m_receivedDataBuffer.data() + i;
-			block->setData(this, blockData);
-			m_blocksQueue.removeAt(blockIndex);
+			if(!block->downloaded()) {
+				block->setData(this, blockData);
+				m_blocksQueue.removeAt(blockIndex);
+			}
 			if(m_blocksQueue.isEmpty()) {
 				m_replyTimeoutTimer.stop();
 			} else {
