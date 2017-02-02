@@ -17,13 +17,14 @@ const int BLOCKS_TO_REQUEST = 5;
 const int MAX_MESSAGE_LENGTH = 65536;
 const int RECONNECT_INTERVAL_MSEC = 30000;
 
-Peer::Peer(PeerType peerType, QTcpSocket* socket) :
-	m_torrent(nullptr),
-	m_bitfield(nullptr),
-	m_status(Created),
-	m_peerType(peerType),
-	m_socket(socket) {
-
+Peer::Peer(PeerType peerType, QTcpSocket* socket)
+	: m_torrent(nullptr)
+	, m_bitfield(nullptr)
+	, m_status(Created)
+	, m_peerType(peerType)
+	, m_socket(socket)
+	, m_paused(false)
+{
 	connectAll();
 }
 
@@ -70,6 +71,20 @@ void Peer::startConnection() {
 
 	qDebug() << "Connecting to" << addressPort();
 	m_socket->connectToHost(m_address, m_port);
+}
+
+void Peer::start() {
+	m_paused = false;
+	if(m_status == ConnectionEstablished) {
+		sendMessages();
+	} else if(!isConnected()) {
+		startConnection();
+	}
+}
+
+void Peer::pause() {
+	m_paused = true;
+	sendMessages();
 }
 
 void Peer::sendHandshake() {
@@ -224,18 +239,44 @@ void Peer::sendMessages() {
 		return;
 	}
 
-	if(!m_amInterested) {
-		sendInterested();
-	}
-	if(m_peerInterested && m_amChoking) {
-		sendUnchoke();
-	}
-	if(!m_peerChoking) {
-		while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
-			if(!requestBlock()) {
-				break;
+	if(m_paused) {
+		/* Paused */
+
+		// Paused means we are not interested in anybody
+		if(m_amInterested) {
+			sendNotInterested();
+		}
+		// If we're paused, choke everybody
+		if(!m_amChoking) {
+			sendChoke();
+		}
+		// Cancel all blocks
+		for(Block* block : m_blocksQueue) {
+			sendCancel(block);
+		}
+
+	} else {
+		/* Not Paused */
+
+		// We are always interested [TODO]
+		if(!m_amInterested) {
+			sendInterested();
+		}
+
+		// Unchoke if peer is interested
+		if(m_peerInterested && m_amChoking) {
+			sendUnchoke();
+		}
+
+		// Request as many bloks as we can if we are not choked
+		if(!m_peerChoking) {
+			while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
+				if(!requestBlock()) {
+					break;
+				}
 			}
 		}
+
 	}
 }
 
@@ -762,6 +803,10 @@ bool Peer::timedOut() {
 
 QList<Block*>& Peer::blocksQueue() {
 	return m_blocksQueue;
+}
+
+bool Peer::isPaused() const {
+	return m_paused;
 }
 
 QString Peer::addressPort() {

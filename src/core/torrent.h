@@ -21,6 +21,10 @@ class QFile;
  */
 class Torrent {
 public:
+	enum Status {
+		New, Loading, Checking, Ready, Downloading, Completed
+	};
+
 	/* Constructor and destructor */
 	Torrent(QTorrent* qTorrent);
 	~Torrent();
@@ -30,6 +34,11 @@ public:
 	bool createFromFile(const QString& filename, const QString& downloadPath);
 	bool createFromMagnetLink(QUrl url);
 	bool createFileTree(const QString& directory);
+
+	// Start downloading/uploading
+	void start();
+	// Pause the torrent
+	void pause();
 
 	/* Creates a peer and connects to him */
 	Peer* addPeer(const QByteArray& address, int port);
@@ -55,6 +64,8 @@ public:
 	int downloadedPieces();
 	bool downloaded();
 
+	bool isPaused() const;
+
 	/* Calculates the current percentage of the downloaded pieces */
 	float percentDownloaded();
 	/* Returns this torrent's current bitfield */
@@ -77,6 +88,7 @@ public:
 
 private:
 	QTorrent* m_qTorrent;
+	Status m_status;
 	QList<Peer*> m_peers;
 	QList<Piece*> m_pieces;
 	TorrentInfo* m_torrentInfo;
@@ -91,6 +103,9 @@ private:
 
 	/* This flag is set when the torrent is completely downloaded */
 	bool m_downloaded;
+
+	/* Is the downloading/uploading paused? */
+	bool m_paused;
 
 	/* Contains last error */
 	QString m_errorString;

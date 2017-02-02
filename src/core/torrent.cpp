@@ -9,14 +9,16 @@
 #include <QFile>
 #include <QUrlQuery>
 
-Torrent::Torrent(QTorrent *qTorrent) :
-	m_qTorrent(qTorrent),
-	m_torrentInfo(nullptr),
-	m_trackerClient(nullptr),
-	m_bytesDownloaded(0),
-	m_bytesUploaded(0),
-	m_downloadedPieces(0),
-	m_downloaded(false)
+Torrent::Torrent(QTorrent *qTorrent)
+	: m_qTorrent(qTorrent)
+	, m_status(New)
+	, m_torrentInfo(nullptr)
+	, m_trackerClient(nullptr)
+	, m_bytesDownloaded(0)
+	, m_bytesUploaded(0)
+	, m_downloadedPieces(0)
+	, m_downloaded(false)
+	, m_paused(false)
 {
 }
 
@@ -35,6 +37,7 @@ Torrent::~Torrent() {
 }
 
 bool Torrent::createFromFile(const QString &filename, const QString& downloadPath) {
+	m_status = Loading;
 	clearError();
 	m_torrentInfo = new TorrentInfo();
 
@@ -69,8 +72,13 @@ bool Torrent::createFromFile(const QString &filename, const QString& downloadPat
 	// Create tracker client
 	m_trackerClient = new TrackerClient(this, m_torrentInfo);
 
+	m_status = Ready;
+
 	// Send the first announce to the tracker
 	m_trackerClient->announce(TrackerClient::Started);
+
+	// Start downloading/uploading
+	start();
 
 	return true;
 }
@@ -150,6 +158,22 @@ bool Torrent::createFileTree(const QString &directory) {
 	return true;
 }
 
+void Torrent::start() {
+	// Start all peers
+	for(Peer* peer :  m_peers) {
+		peer->start();
+	}
+	m_paused = false;
+}
+
+void Torrent::pause() {
+	// Pause all peers
+	for(Peer* peer : m_peers) {
+		peer->pause();
+	}
+	m_paused = true;
+}
+
 Peer* Torrent::addPeer(const QByteArray &address, int port) {
 	// Don't add the peer if he's already added
 	for(auto p : m_peers) {
@@ -162,10 +186,14 @@ Peer* Torrent::addPeer(const QByteArray &address, int port) {
 	Peer* peer = Peer::createServer(this, address, port);
 	m_peers.push_back(peer);
 
-	// Start connecting if torrent isn't downloaded yet
-	if(!m_downloaded) {
-		peer->startConnection();
+	// Always start connecting
+	peer->startConnection();
+
+	// Pause the peer if needed
+	if(m_paused) {
+		peer->pause();
 	}
+
 	qDebug() << "Added peer" << peer->addressPort();
 	return peer;
 }
@@ -330,6 +358,10 @@ int Torrent::downloadedPieces() {
 
 bool Torrent::downloaded() {
 	return m_downloaded;
+}
+
+bool Torrent::isPaused() const {
+	return m_paused;
 }
 
 

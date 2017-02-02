@@ -60,6 +60,7 @@ public:
 	QTcpSocket* socket();
 	bool timedOut();
 	QList<Block*>& blocksQueue();
+	bool isPaused() const;
 
 	QString addressPort();
 	bool downloaded();
@@ -106,6 +107,9 @@ private:
 	 */
 	QList<Block*> m_blocksQueue;
 
+	/* Is downloading/uploading paused */
+	bool m_paused;
+
 private:
 	/* Try to read handshake reply from the buffer
 	 * Returns true on successful message parse, false on
@@ -138,6 +142,11 @@ public:
 
 	/* Attempt to connect to the peer */
 	void startConnection();
+
+	/* Start downloading/uploading */
+	void start();
+	/* Pause download/upload */
+	void pause();
 
 	/* Send message */
 	void sendHandshake();
