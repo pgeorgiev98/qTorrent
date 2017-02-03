@@ -2,6 +2,7 @@
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
 #include "core/torrentserver.h"
+#include "core/trackerclient.h"
 #include "ui/mainwindow.h"
 #include <QGuiApplication>
 #include <QMessageBox>
@@ -83,6 +84,12 @@ bool QTorrent::addTorrentFromUrl(QUrl url) {
 	return false;
 }
 
+void QTorrent::shutDown() {
+	for(Torrent* torrent : m_torrents) {
+		TrackerClient* tracker = torrent->trackerClient();
+		tracker->announce(TrackerClient::Stopped);
+	}
+}
 
 void QTorrent::showMainWindow() {
 	m_mainWindow->show();

@@ -12,5 +12,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	qTorrent.showMainWindow();
-	return app.exec();
+	app.exec();
+	qTorrent.shutDown();
+	return 0;
 }

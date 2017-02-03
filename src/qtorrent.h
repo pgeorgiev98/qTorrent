@@ -19,6 +19,8 @@ public:
 	bool addTorrentFromMagnetLink(QUrl url);
 	bool addTorrentFromUrl(QUrl url);
 
+	void shutDown();
+
 	void showMainWindow();
 
 	/* Opens a critical MessageBox */
