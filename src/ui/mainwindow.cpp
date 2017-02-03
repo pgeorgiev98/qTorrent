@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QCloseEvent>
 
 MainWindow::MainWindow(QTorrent *qTorrent)
 	: m_qTorrent(qTorrent)
@@ -93,4 +94,12 @@ void MainWindow::addTorrentAction() {
 	}
 
 	m_qTorrent->addTorrentFromLocalFile(filePath);
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+	if(m_qTorrent->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
+		event->accept();
+	} else {
+		event->ignore();
+	}
 }
