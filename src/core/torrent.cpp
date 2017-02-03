@@ -412,8 +412,8 @@ void Torrent::downloadedPiece(Piece *piece) {
 	}
 }
 
-void Torrent::uploadedPiece(Piece *piece) {
-	m_bytesUploaded += piece->size();
+void Torrent::uploadedBlock(int bytes) {
+	m_bytesUploaded += bytes;
 }
 
 void Torrent::fullyDownloaded() {

@@ -174,6 +174,7 @@ void Peer::sendPiece(int index, int begin, const QByteArray &blockData) {
 	}
 	qDebug() << "Sending piece" << index << begin << blockData.size() << "to" << addressPort();
 	TorrentMessage::piece(m_socket, index, begin, blockData);
+	m_torrent->uploadedBlock(blockData.size());
 }
 
 void Peer::sendCancel(Block* block) {

@@ -83,7 +83,7 @@ public:
 	void downloadedPiece(Piece* piece);
 
 	/* Emitted when a piece is successfully uploaded */
-	void uploadedPiece(Piece* piece);
+	void uploadedBlock(int bytes);
 
 	/* Emitted when torrent is fully downloaded */
 	void fullyDownloaded();
