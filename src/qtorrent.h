@@ -31,6 +31,7 @@ public:
 	void warning(const QString& text);
 
 	const QByteArray& peerId() const;
+	QByteArray peerIdPercentEncoded() const;
 	QList<Torrent*>& torrents();
 	TorrentServer* server();
 	MainWindow* mainWindow();

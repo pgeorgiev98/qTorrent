@@ -60,7 +60,7 @@ void TrackerClient::announce(Event event) {
 	QUrlQuery query(url);
 	auto hash = m_torrentInfo->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
-	query.addQueryItem("peer_id", m_torrent->qTorrent()->peerId());
+	query.addQueryItem("peer_id", m_torrent->qTorrent()->peerIdPercentEncoded());
 	query.addQueryItem("port", portString);
 	query.addQueryItem("uploaded", bytesUploadedString);
 	query.addQueryItem("downloaded", bytesDownloadedString);
