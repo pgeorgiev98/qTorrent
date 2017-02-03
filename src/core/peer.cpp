@@ -606,6 +606,24 @@ void Peer::initClient(QTorrent *qTorrent) {
 	m_piecesDownloaded = 0;
 	m_bitfield = nullptr;
 	m_status = Handshaking;
+
+	m_protocol.clear();
+	m_reserved.clear();
+	m_infoHash.clear();
+	m_peerId.clear();
+
+	m_amChoking = true;
+	m_amInterested = false;
+	m_peerChoking = true;
+	m_peerInterested = false;
+
+	m_receivedDataBuffer.clear();
+	m_replyTimeoutTimer.stop();
+	m_handshakeTimeoutTimer.stop();
+	m_reconnectTimer.stop();
+
+	m_timedOut = false;
+	m_blocksQueue.clear();
 }
 
 void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
@@ -621,16 +639,9 @@ void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
 /* Slots */
 
 void Peer::connected() {
-	m_status = Handshaking;
-	m_amChoking = true;
-	m_amInterested = false;
-	m_peerChoking = true;
-	m_peerInterested = false;
-	m_blocksQueue.clear();
-	m_receivedDataBuffer.clear();
-	m_timedOut = false;
 	qDebug() << "Connected to" << addressPort();
 
+	m_status = Handshaking;
 	sendHandshake();
 	m_handshakeTimeoutTimer.start();
 }
