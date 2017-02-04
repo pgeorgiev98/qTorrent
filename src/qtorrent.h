@@ -6,6 +6,7 @@
 #include <QUrl>
 
 class Torrent;
+class TorrentManager;
 class TorrentServer;
 class MainWindow;
 
@@ -34,14 +35,15 @@ public:
 
 	const QByteArray& peerId() const;
 	QByteArray peerIdPercentEncoded() const;
-	QList<Torrent*>& torrents();
+	const QList<Torrent*>& torrents() const;
+	TorrentManager* torrentManager();
 	TorrentServer* server();
 	MainWindow* mainWindow();
 
 private:
 	QByteArray m_peerId;
 
-	QList<Torrent*> m_torrents;
+	TorrentManager* m_torrentManager;
 	TorrentServer* m_server;
 
 	MainWindow* m_mainWindow;

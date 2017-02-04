@@ -1,6 +1,7 @@
 #include "qtorrent.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include "core/torrentmanager.h"
 #include "core/torrentserver.h"
 #include "core/trackerclient.h"
 #include "ui/mainwindow.h"
@@ -9,7 +10,8 @@
 #include <QUrlQuery>
 
 QTorrent::QTorrent()
-	: m_server(new TorrentServer(this))
+	: m_torrentManager(new TorrentManager(this))
+	, m_server(new TorrentServer(this))
 	, m_mainWindow(new MainWindow(this))
 {
 	// Generate random peer id that starts with 'qT'
@@ -21,9 +23,7 @@ QTorrent::QTorrent()
 }
 
 QTorrent::~QTorrent() {
-	for(auto torrent : m_torrents) {
-		delete torrent;
-	}
+	delete m_torrentManager;
 	delete m_server;
 }
 
@@ -33,41 +33,13 @@ bool QTorrent::startServer() {
 }
 
 bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
-	// Load the torrent file
-	TorrentInfo* torrentInfo = new TorrentInfo;
-	if(!torrentInfo->loadFromTorrentFile(filename)) {
-		warning("Invalid torrent file");
-		delete torrentInfo;
-		return false;
-	}
-
-	// Check if torrent already added to list
-	for(Torrent* t : m_torrents) {
-		if(t->torrentInfo()->infoHash() == torrentInfo->infoHash()) {
-			warning("The torrent you're trying to add is already in the torrents list.");
-			delete torrentInfo;
-			return false;
-		}
-	}
-
-	// Get the download location
-	QString downloadLocation = m_mainWindow->getDownloadLocation();
-	if(downloadLocation.isEmpty()) {
-		delete torrentInfo;
-		return false;
-	}
-
-	// Create the torrent
-	Torrent* torrent = new Torrent(this);
-	if(!torrent->createNew(torrentInfo, downloadLocation)) {
-		warning(torrent->errorString());
-		delete torrent;
+	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename);
+	if(torrent == nullptr) {
 		return false;
 	}
 
 	torrent->start();
 
-	m_torrents.push_back(torrent);
 	m_mainWindow->addTorrent(torrent);
 	return true;
 }
@@ -79,7 +51,7 @@ bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
 		delete torrent;
 		return false;
 	}
-	m_torrents.push_back(torrent);
+	//m_torrents.push_back(torrent);
 	m_mainWindow->addTorrent(torrent);
 	return true;
 }
@@ -96,7 +68,7 @@ bool QTorrent::addTorrentFromUrl(QUrl url) {
 }
 
 void QTorrent::shutDown() {
-	for(Torrent* torrent : m_torrents) {
+	for(Torrent* torrent : torrents()) {
 		TrackerClient* tracker = torrent->trackerClient();
 		tracker->announce(TrackerClient::Stopped);
 	}
@@ -142,8 +114,12 @@ QByteArray QTorrent::peerIdPercentEncoded() const {
 }
 
 
-QList<Torrent*>& QTorrent::torrents() {
-	return m_torrents;
+const QList<Torrent*>& QTorrent::torrents() const {
+	return m_torrentManager->torrents();
+}
+
+TorrentManager* QTorrent::torrentManager() {
+	return m_torrentManager;
 }
 
 TorrentServer* QTorrent::server() {
