@@ -35,24 +35,18 @@ bool QTorrent::startServer() {
 bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
 	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename);
 	if(torrent == nullptr) {
+		delete torrent;
 		return false;
 	}
-
-	torrent->start();
-
-	m_mainWindow->addTorrent(torrent);
 	return true;
 }
 
 bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
-	Torrent* torrent = new Torrent(this);
-	if(!torrent->createFromMagnetLink(url)) {
-		warning("Failed to load torrent from magnet link\n" + torrent->errorString());
+	Torrent* torrent = torrentManager()->addTorrentFromMagnetLink(url);
+	if(torrent == nullptr) {
 		delete torrent;
 		return false;
 	}
-	//m_torrents.push_back(torrent);
-	m_mainWindow->addTorrent(torrent);
 	return true;
 }
 

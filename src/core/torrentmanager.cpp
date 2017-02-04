@@ -49,6 +49,25 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString &filename) {
 	}
 
 	m_torrents.push_back(torrent);
+	m_qTorrent->mainWindow()->addTorrent(torrent);
+
+	torrent->start();
+
+	return torrent;
+}
+
+Torrent* TorrentManager::addTorrentFromMagnetLink(QUrl url) {
+	Torrent* torrent = new Torrent(m_qTorrent);
+	if(!torrent->createFromMagnetLink(url)) {
+		m_qTorrent->warning("Failed to load torrent from magnet link\n" + torrent->errorString());
+		delete torrent;
+		return nullptr;
+	}
+
+	m_torrents.push_back(torrent);
+	m_qTorrent->mainWindow()->addTorrent(torrent);
+
+	torrent->start();
 
 	return torrent;
 }

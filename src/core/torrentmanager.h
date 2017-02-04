@@ -2,6 +2,7 @@
 #define TORRENTMANAGER_H
 
 #include <QList>
+#include <QUrl>
 
 class QTorrent;
 class Torrent;
@@ -13,6 +14,9 @@ public:
 	~TorrentManager();
 
 	Torrent* addTorrentFromLocalFile(const QString& filename);
+
+	// Not usable
+	Torrent* addTorrentFromMagnetLink(QUrl url);
 
 	/* Getters */
 	QTorrent* qTorrent();
