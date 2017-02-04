@@ -33,25 +33,36 @@ bool QTorrent::startServer() {
 }
 
 bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
-	QString downloadLocation = m_mainWindow->getDownloadLocation();
-	if(downloadLocation.isEmpty()) {
-		return false;
-	}
-
-	Torrent* torrent = new Torrent(this);
-	if(!torrent->createFromFile(filename, downloadLocation)) {
-		warning("Failed to read torrent file\n" + torrent->errorString());
-		delete torrent;
+	// Load the torrent file
+	TorrentInfo* torrentInfo = new TorrentInfo;
+	if(!torrentInfo->loadFromTorrentFile(filename)) {
+		warning("Invalid torrent file");
+		delete torrentInfo;
 		return false;
 	}
 
 	// Check if torrent already added to list
 	for(Torrent* t : m_torrents) {
-		if(t->torrentInfo()->infoHash() == torrent->torrentInfo()->infoHash()) {
+		if(t->torrentInfo()->infoHash() == torrentInfo->infoHash()) {
 			warning("The torrent you're trying to add is already in the torrents list.");
-			delete torrent;
+			delete torrentInfo;
 			return false;
 		}
+	}
+
+	// Get the download location
+	QString downloadLocation = m_mainWindow->getDownloadLocation();
+	if(downloadLocation.isEmpty()) {
+		delete torrentInfo;
+		return false;
+	}
+
+	// Create the torrent
+	Torrent* torrent = new Torrent(this);
+	if(!torrent->createNew(torrentInfo, downloadLocation)) {
+		warning(torrent->errorString());
+		delete torrent;
+		return false;
 	}
 
 	torrent->start();

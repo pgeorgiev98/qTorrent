@@ -35,7 +35,7 @@ TorrentInfo::~TorrentInfo() {
 	if(m_encoding != nullptr) delete m_encoding;
 }
 
-bool TorrentInfo::loadTorrentFile(QString filename) {
+bool TorrentInfo::loadFromTorrentFile(QString filename) {
 	BencodeParser bencodeParser;
 
 	/* Read torrent file */
@@ -52,7 +52,7 @@ bool TorrentInfo::loadTorrentFile(QString filename) {
 
 	try {
 		/* Just in case we need to throw stuff */
-		BencodeException ex("TorrentInfo::loadTorrentFile(): ");
+		BencodeException ex("TorrentInfo::loadFromTorrentFile(): ");
 
 		/* Required parameters */
 

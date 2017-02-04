@@ -36,40 +36,31 @@ Torrent::~Torrent() {
 	}
 }
 
-bool Torrent::createFromFile(const QString &filename, const QString& downloadPath) {
-	m_status = Loading;
+bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocation) {
 	clearError();
-	m_torrentInfo = new TorrentInfo();
 
-	// Load torrent info from bencoded .torrent file
-	if(!m_torrentInfo->loadTorrentFile(filename)) {
-		setError(m_torrentInfo->errorString());
-		return false;
-	}
+	m_torrentInfo = torrentInfo;
 
 	// Create all files and directories
-	if(!createFileTree(downloadPath)) {
+	if(!createFileTree(downloadLocation)) {
+		setError("Failed to create file tree");
 		return false;
 	}
 
-	// Create pieces
-	if(m_torrentInfo->length() % m_torrentInfo->pieceLength() == 0) {
-		// All pieces are the same size
-		for(int i = 0; i < m_torrentInfo->numberOfPieces(); i++) {
-			Piece* piece = new Piece(this, i, m_torrentInfo->pieceLength());
-			m_pieces.push_back(piece);
-		}
-	} else {
-		// Last piece has different size
-		for(int i = 0; i < m_torrentInfo->numberOfPieces()-1; i++) {
-			Piece* piece = new Piece(this, i, m_torrentInfo->pieceLength());
-			m_pieces.push_back(piece);
-		}
-		int lastPieceLength = m_torrentInfo->length() % m_torrentInfo->pieceLength();
-		m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces()-1, lastPieceLength));
+	// Create all pieces but the last
+	// The last piece could have a different size than the others
+	for(int i = 0; i < m_torrentInfo->numberOfPieces() - 1; i++) {
+		m_pieces.push_back(new Piece(this, i, m_torrentInfo->pieceLength()));
 	}
+	int lastPieceLength = m_torrentInfo->length() % m_torrentInfo->pieceLength();
+	if(lastPieceLength == 0) {
+		// The size of the last piece is the same as the others
+		lastPieceLength = m_torrentInfo->pieceLength();
+	}
+	// Create the last piece
+	m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces() - 1, lastPieceLength));
 
-	// Create tracker client
+	// Create the tracker client
 	m_trackerClient = new TrackerClient(this, m_torrentInfo);
 
 	m_status = Ready;

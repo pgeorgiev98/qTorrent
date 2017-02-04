@@ -35,7 +35,7 @@ class TorrentInfo {
 	int m_numberOfPieces;
 public:
 	QString errorString() const;
-	bool loadTorrentFile(QString filename);
+	bool loadFromTorrentFile(QString filename);
 
 	const QList<QByteArray>& announceUrlsList() const;
 

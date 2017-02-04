@@ -31,7 +31,7 @@ public:
 
 	/* Operations */
 
-	bool createFromFile(const QString& filename, const QString& downloadPath);
+	bool createNew(TorrentInfo* torrentInfo, const QString& downloadLocation);
 	bool createFromMagnetLink(QUrl url);
 	bool createFileTree(const QString& directory);
 
