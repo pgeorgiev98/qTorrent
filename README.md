@@ -27,9 +27,11 @@ You can build qTorrent with:
 	# The '-j5' means "Use up to 5 threads to build"
 	# which speeds up things quite a bit
 
-	# Make sure you're using the propper Qt5 version of qmake
+	# Make sure you're using the propper (Qt5) version of qmake
 	# On some systems (e.g. Gentoo) you may need to add a '-qt=5'
 	# option to the qmake command.
+
+Pre-compiled versions for the application are not available due to the fact, that the project has not reached its stable version yet.
 
 ## Usage
 
@@ -41,8 +43,7 @@ Just call
 
 Currently, qTorrent:
 * Can fully download torrents
-* Can seed torrents (more testing needed)
+* Can seed torrents
 * Has a very basic GUI
-* Does **Not** support any extensions
-* Can **Not** pause/resume downloads
-* Lacks a lot of other stuff
+* Can pause and resume torrents
+* Does not support DHT, PEX, Magnet Links, UDP trackers or encription
