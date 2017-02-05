@@ -1,4 +1,5 @@
 #include "bencodevalue.h"
+#include <QDataStream>
 #include <QDebug>
 
 BencodeValue::BencodeValue(Type type)
@@ -434,55 +435,51 @@ void BencodeDictionary::add(BencodeValue* key, BencodeValue* value) {
 
 
 QByteArray BencodeInteger::bencode(bool includeMetadata) const {
-	QString data;
-	QTextStream out(&data);
+	QByteArray data;
 	if(includeMetadata) {
-		out << 'i' << QString::number(m_value) << 'e';
+		data.append('i').append(QString::number(m_value)).append('e');
 	} else {
-		out << QString::number(m_value);
+		data.append(QString::number(m_value));
 	}
-	return data.toUtf8();
+	return data;
 }
 
 QByteArray BencodeString::bencode(bool includeMetadata) const {
-	QString data;
-	QTextStream out(&data);
+	QByteArray data;
 	if(includeMetadata) {
-		out << QString::number(m_value.size()) << ':' << m_value;
+		data.append(QString::number(m_value.size())).append(':').append(m_value);
 	} else {
-		out << m_value;
+		data.append(m_value);
 	}
-	return data.toUtf8();
+	return data;
 }
 
 QByteArray BencodeList::bencode(bool includeMetadata) const {
-	QString data;
-	QTextStream out(&data);
+	QByteArray data;
 	if(includeMetadata) {
-		out << 'l';
+		data.append('l');
 	}
 	for(BencodeValue* value : m_values) {
-		out << value->bencode();
+		data.append(value->bencode());
 	}
 	if(includeMetadata) {
-		out << 'e';
+		data.append('e');
 	}
-	return data.toUtf8();
+	return data;
 }
 
 QByteArray BencodeDictionary::bencode(bool includeMetadata) const {
-	QString data;
-	QTextStream out(&data);
+	QByteArray data;
 	if(includeMetadata) {
-		out << 'd';
+		data.append('d');
 	}
 	for(auto pair : m_values) {
-		out << pair.first->bencode() << pair.second->bencode();
+		data.append(pair.first->bencode()).append(pair.second->bencode());
 	}
 	if(includeMetadata) {
-		out << 'e';
+		data.append('e');
 	}
-	return data.toUtf8();
+	return data;
 }
 
 
