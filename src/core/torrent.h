@@ -70,10 +70,10 @@ public:
 	qint64 bytesUploaded();
 	int downloadedPieces();
 	bool downloaded();
-
 	bool isPaused() const;
-
 	bool hasAnnouncedStarted() const;
+	int connectedPeersCount() const;
+	int allPeersCount() const;
 
 	const QString& downloadLocation() const;
 

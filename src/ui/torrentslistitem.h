@@ -28,7 +28,7 @@ public:
 
 	void setName(const QString& value);
 	void setSize(qint64 value);
-	void setPeers(int value);
+	void setPeers(int connected, int all);
 	void setProgress(float value);
 	void setDownloaded(qint64 value);
 	void setUploaded(qint64 value);

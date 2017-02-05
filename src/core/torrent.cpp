@@ -446,6 +446,20 @@ bool Torrent::hasAnnouncedStarted() const {
 	return m_hasAnnouncedStarted;
 }
 
+int Torrent::connectedPeersCount() const {
+	int count = 0;
+	for(Peer* peer : m_peers) {
+		if(peer->isConnected()) {
+			count++;
+		}
+	}
+	return count;
+}
+
+int Torrent::allPeersCount() const {
+	return m_peers.size();
+}
+
 const QString& Torrent::downloadLocation() const {
 	return m_downloadLocation;
 }
