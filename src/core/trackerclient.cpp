@@ -19,6 +19,7 @@ TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
 	m_bytesUploadedAtStarted(-1),
 	m_reannounceInterval(-1),
 	m_urlListCurrentIndex(0),
+	m_numberOfAnnounces(0),
 	m_lastEvent(None)
 {
 	connect(&m_reannounceTimer, SIGNAL(timeout()), this, SLOT(reannounce()));
@@ -194,6 +195,7 @@ void TrackerClient::httpFinished() {
 		failedToAnnounce();
 		return;
 	}
+	m_numberOfAnnounces++;
 }
 
 void TrackerClient::httpReadyRead() {
@@ -209,4 +211,8 @@ void TrackerClient::failedToAnnounce() {
 	m_urlListCurrentIndex++;
 	qDebug() << "Trying backup URL:" << announceList[m_urlListCurrentIndex];
 	announce(m_lastEvent);
+}
+
+int TrackerClient::numberOfAnnounces() const {
+	return m_numberOfAnnounces;
 }

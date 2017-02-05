@@ -30,6 +30,9 @@ public:
 	/* Used to send 'announce' to the tracker */
 	void announce(Event event);
 
+	/* Returns the number of successfull announces */
+	int numberOfAnnounces() const;
+
 public slots:
 	/* For QNetworkAccessManager */
 	void httpFinished();
@@ -58,6 +61,9 @@ private:
 	// The current index in the TorrentInfo::announceUrlsList()
 	// This is incremented if connecting to the tracker failed
 	int m_urlListCurrentIndex;
+
+	// Holds the number of successfull announces
+	int m_numberOfAnnounces;
 
 	// Last event with which was announce() called
 	Event m_lastEvent;
