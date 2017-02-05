@@ -176,6 +176,10 @@ void Piece::unloadFromMemory() {
 	m_pieceData = nullptr;
 }
 
+void Piece::setDownloaded(bool downloaded) {
+	m_downloaded = downloaded;
+}
+
 bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 	blockData.clear();
 

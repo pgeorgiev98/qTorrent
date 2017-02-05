@@ -36,6 +36,7 @@ public:
 	void updateInfo();
 	void deleteBlock(Block* block);
 	void unloadFromMemory();
+	void setDownloaded(bool downloaded);
 	// Gets data for a block. Reads from files if needed
 	bool getBlockData(int begin, int size, QByteArray& blockData);
 	// Returns a pointer to an existing block or nullptr if no such block exists
