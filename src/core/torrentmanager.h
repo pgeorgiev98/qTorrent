@@ -6,6 +6,7 @@
 
 class QTorrent;
 class Torrent;
+class TorrentInfo;
 
 class TorrentManager
 {
@@ -15,8 +16,16 @@ public:
 
 	Torrent* addTorrentFromLocalFile(const QString& filename);
 
+	// Loads all saved for resuming torrents
+	bool resumeTorrents();
+
 	// Not usable
 	Torrent* addTorrentFromMagnetLink(QUrl url);
+
+	// Saves resume info for all torrents
+	bool saveTorrentsResumeInfo();
+	// Permanently saves the torrent file to the app data directory
+	bool saveTorrentFile(const QString& filename, TorrentInfo* torrentInfo);
 
 	/* Getters */
 	QTorrent* qTorrent();

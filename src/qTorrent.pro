@@ -20,6 +20,7 @@ SOURCES += main.cpp \
     core/block.cpp \
     core/torrentmessage.cpp \
     core/torrentserver.cpp \
+    core/resumeinfo.cpp \
     core/torrentmanager.cpp \
     ui/mainwindow.cpp \
     ui/panel.cpp \
@@ -38,6 +39,7 @@ HEADERS += \
     core/block.h \
     core/torrentmessage.h \
     core/torrentserver.h \
+    core/resumeinfo.h \
     core/torrentmanager.h \
     ui/mainwindow.h \
     ui/panel.h \

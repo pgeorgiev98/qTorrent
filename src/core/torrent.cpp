@@ -40,6 +40,7 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	clearError();
 
 	m_torrentInfo = torrentInfo;
+	m_downloadLocation = downloadLocation;
 
 	// Create all files and directories
 	if(!createFileTree(downloadLocation)) {
@@ -64,6 +65,69 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	m_trackerClient = new TrackerClient(this, m_torrentInfo);
 
 	m_status = Ready;
+
+	return true;
+}
+
+bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeInfo) {
+	clearError();
+
+	m_torrentInfo = torrentInfo;
+
+	// Create all files and directories
+	if(!createFileTree(resumeInfo->downloadLocation())) {
+		setError("Failed to create file tree");
+		return false;
+	}
+
+	// Create all pieces but the last
+	// The last piece could have a different size than the others
+	for(int i = 0; i < m_torrentInfo->numberOfPieces() - 1; i++) {
+		m_pieces.push_back(new Piece(this, i, m_torrentInfo->pieceLength()));
+	}
+	int lastPieceLength = m_torrentInfo->length() % m_torrentInfo->pieceLength();
+	if(lastPieceLength == 0) {
+		// The size of the last piece is the same as the others
+		lastPieceLength = m_torrentInfo->pieceLength();
+	}
+	// Create the last piece
+	m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces() - 1, lastPieceLength));
+
+	// Create the tracker client
+	m_trackerClient = new TrackerClient(this, m_torrentInfo);
+
+	if(m_pieces.size() != resumeInfo->aquiredPieces().size()) {
+		setError("The number of pieces in the TorrentInfo does not match the one in the ResumeInfo");
+		return false;
+	}
+
+	// Set all pieces
+	for(int i = 0; i < m_pieces.size(); i++) {
+		Piece* piece = m_pieces[i];
+		bool downloaded = resumeInfo->aquiredPieces()[i];
+		piece->setDownloaded(downloaded);
+		if(downloaded) {
+			m_downloadedPieces++;
+		}
+	}
+	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
+		m_downloaded = true;
+	}
+
+	m_hasAnnouncedStarted = resumeInfo->hasAnnouncedStarted();
+
+	m_downloadLocation = resumeInfo->downloadLocation();
+
+	m_bytesDownloaded = resumeInfo->totalBytesDownloaded();
+	m_bytesUploaded = resumeInfo->totalBytesUploaded();
+
+	m_status = Ready;
+
+	if(resumeInfo->paused()) {
+		pause();
+	} else {
+		start();
+	}
 
 	return true;
 }
@@ -129,18 +193,33 @@ bool Torrent::createFileTree(const QString &directory) {
 		}
 		QFile* file = new QFile();
 		file->setFileName(dir.absoluteFilePath(f.path.last()));
-		if(!file->open(QFile::ReadWrite)) {
-			setError("Failed to open file " + file->fileName() + ": " + file->errorString());
-			return false;
+		if(!file->exists() || file->size() != f.length) {
+			if(!file->open(QFile::ReadWrite)) {
+				setError("Failed to open file " + file->fileName() + ": " + file->errorString());
+				return false;
+			}
+			if(!file->resize(f.length)) {
+				setError("Failed to resize file " + file->fileName() + ": " + file->errorString());
+				return false;
+			}
+			file->close();
+		} else {
+			qDebug() << "File" << file->fileName() << "exists";
 		}
-		if(!file->resize(f.length)) {
-			setError("Failed to resize file " + file->fileName() + ": " + file->errorString());
-			return false;
-		}
-		file->close();
 		m_files.push_back(file);
 	}
 	return true;
+}
+
+ResumeInfo Torrent::getResumeInfo() const {
+	ResumeInfo resumeInfo(m_torrentInfo);
+	resumeInfo.setDownloadLocation(m_downloadLocation);
+	resumeInfo.setTotalBytesDownloaded(m_bytesDownloaded);
+	resumeInfo.setTotalBytesUploaded(m_bytesUploaded);
+	resumeInfo.setPaused(m_paused);
+	resumeInfo.setHasAnnouncedStarted(m_hasAnnouncedStarted);
+	resumeInfo.setAquiredPieces(bitfield());
+	return resumeInfo;
 }
 
 void Torrent::start() {
@@ -148,6 +227,9 @@ void Torrent::start() {
 		// Send the first announce to the tracker
 		m_trackerClient->announce(TrackerClient::Started);
 		m_hasAnnouncedStarted = true;
+	} else if(m_trackerClient->numberOfAnnounces() == 0) {
+		// Announced if we haven't already
+		m_trackerClient->announce(TrackerClient::None);
 	}
 
 	// Start all peers
@@ -359,6 +441,10 @@ bool Torrent::hasAnnouncedStarted() const {
 	return m_hasAnnouncedStarted;
 }
 
+const QString& Torrent::downloadLocation() const {
+	return m_downloadLocation;
+}
+
 
 float Torrent::percentDownloaded() {
 	float percent = m_downloadedPieces;
@@ -367,7 +453,7 @@ float Torrent::percentDownloaded() {
 	return percent;
 }
 
-QVector<bool> Torrent::bitfield() {
+QVector<bool> Torrent::bitfield() const {
 	QVector<bool> bf;
 	for(auto p : m_pieces) {
 		bf.push_back(p->downloaded());

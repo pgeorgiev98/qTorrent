@@ -32,12 +32,17 @@ bool QTorrent::startServer() {
 	return m_server->startServer();
 }
 
+bool QTorrent::resumeTorrents() {
+	return m_torrentManager->resumeTorrents();
+}
+
 bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
 	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename);
 	if(torrent == nullptr) {
 		delete torrent;
 		return false;
 	}
+	m_torrentManager->saveTorrentsResumeInfo();
 	return true;
 }
 
@@ -66,6 +71,7 @@ void QTorrent::shutDown() {
 		TrackerClient* tracker = torrent->trackerClient();
 		tracker->announce(TrackerClient::Stopped);
 	}
+	m_torrentManager->saveTorrentsResumeInfo();
 }
 
 void QTorrent::showMainWindow() {
