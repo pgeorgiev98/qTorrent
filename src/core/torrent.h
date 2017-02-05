@@ -2,6 +2,7 @@
 #define TORRENT_H
 
 #include "resumeinfo.h"
+#include "trackerclient.h"
 #include <QString>
 #include <QList>
 #include <QUrl>
@@ -53,6 +54,8 @@ public:
 	void releaseBlock(Peer* client, Block* block);
 
 	bool savePiece(int pieceNumber);
+
+	void successfullyAnnounced(TrackerClient::Event event);
 
 	/* Getters */
 

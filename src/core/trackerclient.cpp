@@ -196,6 +196,7 @@ void TrackerClient::httpFinished() {
 		return;
 	}
 	m_numberOfAnnounces++;
+	m_torrent->successfullyAnnounced(m_lastEvent);
 }
 
 void TrackerClient::httpReadyRead() {

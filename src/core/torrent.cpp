@@ -1,7 +1,6 @@
 #include "torrent.h"
 #include "peer.h"
 #include "torrentinfo.h"
-#include "trackerclient.h"
 #include "piece.h"
 #include "block.h"
 #include "torrentmessage.h"
@@ -387,6 +386,12 @@ bool Torrent::savePiece(int pieceNumber) {
 		}
 	}
 	return true;
+}
+
+void Torrent::successfullyAnnounced(TrackerClient::Event event) {
+	if(event == TrackerClient::Started) {
+		m_hasAnnouncedStarted = true;
+	}
 }
 
 
