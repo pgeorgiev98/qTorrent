@@ -36,8 +36,8 @@ bool QTorrent::resumeTorrents() {
 	return m_torrentManager->resumeTorrents();
 }
 
-bool QTorrent::addTorrentFromLocalFile(const QString &filename) {
-	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename);
+bool QTorrent::addTorrentFromLocalFile(const QString& filename, const QString& downloadLocation) {
+	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename, downloadLocation);
 	if(torrent == nullptr) {
 		delete torrent;
 		return false;
@@ -56,6 +56,7 @@ bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
 }
 
 bool QTorrent::addTorrentFromUrl(QUrl url) {
+	/*
 	if(url.isLocalFile()) {
 		// It's a local file
 		return addTorrentFromLocalFile(url.toLocalFile());
@@ -63,6 +64,7 @@ bool QTorrent::addTorrentFromUrl(QUrl url) {
 		// It's a magnet link
 		return addTorrentFromMagnetLink(url);
 	}
+	*/
 	return false;
 }
 

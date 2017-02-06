@@ -19,7 +19,7 @@ TorrentManager::~TorrentManager() {
 	}
 }
 
-Torrent* TorrentManager::addTorrentFromLocalFile(const QString &filename) {
+Torrent* TorrentManager::addTorrentFromLocalFile(const QString& filename, const QString& downloadLocation) {
 	// Load the torrent file
 	TorrentInfo* torrentInfo = new TorrentInfo;
 	if(!torrentInfo->loadFromTorrentFile(filename)) {
@@ -35,13 +35,6 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString &filename) {
 			delete torrentInfo;
 			return nullptr;
 		}
-	}
-
-	// Get the download location
-	QString downloadLocation = m_qTorrent->mainWindow()->getDownloadLocation();
-	if(downloadLocation.isEmpty()) {
-		delete torrentInfo;
-		return nullptr;
 	}
 
 	// Create the torrent

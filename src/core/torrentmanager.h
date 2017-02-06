@@ -14,7 +14,7 @@ public:
 	TorrentManager(QTorrent* qTorrent);
 	~TorrentManager();
 
-	Torrent* addTorrentFromLocalFile(const QString& filename);
+	Torrent* addTorrentFromLocalFile(const QString& filename, const QString& downloadLocation);
 
 	// Loads all saved for resuming torrents
 	bool resumeTorrents();

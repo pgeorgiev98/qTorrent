@@ -25,7 +25,8 @@ SOURCES += main.cpp \
     ui/mainwindow.cpp \
     ui/panel.cpp \
     ui/torrentslist.cpp \
-    ui/torrentslistitem.cpp
+    ui/torrentslistitem.cpp \
+    ui/addtorrentdialog.cpp
 
 HEADERS += \
     qtorrent.h \
@@ -44,7 +45,8 @@ HEADERS += \
     ui/mainwindow.h \
     ui/panel.h \
     ui/torrentslist.h \
-    ui/torrentslistitem.h
+    ui/torrentslistitem.h \
+    ui/addtorrentdialog.h
 
 RESOURCES += \
     resources.qrc
