@@ -34,6 +34,12 @@ void TorrentsListItem::refresh() {
 	setSize(info->length());
 	setPeers(t->connectedPeersCount(), t->allPeersCount());
 	setProgress(t->percentDownloaded());
+	setAvailable(t->bytesAvailable());
+	setLeft(t->bytesLeft());
+	setTotalDownloaded(t->totalBytesDownloaded());
+	setTotalUploaded(t->totalBytesUploaded());
+	float ratio = (double)t->totalBytesUploaded() / (double)t->totalBytesDownloaded();
+	setRatio(ratio);
 	setDownloaded(t->bytesDownloaded());
 	setUploaded(t->bytesUploaded());
 	setHidden(!belongsToSection());
@@ -100,6 +106,31 @@ void TorrentsListItem::setPeers(int connected, int all) {
 void TorrentsListItem::setProgress(float value) {
 	setText(Progress, QString::number(value) + "%");
 	setSortData(Progress, value);
+}
+
+void TorrentsListItem::setAvailable(qint64 value) {
+	setText(Available, toPrettySize(value));
+	setSortData(Available, value);
+}
+
+void TorrentsListItem::setLeft(qint64 value) {
+	setText(Left, toPrettySize(value));
+	setSortData(Left, value);
+}
+
+void TorrentsListItem::setTotalDownloaded(qint64 value) {
+	setText(TotalDownloaded, toPrettySize(value));
+	setSortData(TotalDownloaded, value);
+}
+
+void TorrentsListItem::setTotalUploaded(qint64 value) {
+	setText(TotalUploaded, toPrettySize(value));
+	setSortData(TotalUploaded, value);
+}
+
+void TorrentsListItem::setRatio(float value) {
+	setText(Ratio, QString::number(value));
+	setSortData(Ratio, value);
 }
 
 void TorrentsListItem::setDownloaded(qint64 value) {

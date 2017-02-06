@@ -16,7 +16,10 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 {
 	QFontMetrics fm = fontMetrics();
 	QStringList headers;
-	headers << tr("Torrent") << tr("Size") << tr("Peers") << tr("Progress") << tr("Downloaded") << tr("Uploaded");
+	headers << tr("Torrent") << tr("Size") << tr("Peers") << tr("Progress")
+			<< tr("Available") << tr("Left")
+			<< tr("Total Downloaded") << tr("Total Uploaded") << tr("Ratio")
+			<< tr("Downloaded") << tr("Uploaded");
 
 	QHeaderView *headerView = header();
 
@@ -32,12 +35,30 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 	headerView->setSectionsMovable(true);
 	headerView->setSectionsClickable(true);
 
-	headerView->resizeSection(TorrentsListItem::Name, fm.width("typical-name-for-a-torrent.torrent"));
-	headerView->resizeSection(TorrentsListItem::Size, fm.width(" 987.65 MiB "));
-	headerView->resizeSection(TorrentsListItem::Peers, fm.width(headers.at(TorrentsListItem::Peers) + "  "));
-	headerView->resizeSection(TorrentsListItem::Progress, fm.width(headers.at(TorrentsListItem::Progress) + "  "));
-	headerView->resizeSection(TorrentsListItem::Downloaded, fm.width(headers.at(TorrentsListItem::Downloaded) + "  "));
-	headerView->resizeSection(TorrentsListItem::Uploaded, fm.width(headers.at(TorrentsListItem::Uploaded) + "  "));
+	const int typicalSizeWidth = fm.width(" 987.65 MiB ");
+
+// An easier way to set the width of a section
+// Ugly, but easier
+#define SECTION_HEADER_WIDTH(Section) fm.width(headers.at(TorrentsListItem::Section) + "  ")
+#define BYTES_SECTION_WIDTH(Section) qMax(SECTION_HEADER_WIDTH(Section), typicalSizeWidth)
+#define SET_SECTION_WIDTH(Section, width) headerView->resizeSection(TorrentsListItem::Section, width)
+#define SET_SECTION_TO_HEADER_WIDTH(Section) SET_SECTION_WIDTH(Section, SECTION_HEADER_WIDTH(Section))
+#define SET_BYTES_SECTION_WIDTH(Section) SET_SECTION_WIDTH(Section, BYTES_SECTION_WIDTH(Section))
+
+	SET_SECTION_WIDTH(Name, fm.width("typical-name-for-a-torrent.torrent"));
+	SET_BYTES_SECTION_WIDTH(Available);
+	SET_SECTION_TO_HEADER_WIDTH(Peers);
+	SET_SECTION_TO_HEADER_WIDTH(Progress);
+
+	SET_BYTES_SECTION_WIDTH(Available);
+	SET_BYTES_SECTION_WIDTH(Left);
+	SET_BYTES_SECTION_WIDTH(TotalDownloaded);
+	SET_BYTES_SECTION_WIDTH(TotalUploaded);
+	SET_SECTION_TO_HEADER_WIDTH(Ratio);
+	SET_BYTES_SECTION_WIDTH(Downloaded);
+	SET_BYTES_SECTION_WIDTH(Uploaded);
+
+	// Don't criticize me
 
 	for(Torrent* torrent : m_qTorrent->torrents()) {
 		addTorrent(torrent);
