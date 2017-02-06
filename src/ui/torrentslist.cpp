@@ -3,6 +3,7 @@
 #include "core/torrentinfo.h"
 #include "torrentslist.h"
 #include "torrentslistitem.h"
+#include "torrentitemdelegate.h"
 #include <QHeaderView>
 #include <QDragEnterEvent>
 #include <QDropEvent>
@@ -31,6 +32,7 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 	setExpandsOnDoubleClick(true);
 	setAcceptDrops(true);
 	setContextMenuPolicy(Qt::CustomContextMenu);
+	setItemDelegate(new TorrentItemDelegate(this));
 
 	headerView->setSectionsMovable(true);
 	headerView->setSectionsClickable(true);
@@ -48,7 +50,7 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 	SET_SECTION_WIDTH(Name, fm.width("typical-name-for-a-torrent.torrent"));
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_SECTION_TO_HEADER_WIDTH(Peers);
-	SET_SECTION_TO_HEADER_WIDTH(Progress);
+	SET_SECTION_WIDTH(Progress, SECTION_HEADER_WIDTH(Progress)*2);
 
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_BYTES_SECTION_WIDTH(Left);
