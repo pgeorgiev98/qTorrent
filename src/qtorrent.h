@@ -1,6 +1,7 @@
 #ifndef QTORRENT_H
 #define QTORRENT_H
 
+#include "core/torrentsettings.h"
 #include <QList>
 #include <QString>
 #include <QUrl>
@@ -17,7 +18,7 @@ public:
 
 	bool startServer();
 	bool resumeTorrents();
-	bool addTorrentFromLocalFile(const QString& filename, const QString& downloadLocation);
+	bool addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings);
 	bool addTorrentFromMagnetLink(QUrl url);
 	bool addTorrentFromUrl(QUrl url);
 

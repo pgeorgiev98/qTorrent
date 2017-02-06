@@ -36,8 +36,8 @@ bool QTorrent::resumeTorrents() {
 	return m_torrentManager->resumeTorrents();
 }
 
-bool QTorrent::addTorrentFromLocalFile(const QString& filename, const QString& downloadLocation) {
-	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename, downloadLocation);
+bool QTorrent::addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings) {
+	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename, settings);
 	if(torrent == nullptr) {
 		delete torrent;
 		return false;

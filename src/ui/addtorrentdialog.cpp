@@ -89,13 +89,17 @@ void AddTorrentDialog::ok() {
 							 "Please select a valid torrent file");
 		return;
 	}
-	QDir dir(m_downloadLocation->text());
+	QString downloadLocation = m_downloadLocation->text();
+	QDir dir(downloadLocation);
 	if(!dir.exists()) {
 		QMessageBox::warning(this, QGuiApplication::applicationDisplayName(),
 							 "Please select a valid directory");
 		return;
 	}
-	m_qTorrent->addTorrentFromLocalFile(filePath, m_downloadLocation->text());
+
+	TorrentSettings settings;
+	settings.setDownloadLocation(downloadLocation);
+	m_qTorrent->addTorrentFromLocalFile(filePath, settings);
 	close();
 }
 

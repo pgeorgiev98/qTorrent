@@ -1,6 +1,7 @@
 #ifndef TORRENTMANAGER_H
 #define TORRENTMANAGER_H
 
+#include "torrentsettings.h"
 #include <QList>
 #include <QUrl>
 
@@ -14,7 +15,7 @@ public:
 	TorrentManager(QTorrent* qTorrent);
 	~TorrentManager();
 
-	Torrent* addTorrentFromLocalFile(const QString& filename, const QString& downloadLocation);
+	Torrent* addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings);
 
 	// Loads all saved for resuming torrents
 	bool resumeTorrents();
