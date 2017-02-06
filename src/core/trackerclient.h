@@ -49,11 +49,6 @@ private:
 	QNetworkReply *m_reply;
 	QByteArray m_announceResponse;
 
-	// Bytes uploaded and downloaded at the
-	// moment 'started' message was sent
-	qint64 m_bytesDownloadedAtStarted;
-	qint64 m_bytesUploadedAtStarted;
-
 	// For reannouncing
 	int m_reannounceInterval;
 	QTimer m_reannounceTimer;

@@ -27,7 +27,6 @@ public:
 	qint64 totalBytesDownloaded() const;
 	qint64 totalBytesUploaded() const;
 	bool paused() const;
-	bool hasAnnouncedStarted() const;
 	const QVector<bool>& aquiredPieces() const;
 	QByteArray aquiredPiecesArray() const;
 
@@ -36,7 +35,6 @@ public:
 	void setTotalBytesDownloaded(qint64 totalBytesDownloaded);
 	void setTotalBytesUploaded(qint64 totalBytesUploaded);
 	void setPaused(bool paused);
-	void setHasAnnouncedStarted(bool hasAnnouncedStarted);
 	void setAquiredPieces(const QVector<bool>& aquiredPieces);
 
 private:
@@ -45,7 +43,6 @@ private:
 	qint64 m_totalBytesDownloaded;
 	qint64 m_totalBytesUploaded;
 	bool m_paused;
-	bool m_hasAnnouncedStarted;
 	QVector<bool> m_aquiredPieces;
 
 	QVector<bool> toBitArray(const QByteArray& data);

@@ -13,11 +13,14 @@ Torrent::Torrent(QTorrent *qTorrent)
 	, m_status(New)
 	, m_torrentInfo(nullptr)
 	, m_trackerClient(nullptr)
-	, m_bytesDownloaded(0)
-	, m_bytesUploaded(0)
+	, m_bytesDownloadedOnStartup(0)
+	, m_bytesUploadedOnStartup(0)
+	, m_totalBytesDownloaded(0)
+	, m_totalBytesUploaded(0)
 	, m_downloadedPieces(0)
 	, m_downloaded(false)
 	, m_paused(true)
+	, m_hasAnnouncedStarted(false)
 {
 }
 
@@ -113,12 +116,10 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 		m_downloaded = true;
 	}
 
-	m_hasAnnouncedStarted = resumeInfo->hasAnnouncedStarted();
-
 	m_downloadLocation = resumeInfo->downloadLocation();
 
-	m_bytesDownloaded = resumeInfo->totalBytesDownloaded();
-	m_bytesUploaded = resumeInfo->totalBytesUploaded();
+	m_totalBytesDownloaded = resumeInfo->totalBytesDownloaded();
+	m_totalBytesUploaded = resumeInfo->totalBytesUploaded();
 
 	m_status = Ready;
 
@@ -213,10 +214,9 @@ bool Torrent::createFileTree(const QString &directory) {
 ResumeInfo Torrent::getResumeInfo() const {
 	ResumeInfo resumeInfo(m_torrentInfo);
 	resumeInfo.setDownloadLocation(m_downloadLocation);
-	resumeInfo.setTotalBytesDownloaded(m_bytesDownloaded);
-	resumeInfo.setTotalBytesUploaded(m_bytesUploaded);
+	resumeInfo.setTotalBytesDownloaded(m_totalBytesDownloaded);
+	resumeInfo.setTotalBytesUploaded(m_totalBytesUploaded);
 	resumeInfo.setPaused(m_paused);
-	resumeInfo.setHasAnnouncedStarted(m_hasAnnouncedStarted);
 	resumeInfo.setAquiredPieces(bitfield());
 	return resumeInfo;
 }
@@ -225,7 +225,6 @@ void Torrent::start() {
 	if(!m_hasAnnouncedStarted) {
 		// Send the first announce to the tracker
 		m_trackerClient->announce(TrackerClient::Started);
-		m_hasAnnouncedStarted = true;
 	} else if(m_trackerClient->numberOfAnnounces() == 0) {
 		// Announced if we haven't already
 		m_trackerClient->announce(TrackerClient::None);
@@ -391,6 +390,8 @@ bool Torrent::savePiece(int pieceNumber) {
 void Torrent::successfullyAnnounced(TrackerClient::Event event) {
 	if(event == TrackerClient::Started) {
 		m_hasAnnouncedStarted = true;
+		m_bytesDownloadedOnStartup = m_totalBytesDownloaded;
+		m_bytesUploadedOnStartup = m_totalBytesUploaded;
 	}
 }
 
@@ -422,13 +423,48 @@ QList<QFile*>& Torrent::files() {
 }
 
 
-qint64 Torrent::bytesDownloaded() {
-	return m_bytesDownloaded;
+qint64 Torrent::bytesDownloaded() const {
+	if(!m_hasAnnouncedStarted) {
+		return 0;
+	}
+	return m_totalBytesDownloaded - m_bytesDownloadedOnStartup;
 }
 
-qint64 Torrent::bytesUploaded() {
-	return m_bytesUploaded;
+qint64 Torrent::bytesUploaded() const {
+	if(!m_hasAnnouncedStarted) {
+		return 0;
+	}
+	return m_totalBytesUploaded - m_bytesUploadedOnStartup;
 }
+
+qint64 Torrent::totalBytesDownloaded() const {
+	return m_totalBytesDownloaded;
+}
+
+qint64 Torrent::totalBytesUploaded() const {
+	return m_totalBytesUploaded;
+}
+
+qint64 Torrent::bytesAvailable() const {
+	qint64 bytes = 0;
+	for(Piece* piece : m_pieces) {
+		if(piece->downloaded()) {
+			bytes += piece->size();
+		}
+	}
+	return bytes;
+}
+
+qint64 Torrent::bytesLeft() const {
+	qint64 bytes = 0;
+	for(Piece* piece : m_pieces) {
+		if(piece->downloaded()) {
+			bytes += piece->size();
+		}
+	}
+	return bytes;
+}
+
 
 int Torrent::downloadedPieces() {
 	return m_downloadedPieces;
@@ -491,7 +527,7 @@ QString Torrent::errorString() const {
 void Torrent::downloadedPiece(Piece *piece) {
 	// Increment some counters
 	m_downloadedPieces++;
-	m_bytesDownloaded += piece->size();
+	m_totalBytesDownloaded += piece->size();
 
 	qDebug() << "Downloaded pieces"
 			 << m_downloadedPieces << "/" << m_torrentInfo->numberOfPieces()
@@ -509,7 +545,7 @@ void Torrent::downloadedPiece(Piece *piece) {
 }
 
 void Torrent::uploadedBlock(int bytes) {
-	m_bytesUploaded += bytes;
+	m_totalBytesUploaded += bytes;
 }
 
 void Torrent::fullyDownloaded() {

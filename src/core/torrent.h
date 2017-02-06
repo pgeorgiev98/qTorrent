@@ -66,8 +66,17 @@ public:
 	TrackerClient* trackerClient();
 	QList<QFile*>& files();
 
-	qint64 bytesDownloaded();
-	qint64 bytesUploaded();
+	// The number of bytes since startup
+	qint64 bytesDownloaded() const;
+	qint64 bytesUploaded() const;
+	// The number of bytes since the torrent was added
+	qint64 totalBytesDownloaded() const;
+	qint64 totalBytesUploaded() const;
+	// The number of bytes we have
+	qint64 bytesAvailable() const;
+	// The number of bytes we need to have the full torrent
+	qint64 bytesLeft() const;
+
 	int downloadedPieces();
 	bool downloaded();
 	bool isPaused() const;
@@ -106,8 +115,12 @@ private:
 	TrackerClient* m_trackerClient;
 	QList<QFile*> m_files;
 
-	qint64 m_bytesDownloaded;
-	qint64 m_bytesUploaded;
+	// The number of bytes on startup
+	qint64 m_bytesDownloadedOnStartup;
+	qint64 m_bytesUploadedOnStartup;
+	// The number of bytes since the torrent was added
+	qint64 m_totalBytesDownloaded;
+	qint64 m_totalBytesUploaded;
 
 	/* The total number of successfully downloaded pieces */
 	int m_downloadedPieces;

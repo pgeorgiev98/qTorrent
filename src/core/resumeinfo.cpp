@@ -8,7 +8,6 @@ ResumeInfo::ResumeInfo(TorrentInfo *torrentInfo)
 	, m_totalBytesDownloaded(0)
 	, m_totalBytesUploaded(0)
 	, m_paused(false)
-	, m_hasAnnouncedStarted(false)
 {
 }
 
@@ -19,7 +18,6 @@ bool ResumeInfo::loadFromBencode(BencodeDictionary *dict) {
 		m_totalBytesDownloaded = dict->value("totalBytesDownloaded")->toInt();
 		m_totalBytesUploaded = dict->value("totalBytesUploaded")->toInt();
 		m_paused = dict->value("paused")->toInt() ? true : false;
-		m_hasAnnouncedStarted = dict->value("hasAnnouncedStarted")->toInt() ? true : false;
 		m_aquiredPieces = toBitArray(dict->value("aquiredPieces")->toByteArray());
 
 	} catch(BencodeException& ex) {
@@ -35,7 +33,6 @@ void ResumeInfo::addToBencode(BencodeDictionary *mainResumeDictionary) const {
 	dict->add(new BencodeString("totalBytesDownloaded"), new BencodeInteger(m_totalBytesDownloaded));
 	dict->add(new BencodeString("totalBytesUploaded"), new BencodeInteger(m_totalBytesUploaded));
 	dict->add(new BencodeString("paused"), new BencodeInteger(m_paused));
-	dict->add(new BencodeString("hasAnnouncedStarted"), new BencodeInteger(m_hasAnnouncedStarted));
 	dict->add(new BencodeString("aquiredPieces"), new BencodeString(aquiredPiecesArray()));
 
 	mainResumeDictionary->add(new BencodeString(m_torrentInfo->infoHash()), dict);
@@ -103,10 +100,6 @@ bool ResumeInfo::paused() const {
 	return m_paused;
 }
 
-bool ResumeInfo::hasAnnouncedStarted() const {
-	return m_hasAnnouncedStarted;
-}
-
 const QVector<bool>& ResumeInfo::aquiredPieces() const {
 	return m_aquiredPieces;
 }
@@ -127,10 +120,6 @@ void ResumeInfo::setTotalBytesUploaded(qint64 totalBytesUploaded) {
 
 void ResumeInfo::setPaused(bool paused) {
 	m_paused = paused;
-}
-
-void ResumeInfo::setHasAnnouncedStarted(bool hasAnnouncedStarted) {
-	m_hasAnnouncedStarted = hasAnnouncedStarted;
 }
 
 void ResumeInfo::setAquiredPieces(const QVector<bool>& aquiredPieces) {

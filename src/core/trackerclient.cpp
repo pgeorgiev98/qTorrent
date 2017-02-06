@@ -15,8 +15,6 @@ TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
 	m_torrent(torrent),
 	m_torrentInfo(torrentInfo),
 	m_reply(nullptr),
-	m_bytesDownloadedAtStarted(-1),
-	m_bytesUploadedAtStarted(-1),
 	m_reannounceInterval(-1),
 	m_urlListCurrentIndex(0),
 	m_numberOfAnnounces(0),
@@ -45,17 +43,12 @@ void TrackerClient::announce(Event event) {
 
 	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
 	qint64 bytesUploaded = m_torrent->bytesUploaded();
-	qint64 torrentLength = m_torrentInfo->length();
+	qint64 bytesLeft = m_torrent->bytesLeft();
 	int port = m_torrent->qTorrent()->server()->port();
 
-	if(event == Event::Started) {
-		m_bytesDownloadedAtStarted = bytesDownloaded;
-		m_bytesUploadedAtStarted = bytesUploaded;
-	}
-
-	QString bytesDownloadedString = QString::number(bytesDownloaded - m_bytesDownloadedAtStarted);
-	QString bytesUploadedString = QString::number(bytesUploaded - m_bytesUploadedAtStarted);
-	QString bytesLeftString = QString::number(torrentLength - bytesDownloaded);
+	QString bytesDownloadedString = QString::number(bytesDownloaded);
+	QString bytesUploadedString = QString::number(bytesUploaded);
+	QString bytesLeftString = QString::number(bytesLeft);
 	QString portString = QString::number(port);
 
 	QUrlQuery query(url);
