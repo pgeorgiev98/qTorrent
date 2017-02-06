@@ -456,13 +456,7 @@ qint64 Torrent::bytesAvailable() const {
 }
 
 qint64 Torrent::bytesLeft() const {
-	qint64 bytes = 0;
-	for(Piece* piece : m_pieces) {
-		if(piece->downloaded()) {
-			bytes += piece->size();
-		}
-	}
-	return bytes;
+	return m_torrentInfo->length() - bytesAvailable();
 }
 
 
