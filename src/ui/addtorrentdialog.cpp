@@ -51,6 +51,12 @@ void AddTorrentDialog::connectAll() {
 	connect(m_cancel, SIGNAL(clicked()), this, SLOT(cancel()));
 }
 
+void AddTorrentDialog::setTorrentUrl(QUrl url) {
+	if(url.isLocalFile()) {
+		m_filePath->setText(url.path());
+	}
+}
+
 void AddTorrentDialog::browseFilePath() {
 	// Open a dialog box that accepts only torrent files
 	QString filePath = QFileDialog::getOpenFileName(this, tr("Open torrent"),

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QUrl>
 
 class QTorrent;
 class Panel;
@@ -41,8 +42,10 @@ private:
 signals:
 
 public slots:
-	// Calledd when m_addTorrentAction is clicked
+	// Called when m_addTorrentAction is clicked
 	void addTorrentAction();
+	// Add torrent from url
+	void addTorrentFromUrl(QUrl url);
 };
 
 #endif // MAINWINDOW_H

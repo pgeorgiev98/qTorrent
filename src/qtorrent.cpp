@@ -56,15 +56,11 @@ bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
 }
 
 bool QTorrent::addTorrentFromUrl(QUrl url) {
-	/*
 	if(url.isLocalFile()) {
-		// It's a local file
-		return addTorrentFromLocalFile(url.toLocalFile());
+		m_mainWindow->addTorrentFromUrl(url);
 	} else if(url.scheme() == "magnet") {
-		// It's a magnet link
-		return addTorrentFromMagnetLink(url);
+
 	}
-	*/
 	return false;
 }
 

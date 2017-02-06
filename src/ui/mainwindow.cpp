@@ -83,6 +83,12 @@ void MainWindow::addTorrentAction() {
 	dialog.exec();
 }
 
+void MainWindow::addTorrentFromUrl(QUrl url) {
+	AddTorrentDialog dialog(this, m_qTorrent);
+	dialog.setTorrentUrl(url);
+	dialog.exec();
+}
+
 void MainWindow::closeEvent(QCloseEvent *event) {
 	if(m_qTorrent->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
 		event->accept();

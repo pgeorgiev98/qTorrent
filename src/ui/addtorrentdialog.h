@@ -2,6 +2,7 @@
 #define ADDTORRENTDIALOG_H
 
 #include <QDialog>
+#include <QUrl>
 
 class QTorrent;
 class QLineEdit;
@@ -13,6 +14,8 @@ class AddTorrentDialog : public QDialog
 
 public:
 	AddTorrentDialog(QWidget *parent, QTorrent* qTorrent);
+
+	void setTorrentUrl(QUrl url);
 
 public slots:
 	void browseFilePath();
