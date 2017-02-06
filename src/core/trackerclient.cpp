@@ -64,6 +64,7 @@ void TrackerClient::announce(Event event) {
 		query.addQueryItem("event", "started");
 	} else if(event == Event::Stopped) {
 		query.addQueryItem("event", "stopped");
+		query.addQueryItem("numwant", "0");
 	} else if(event == Event::Completed) {
 		query.addQueryItem("event", "completed");
 	}
