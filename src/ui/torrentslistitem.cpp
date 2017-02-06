@@ -39,6 +39,9 @@ void TorrentsListItem::refresh() {
 	setTotalDownloaded(t->totalBytesDownloaded());
 	setTotalUploaded(t->totalBytesUploaded());
 	float ratio = (double)t->totalBytesUploaded() / (double)t->totalBytesDownloaded();
+	if(t->totalBytesDownloaded() == 0) {
+		ratio = 0.0f;
+	}
 	setRatio(ratio);
 	setDownloaded(t->bytesDownloaded());
 	setUploaded(t->bytesUploaded());
@@ -104,7 +107,7 @@ void TorrentsListItem::setPeers(int connected, int all) {
 }
 
 void TorrentsListItem::setProgress(float value) {
-	setText(Progress, QString::number(value) + "%");
+	setText(Progress, QString::number(value, 'f', 2) + "%");
 	setSortData(Progress, value);
 }
 
@@ -129,7 +132,7 @@ void TorrentsListItem::setTotalUploaded(qint64 value) {
 }
 
 void TorrentsListItem::setRatio(float value) {
-	setText(Ratio, QString::number(value));
+	setText(Ratio, QString::number(value, 'f', 3));
 	setSortData(Ratio, value);
 }
 

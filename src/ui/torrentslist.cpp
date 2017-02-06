@@ -49,14 +49,14 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 
 	SET_SECTION_WIDTH(Name, fm.width("typical-name-for-a-torrent.torrent"));
 	SET_BYTES_SECTION_WIDTH(Available);
-	SET_SECTION_TO_HEADER_WIDTH(Peers);
+	SET_SECTION_WIDTH(Peers, fm.width(" 123/456 "));
 	SET_SECTION_WIDTH(Progress, SECTION_HEADER_WIDTH(Progress)*2);
 
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_BYTES_SECTION_WIDTH(Left);
 	SET_BYTES_SECTION_WIDTH(TotalDownloaded);
 	SET_BYTES_SECTION_WIDTH(TotalUploaded);
-	SET_SECTION_TO_HEADER_WIDTH(Ratio);
+	SET_SECTION_WIDTH(Ratio, fm.width(" 132.456 "));
 	SET_BYTES_SECTION_WIDTH(Downloaded);
 	SET_BYTES_SECTION_WIDTH(Uploaded);
 
