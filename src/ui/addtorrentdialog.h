@@ -7,6 +7,7 @@
 class QTorrent;
 class QLineEdit;
 class QPushButton;
+class QCheckBox;
 
 class AddTorrentDialog : public QDialog
 {
@@ -29,6 +30,7 @@ private:
 	QPushButton* m_browseFilePath;
 	QLineEdit* m_downloadLocation;
 	QPushButton* m_browseDownloadLocation;
+	QCheckBox* m_startImmediately;
 	QPushButton* m_ok;
 	QPushButton* m_cancel;
 

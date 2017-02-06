@@ -55,7 +55,11 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString& filename, const 
 	m_torrents.push_back(torrent);
 	m_qTorrent->mainWindow()->addTorrent(torrent);
 
-	torrent->start();
+	if(settings.startImmediately()) {
+		torrent->start();
+	} else {
+		torrent->pause();
+	}
 
 	return torrent;
 }

@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>
+#include <QCheckBox>
 #include <QFileDialog>
 #include <QDir>
 #include <QStandardPaths>
@@ -28,6 +29,9 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent, QTorrent* qTorrent)
 	downloadLocationLayout->addWidget(m_downloadLocation = new QLineEdit);
 	downloadLocationLayout->addWidget(m_browseDownloadLocation= new QPushButton("Browse"));
 	layout->addLayout(downloadLocationLayout);
+
+	layout->addWidget(m_startImmediately = new QCheckBox("Start Immediately"));
+	m_startImmediately->setChecked(true);
 
 	QHBoxLayout* bottomLayout = new QHBoxLayout;
 	bottomLayout->addWidget(m_ok = new QPushButton("Ok"));
@@ -99,6 +103,8 @@ void AddTorrentDialog::ok() {
 
 	TorrentSettings settings;
 	settings.setDownloadLocation(downloadLocation);
+	settings.setStartImmediately(m_startImmediately->isChecked());
+
 	m_qTorrent->addTorrentFromLocalFile(filePath, settings);
 	close();
 }
