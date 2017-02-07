@@ -181,11 +181,6 @@ void Peer::sendCancel(Block* block) {
 	if(m_status != ConnectionEstablished) {
 		return;
 	}
-	for(int i = m_blocksQueue.size() - 1; i >= 0; i--) {
-		if(m_blocksQueue[i] == block) {
-			m_blocksQueue.removeAt(i);
-		}
-	}
 	int	index = block->piece()->pieceNumber();
 	int begin = block->begin();
 	int length = block->size();
@@ -255,8 +250,8 @@ void Peer::sendMessages() {
 		// Cancel all blocks
 		for(Block* block : m_blocksQueue) {
 			sendCancel(block);
-			block->removeAssignee(this);
 		}
+		releaseAllBlocks();
 
 	} else {
 		/* Not Paused */
@@ -378,10 +373,7 @@ bool Peer::readPeerMessage(bool* ok) {
 	{
 		qDebug() << addressPort() << ": choke";
 		m_peerChoking = true;
-		for(auto block : m_blocksQueue) {
-			m_torrent->releaseBlock(this, block);
-		}
-		m_blocksQueue.clear();
+		releaseAllBlocks();
 		m_replyTimeoutTimer.stop();
 		m_timedOut = false;
 		break;
@@ -542,7 +534,7 @@ bool Peer::readPeerMessage(bool* ok) {
 			const char* blockData = m_receivedDataBuffer.data() + i;
 			if(!block->downloaded()) {
 				block->setData(this, blockData);
-				m_blocksQueue.removeAt(blockIndex);
+				releaseBlock(block);
 			}
 			if(m_blocksQueue.isEmpty()) {
 				m_replyTimeoutTimer.stop();
@@ -636,6 +628,25 @@ void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
 	m_status = Created;
 }
 
+void Peer::releaseBlock(Block *block) {
+	block->removeAssignee(this);
+	m_blocksQueue.removeAll(block);
+	if(block->assignees().isEmpty() && !block->downloaded()) {
+		block->piece()->deleteBlock(block);
+	}
+}
+
+void Peer::releaseAllBlocks() {
+	QList<Block*> blocks = m_blocksQueue;
+	for(Block* block : blocks) {
+		block->removeAssignee(this);
+		m_blocksQueue.removeAll(block);
+		if(block->assignees().isEmpty() && !block->downloaded()) {
+			block->piece()->deleteBlock(block);
+		}
+	}
+}
+
 /* Slots */
 
 void Peer::connected() {
@@ -703,23 +714,7 @@ void Peer::readyRead() {
 void Peer::finished() {
 	m_handshakeTimeoutTimer.stop();
 	m_replyTimeoutTimer.stop();
-	for(auto block : m_blocksQueue) {
-		// Check if other peers have requested this block
-		bool othersHaveBlock = false;
-		for(Peer* peer : m_torrent->peers()) {
-			if(peer == this) {
-				continue;
-			}
-			if(peer->blocksQueue().contains(block)) {
-				othersHaveBlock = true;
-				break;
-			}
-		}
-		// Delete block if nobody has requested it
-		if(!othersHaveBlock) {
-			block->piece()->deleteBlock(block);
-		}
-	}
+	releaseAllBlocks();
 	if(m_status != Error) {
 		m_status = Disconnected;
 	}
@@ -730,7 +725,6 @@ void Peer::finished() {
 			m_reconnectTimer.start();
 		}
 	}
-	m_blocksQueue.clear();
 	qDebug() << "Connection to" << addressPort() << "closed" << m_socket->errorString();
 }
 

@@ -15,6 +15,9 @@ BencodeParser::BencodeParser() {
 }
 
 BencodeParser::~BencodeParser() {
+	for(BencodeValue* value : m_mainList) {
+		delete value;
+	}
 }
 
 

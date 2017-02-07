@@ -164,6 +164,10 @@ public:
 	 * and send that request to the peer */
 	bool requestBlock();
 
+	/* Does the opposite of requesting a block */
+	void releaseBlock(Block* block);
+	void releaseAllBlocks();
+
 	/* Drops the connection */
 	void disconnect();
 

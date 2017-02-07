@@ -172,7 +172,7 @@ void Piece::unloadFromMemory() {
 		qDebug() << "Fatal: Tried to unload piece" << this << "(" << m_pieceNumber << "), which is not downloaded yet!";
 		exit(1);
 	}
-	delete m_pieceData;
+	delete[] m_pieceData;
 	m_pieceData = nullptr;
 }
 

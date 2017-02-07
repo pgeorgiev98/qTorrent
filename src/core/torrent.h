@@ -51,7 +51,6 @@ public:
 	void addPeer(Peer* peer);
 
 	Block* requestBlock(Peer* client, int size);
-	void releaseBlock(Peer* client, Block* block);
 
 	bool savePiece(int pieceNumber);
 

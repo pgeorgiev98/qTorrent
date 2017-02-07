@@ -162,6 +162,7 @@ bool TorrentInfo::loadFromTorrentFile(QString filename) {
 			*m_encoding = mainDict->value("encoding")->toByteArray();
 		} catch(BencodeException& ex) {
 			// Default to UTF-8 encoding
+			delete m_encoding;
 			m_encoding = new QString("UTF-8");
 		}
 

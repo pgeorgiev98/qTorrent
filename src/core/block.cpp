@@ -47,9 +47,9 @@ void Block::setData(const Peer* peer, const char* data) {
 	for(auto p : m_assignees) {
 		if(p != peer) {
 			p->sendCancel(this);
+			p->releaseBlock(this);
 		}
 	}
-	clearAssignees();
 	m_piece->updateInfo();
 }
 

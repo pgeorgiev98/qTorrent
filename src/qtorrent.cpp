@@ -25,6 +25,7 @@ QTorrent::QTorrent()
 QTorrent::~QTorrent() {
 	delete m_torrentManager;
 	delete m_server;
+	delete m_mainWindow;
 }
 
 

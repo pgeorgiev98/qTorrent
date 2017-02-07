@@ -29,12 +29,20 @@ Torrent::~Torrent() {
 		delete peer;
 	}
 
+	for(Piece* piece : m_pieces) {
+		delete piece;
+	}
+
 	if(m_torrentInfo) {
 		delete m_torrentInfo;
 	}
 
 	if(m_trackerClient) {
 		delete m_trackerClient;
+	}
+
+	for(QFile* file : m_files) {
+		delete file;
 	}
 }
 
@@ -312,14 +320,6 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 
 	// No blocks
 	return nullptr;
-}
-
-void Torrent::releaseBlock(Peer *client, Block *block) {
-	Piece* piece = block->piece();
-	block->removeAssignee(client);
-	if(block->assignees().isEmpty()) {
-		piece->deleteBlock(block);
-	}
 }
 
 bool Torrent::savePiece(int pieceNumber) {
