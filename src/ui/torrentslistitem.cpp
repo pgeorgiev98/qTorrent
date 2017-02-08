@@ -4,6 +4,12 @@
 #include "panel.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QCheckBox>
 
 TorrentsListItem::TorrentsListItem(QTorrent* qTorrent, QTreeWidget *view, Torrent *torrent)
 	: QTreeWidgetItem(view)
@@ -152,4 +158,24 @@ void TorrentsListItem::onPauseAction() {
 
 void TorrentsListItem::onStartAction() {
 	m_torrent->start();
+}
+
+void TorrentsListItem::onRemoveAction() {
+	QDialog dialog(m_qTorrent->mainWindow());
+	QVBoxLayout* layout = new QVBoxLayout;
+	layout->addWidget(new QLabel(tr("Are you sure you want to remove this\ntorrent from the list of torrents?")));
+	QCheckBox* deleteData = new QCheckBox("Delete downloaded data");
+	layout->addWidget(deleteData);
+	QHBoxLayout* bottomLayout = new QHBoxLayout;
+	QPushButton* yes = new QPushButton("Yes");
+	QPushButton* no = new QPushButton("No");
+	connect(yes, SIGNAL(clicked()), &dialog, SLOT(accept()));
+	connect(no, SIGNAL(clicked()), &dialog, SLOT(reject()));
+	bottomLayout->addWidget(yes);
+	bottomLayout->addWidget(no);
+	layout->addLayout(bottomLayout);
+	dialog.setLayout(layout);
+	if(dialog.exec()) {
+		m_qTorrent->removeTorrent(m_torrent, deleteData->isChecked());
+	}
 }

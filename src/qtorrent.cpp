@@ -65,6 +65,10 @@ bool QTorrent::addTorrentFromUrl(QUrl url) {
 	return false;
 }
 
+bool QTorrent::removeTorrent(Torrent* torrent, bool deleteData) {
+	return m_torrentManager->removeTorrent(torrent, deleteData);
+}
+
 void QTorrent::shutDown() {
 	for(Torrent* torrent : torrents()) {
 		TrackerClient* tracker = torrent->trackerClient();

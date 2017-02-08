@@ -28,6 +28,8 @@ public:
 	// Permanently saves the torrent file to the app data directory
 	bool saveTorrentFile(const QString& filename, TorrentInfo* torrentInfo);
 
+	bool removeTorrent(Torrent* torrent, bool deleteData);
+
 	/* Getters */
 	QTorrent* qTorrent();
 	const QList<Torrent*>& torrents() const;

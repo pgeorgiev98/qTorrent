@@ -42,6 +42,7 @@ public:
 public slots:
 	void onPauseAction();
 	void onStartAction();
+	void onRemoveAction();
 
 private:
 	QTorrent* m_qTorrent;

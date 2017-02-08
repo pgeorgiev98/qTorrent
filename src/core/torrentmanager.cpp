@@ -228,6 +228,26 @@ bool TorrentManager::saveTorrentFile(const QString &filename, TorrentInfo *torre
 	return true;
 }
 
+bool TorrentManager::removeTorrent(Torrent* torrent, bool deleteData) {
+	QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	QFile savedTorrentFile(dataPath + "/resume/" + torrent->torrentInfo()->infoHash().toHex() + ".torrent");
+	if(savedTorrentFile.exists()) {
+		savedTorrentFile.remove();
+	}
+	m_torrents.removeAll(torrent);
+	if(deleteData) {
+		for(QFile* file : torrent->files()) {
+			if(file->exists()) {
+				file->remove();
+			}
+		}
+	}
+	torrent->trackerClient()->announce(TrackerClient::Stopped);
+	m_qTorrent->mainWindow()->removeTorrent(torrent);
+	delete torrent;
+	return true;
+}
+
 QTorrent* TorrentManager::qTorrent() {
 	return m_qTorrent;
 }

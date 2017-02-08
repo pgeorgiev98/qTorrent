@@ -22,6 +22,8 @@ public:
 	bool addTorrentFromMagnetLink(QUrl url);
 	bool addTorrentFromUrl(QUrl url);
 
+	bool removeTorrent(Torrent* torrent, bool deleteData);
+
 	void shutDown();
 
 	void showMainWindow();

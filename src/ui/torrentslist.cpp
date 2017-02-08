@@ -85,7 +85,11 @@ void TorrentsList::addTorrent(Torrent *torrent) {
 
 void TorrentsList::removeTorrent(Torrent *torrent) {
 	TorrentsListItem* item = torrentItem(torrent);
-	removeItemWidget(item, 0);
+	if(item) {
+		m_items.removeAll(item);
+		removeItemWidget(item, 0);
+		delete item;
+	}
 }
 
 void TorrentsList::refresh() {
@@ -104,6 +108,7 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 
 	QAction* pauseAct = new QAction(tr("&Pause"), this);
 	QAction* startAct = new QAction(tr("&Start"), this);
+	QAction* removeAct = new QAction(tr("&Remove"), this);
 
 	if(item->torrent()->isPaused()) {
 		pauseAct->setEnabled(false);
@@ -113,9 +118,11 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 
 	menu.addAction(pauseAct);
 	menu.addAction(startAct);
+	menu.addAction(removeAct);
 
 	connect(pauseAct, SIGNAL(triggered()), item, SLOT(onPauseAction()));
 	connect(startAct, SIGNAL(triggered()), item, SLOT(onStartAction()));
+	connect(removeAct, SIGNAL(triggered()), item, SLOT(onRemoveAction()));
 
 	menu.exec(mapToGlobal(pos));
 }
