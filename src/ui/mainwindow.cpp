@@ -65,7 +65,7 @@ void MainWindow::removeTorrent(Torrent *torrent) {
 
 void MainWindow::createMenus() {
 	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
-	m_addTorrentAction = fileMenu->addAction(tr("&Add torrent"), this, &MainWindow::addTorrentAction);
+	fileMenu->addAction(tr("&Add torrent"), this, &MainWindow::addTorrentAction);
 }
 
 

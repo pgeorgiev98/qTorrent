@@ -33,16 +33,12 @@ private:
 	Panel* m_panel;
 	TorrentsList* m_torrentsList;
 
-	// Used to add a new torrent
-	QAction* m_addTorrentAction;
-
 	// Creates all needed menus
 	void createMenus();
 
 signals:
 
 public slots:
-	// Called when m_addTorrentAction is clicked
 	void addTorrentAction();
 	// Add torrent from url
 	void addTorrentFromUrl(QUrl url);
