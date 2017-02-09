@@ -364,13 +364,18 @@ void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 			i++;
 			break;
 		}
-		BencodeValue* key;
+		BencodeValue* key = nullptr;
 		QByteArray keyString;
 		BencodeValue* value;
 		try {
 			key = BencodeValue::createFromByteArray(data, i);
 			keyString = key->toByteArray();
+			delete key;
+			key = nullptr;
 		} catch(BencodeException& ex2) {
+			if(key) {
+				delete key;
+			}
 			throw ex << "Failed to load key" << endl << ex2.what();
 		}
 
