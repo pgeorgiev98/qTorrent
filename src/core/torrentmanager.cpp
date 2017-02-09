@@ -101,8 +101,7 @@ bool TorrentManager::resumeTorrents() {
 		}
 
 		BencodeDictionary* mainDict = parser.list().first()->toBencodeDictionary();
-		for(BencodeValue* key : mainDict->keys()) {
-			QByteArray infoHash = key->toByteArray();
+		for(QByteArray infoHash : mainDict->keys()) {
 			QFile file(dir.path() + "/" + infoHash.toHex() + ".torrent");
 			if(!file.exists()) {
 				m_qTorrent->critical("Failed to resume torrent: file " + file.fileName() + " does not exist");

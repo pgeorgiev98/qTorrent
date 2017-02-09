@@ -319,52 +319,28 @@ BencodeDictionary::BencodeDictionary() : BencodeValue(Type::Dictionary) {
 }
 
 BencodeDictionary::~BencodeDictionary() {
-	for(auto pair : m_values) {
-		delete pair.first;
-		delete pair.second;
+	for(BencodeValue* value : m_values.values()) {
+		delete value;
 	}
 }
 
-QList<BencodeValue*> BencodeDictionary::keys() const {
-	QList<BencodeValue*> keys;
-	for(auto pair : m_values) {
-		keys.push_back(pair.first);
-	}
-	return keys;
+QList<QByteArray> BencodeDictionary::keys() const {
+	return m_values.keys();
 }
 
-bool BencodeDictionary::keyExists(BencodeValue* key) const {
-	for(auto pair : m_values) {
-		if(pair.first == key) {
-			return true;
-		}
-		if(pair.first->equalTo(key)) {
-			return true;
-		}
-	}
-	return false;
+QList<BencodeValue*> BencodeDictionary::values() const {
+	return m_values.values();
 }
 
 bool BencodeDictionary::keyExists(const QByteArray& key) const {
-	BencodeString convertedKey(key);
-	return keyExists(&convertedKey);
-}
-
-BencodeValue* BencodeDictionary::value(BencodeValue *key) const {
-	for(auto pair : m_values) {
-		if(pair.first == key) {
-			return pair.second;
-		}
-		if(pair.first -> equalTo(key)) {
-			return pair.second;
-		}
-	}
-	throw BencodeException("BencodeDictionary::value(): No such key");
+	return m_values.keys().contains(key);
 }
 
 BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
-	BencodeString convertedKey(key);
-	return value(&convertedKey);
+	if(keyExists(key)) {
+		return m_values.value(key);
+	}
+	throw BencodeException("BencodeDictionary::value(): No such key: '" + key + "'");
 }
 
 void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position) {
@@ -388,22 +364,23 @@ void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 			i++;
 			break;
 		}
-		BencodeValue* first;
-		BencodeValue* second;
+		BencodeValue* key;
+		QByteArray keyString;
+		BencodeValue* value;
 		try {
-			first = BencodeValue::createFromByteArray(data, i);
+			key = BencodeValue::createFromByteArray(data, i);
+			keyString = key->toByteArray();
 		} catch(BencodeException& ex2) {
-			throw ex << "Failed to load first value" << endl << ex2.what();
+			throw ex << "Failed to load key" << endl << ex2.what();
 		}
 
 		try {
-			second = BencodeValue::createFromByteArray(data, i);
+			value = BencodeValue::createFromByteArray(data, i);
 		} catch(BencodeException& ex2) {
-			throw ex << "Failed to load second value" << endl << ex2.what();
+			throw ex << "Failed to load value" << endl << ex2.what();
 		}
 
-		QPair<BencodeValue*, BencodeValue*> pair(first, second);
-		m_values.push_back(pair);
+		m_values[keyString] = value;
 	}
 	m_dataPosEnd = i;
 }
@@ -425,12 +402,8 @@ void BencodeList::add(BencodeValue *value) {
 	m_values.push_back(value);
 }
 
-void BencodeDictionary::setPairs(const QList<QPair<BencodeValue *, BencodeValue *> > &pairs) {
-	m_values = pairs;
-}
-
-void BencodeDictionary::add(BencodeValue* key, BencodeValue* value) {
-	m_values.push_back(QPair<BencodeValue*,BencodeValue*>(key, value));
+void BencodeDictionary::add(const QByteArray& key, BencodeValue* value) {
+	m_values[key] = value;
 }
 
 
@@ -473,8 +446,9 @@ QByteArray BencodeDictionary::bencode(bool includeMetadata) const {
 	if(includeMetadata) {
 		data.append('d');
 	}
-	for(auto pair : m_values) {
-		data.append(pair.first->bencode()).append(pair.second->bencode());
+	for(const QByteArray& key : m_values.keys()) {
+		BencodeString bkey(key);
+		data.append(bkey.bencode()).append(m_values.value(key)->bencode());
 	}
 	if(includeMetadata) {
 		data.append('e');
@@ -507,15 +481,12 @@ void BencodeList::print(QTextStream& out) const {
 
 void BencodeDictionary::print(QTextStream& out) const {
 	out << "Dictionary {" << endl;
-	for(auto v : m_values) {
+	for(const QByteArray& key : m_values.keys()) {
+		out << key;
+		out << " : ";
 		QString s;
 		QTextStream stream(&s);
-		(v.first) -> print(stream);
-		while(!stream.atEnd()) {
-			out << '\t' << stream.readLine();
-		}
-		(v.second) -> print(stream);
-		out << " : ";
+		m_values[key] -> print(stream);
 		out << stream.readLine() << endl;
 		while(!stream.atEnd()) {
 			out << '\t' << stream.readLine() << endl;
@@ -561,14 +532,11 @@ bool BencodeList::equalTo(BencodeValue *other) const {
 bool BencodeDictionary::equalTo(BencodeValue *other) const {
 	try {
 		BencodeDictionary* otherDict = other->toBencodeDictionary();
-		if(m_values.size() != otherDict->m_values.size()) {
+		if(keys() != otherDict->keys()) {
 			return false;
 		}
-		for(int i = 0; i < m_values.size(); i++) {
-			if(!m_values[i].first->equalTo(otherDict->m_values[i].first) ||
-				!m_values[i].second->equalTo(otherDict->m_values[i].second)) {
-				return false;
-			}
+		if(values() != otherDict->values()) {
+			return false;
 		}
 		return true;
 	} catch(BencodeException& ex) {

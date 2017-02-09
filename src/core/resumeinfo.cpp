@@ -29,13 +29,13 @@ bool ResumeInfo::loadFromBencode(BencodeDictionary *dict) {
 
 void ResumeInfo::addToBencode(BencodeDictionary *mainResumeDictionary) const {
 	BencodeDictionary* dict = new BencodeDictionary;
-	dict->add(new BencodeString("downloadLocation"), new BencodeString(m_downloadLocation.toUtf8()));
-	dict->add(new BencodeString("totalBytesDownloaded"), new BencodeInteger(m_totalBytesDownloaded));
-	dict->add(new BencodeString("totalBytesUploaded"), new BencodeInteger(m_totalBytesUploaded));
-	dict->add(new BencodeString("paused"), new BencodeInteger(m_paused));
-	dict->add(new BencodeString("aquiredPieces"), new BencodeString(aquiredPiecesArray()));
+	dict->add("downloadLocation", new BencodeString(m_downloadLocation.toUtf8()));
+	dict->add("totalBytesDownloaded", new BencodeInteger(m_totalBytesDownloaded));
+	dict->add("totalBytesUploaded", new BencodeInteger(m_totalBytesUploaded));
+	dict->add("paused", new BencodeInteger(m_paused));
+	dict->add("aquiredPieces", new BencodeString(aquiredPiecesArray()));
 
-	mainResumeDictionary->add(new BencodeString(m_torrentInfo->infoHash()), dict);
+	mainResumeDictionary->add(m_torrentInfo->infoHash(), dict);
 }
 
 

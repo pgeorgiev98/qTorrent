@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QString>
 #include <QList>
+#include <QMap>
 
 class BencodeParser;
 class BencodeInteger;
@@ -140,7 +141,7 @@ public:
 
 class BencodeDictionary : public BencodeValue {
 protected:
-	QList< QPair<BencodeValue*, BencodeValue*> > m_values;
+	QMap<QByteArray, BencodeValue*> m_values;
 
 	void loadFromByteArray(const QByteArray& data, int& position);
 
@@ -151,13 +152,11 @@ public:
 	void print(QTextStream& out) const;
 	bool equalTo(BencodeValue *other) const;
 
-	QList<BencodeValue*> keys() const;
-	bool keyExists(BencodeValue* key) const;
+	QList<QByteArray> keys() const;
+	QList<BencodeValue*> values() const;
 	bool keyExists(const QByteArray& key) const;
-	BencodeValue* value(BencodeValue* key) const;
 	BencodeValue* value(const QByteArray& key) const;
-	void setPairs(const QList< QPair<BencodeValue*, BencodeValue*> >& pairs);
-	void add(BencodeValue* key, BencodeValue* value);
+	void add(const QByteArray& key, BencodeValue* value);
 	QByteArray bencode(bool includeMetadata = true) const;
 };
 
