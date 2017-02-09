@@ -51,6 +51,11 @@ bool BencodeParser::parse(const QByteArray &data) {
 bool BencodeParser::parse() {
 	clearError();
 
+	for(BencodeValue* value : m_mainList) {
+		delete value;
+	}
+	m_mainList.clear();
+
 	int i = 0;
 	while(i < m_bencodeData.size()) {
 		BencodeValue *value;
