@@ -13,7 +13,7 @@ class TorrentsListItem : public QObject, public QTreeWidgetItem {
 
 public:
 	enum Section {
-		Name=0, Size, Peers, Progress, Available, Left,
+		Name=0, Size, Peers, State, Progress, Available, Left,
 		TotalDownloaded, TotalUploaded, Ratio, Downloaded, Uploaded
 	};
 
@@ -30,6 +30,7 @@ public:
 	void setName(const QString& value);
 	void setSize(qint64 value);
 	void setPeers(int connected, int all);
+	void setState(const QString& state);
 	void setProgress(float value);
 	void setAvailable(qint64 value);
 	void setLeft(qint64 value);

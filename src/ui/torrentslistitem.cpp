@@ -39,6 +39,7 @@ void TorrentsListItem::refresh() {
 	setName(info->torrentName());
 	setSize(info->length());
 	setPeers(t->connectedPeersCount(), t->allPeersCount());
+	setState(t->stateString());
 	setProgress(t->percentDownloaded());
 	setAvailable(t->bytesAvailable());
 	setLeft(t->bytesLeft());
@@ -110,6 +111,11 @@ void TorrentsListItem::setSize(qint64 value) {
 void TorrentsListItem::setPeers(int connected, int all) {
 	setText(Peers, tr("%1/%2").arg(connected).arg(all));
 	setSortData(Peers, connected);
+}
+
+void TorrentsListItem::setState(const QString &state) {
+	setText(State, state);
+	setSortData(State, state);
 }
 
 void TorrentsListItem::setProgress(float value) {

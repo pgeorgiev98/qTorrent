@@ -17,7 +17,8 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 {
 	QFontMetrics fm = fontMetrics();
 	QStringList headers;
-	headers << tr("Torrent") << tr("Size") << tr("Peers") << tr("Progress")
+	headers << tr("Torrent") << tr("Size") << tr("Peers")
+			<< tr("State") << tr("Progress")
 			<< tr("Available") << tr("Left")
 			<< tr("Total Downloaded") << tr("Total Uploaded") << tr("Ratio")
 			<< tr("Downloaded") << tr("Uploaded");
@@ -50,6 +51,7 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 	SET_SECTION_WIDTH(Name, fm.width("typical-name-for-a-torrent.torrent"));
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_SECTION_WIDTH(Peers, fm.width(" 123/456 "));
+	SET_SECTION_WIDTH(State, fm.width(" Downloading "));
 	SET_SECTION_WIDTH(Progress, SECTION_HEADER_WIDTH(Progress)*2);
 
 	SET_BYTES_SECTION_WIDTH(Available);
