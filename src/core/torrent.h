@@ -24,13 +24,13 @@ class QFile;
 class Torrent {
 public:
 	/*
-	 * Torrent status:
+	 * Torrent state:
 	 * New - Just created
 	 * Loading - Loading torrent / Fetching torrent metainfo
 	 * Checking - Verifying downloaded pieces
 	 * Ready - Everything is ok. Can Seed/Download.
 	 */
-	enum Status {
+	enum State {
 		New, Loading, Checking, Ready
 	};
 
@@ -61,8 +61,8 @@ public:
 
 	bool savePiece(int pieceNumber);
 
-	/* Sets a piece's downloaded/available status.
-	 * if status is Ready, it will increment m_bytesDownloaded */
+	/* Sets a piece's downloaded/available state.
+	 * if state is Ready, it will increment m_bytesDownloaded */
 	void setPieceAvailable(Piece* piece);
 
 	void successfullyAnnounced(TrackerClient::Event event);
@@ -94,6 +94,12 @@ public:
 	int connectedPeersCount() const;
 	int allPeersCount() const;
 
+	// Return the torrent's state
+	State state() const;
+	// Returns the torrent's state as a formatted string
+	QString stateString() const;
+
+
 	const QString& downloadLocation() const;
 
 	/* Calculates the current percentage of the downloaded pieces */
@@ -113,13 +119,13 @@ public:
 	/* Called when a piece is successfully uploaded */
 	void uploadedBlock(int bytes);
 
-	/* Called when torrent is fully downloaded if status is Ready,
+	/* Called when torrent is fully downloaded if state is 'Ready',
 	 * then it will send a 'completed' announce to the tracker */
 	void fullyDownloaded();
 
 private:
 	QTorrent* m_qTorrent;
-	Status m_status;
+	State m_state;
 	QList<Peer*> m_peers;
 	QList<Piece*> m_pieces;
 	TorrentInfo* m_torrentInfo;

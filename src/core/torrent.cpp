@@ -10,7 +10,7 @@
 
 Torrent::Torrent(QTorrent *qTorrent)
 	: m_qTorrent(qTorrent)
-	, m_status(New)
+	, m_state(New)
 	, m_torrentInfo(nullptr)
 	, m_trackerClient(nullptr)
 	, m_bytesDownloadedOnStartup(0)
@@ -48,7 +48,7 @@ Torrent::~Torrent() {
 
 bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocation) {
 	clearError();
-	m_status = Loading;
+	m_state = Loading;
 
 	m_torrentInfo = torrentInfo;
 	m_downloadLocation = downloadLocation;
@@ -75,14 +75,14 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	// Create the tracker client
 	m_trackerClient = new TrackerClient(this, m_torrentInfo);
 
-	m_status = Ready;
+	m_state = Ready;
 
 	return true;
 }
 
 bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeInfo) {
 	clearError();
-	m_status = Loading;
+	m_state = Loading;
 
 	m_torrentInfo = torrentInfo;
 
@@ -123,7 +123,7 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	m_totalBytesDownloaded = resumeInfo->totalBytesDownloaded();
 	m_totalBytesUploaded = resumeInfo->totalBytesUploaded();
 
-	m_status = Ready;
+	m_state = Ready;
 
 	if(resumeInfo->paused()) {
 		pause();
@@ -391,7 +391,7 @@ void Torrent::setPieceAvailable(Piece *piece) {
 	// Increment some counters
 	m_downloadedPieces++;
 
-	if(m_status == Ready) {
+	if(m_state == Ready) {
 		m_totalBytesDownloaded += piece->size();
 
 		// Send 'have' messages to all peers
@@ -509,6 +509,26 @@ int Torrent::allPeersCount() const {
 	return m_peers.size();
 }
 
+Torrent::State Torrent::state() const {
+	return m_state;
+}
+
+QString Torrent::stateString() const {
+	if(m_state == New) {
+		return "Created";
+	} else if(m_state == Loading) {
+		return "Loading torrent";
+	} else if(m_state == Checking) {
+		return "Checking torrent";
+	} else if(m_paused) {
+		return "Paused";
+	} else if(m_downloaded) {
+		return "Completed";
+	} else {
+		return "Downloading";
+	}
+}
+
 const QString& Torrent::downloadLocation() const {
 	return m_downloadLocation;
 }
@@ -565,7 +585,7 @@ void Torrent::fullyDownloaded() {
 	qDebug() << "Torrent fully downloaded!";
 	m_downloaded = true;
 
-	if(m_status == Ready) {
+	if(m_state == Ready) {
 		// Send announce
 		m_trackerClient->announce(TrackerClient::Completed);
 	}
