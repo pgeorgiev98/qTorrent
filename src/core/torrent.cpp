@@ -398,11 +398,11 @@ void Torrent::setPieceAvailable(Piece *piece) {
 		for(auto peer : m_peers) {
 			peer->sendHave(piece->pieceNumber());
 		}
+	}
 
-		// Check if all pieces are downloaded
-		if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
-			fullyDownloaded();
-		}
+	// Check if all pieces are downloaded
+	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
+		fullyDownloaded();
 	}
 }
 
