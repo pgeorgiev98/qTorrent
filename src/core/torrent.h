@@ -54,6 +54,11 @@ public:
 
 	bool savePiece(int pieceNumber);
 
+	/* Sets a piece's downloaded/available status.
+	 * Does not increment m_bytesDownloaded
+	 * if torrent is currently being added, announce must be true */
+	void setPieceAvailable(Piece* piece, bool announce);
+
 	void successfullyAnnounced(TrackerClient::Event event);
 
 	/* Getters */
@@ -96,14 +101,16 @@ public:
 
 	/* Signals */
 
-	/* Emitted when a piece is successfully downloaded */
+	/* Called when a piece is successfully downloaded */
 	void downloadedPiece(Piece* piece);
 
-	/* Emitted when a piece is successfully uploaded */
+	/* Called when a piece is successfully uploaded */
 	void uploadedBlock(int bytes);
 
-	/* Emitted when torrent is fully downloaded */
-	void fullyDownloaded();
+	/* Called when torrent is fully downloaded if announce == true,
+	 * then it will send a 'completed' announce to the tracker
+	 * Must be set to false when the torrent is still being added */
+	void fullyDownloaded(bool announce = true);
 
 private:
 	QTorrent* m_qTorrent;

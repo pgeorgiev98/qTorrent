@@ -112,16 +112,8 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	}
 
 	// Set all pieces
-	for(int i = 0; i < m_pieces.size(); i++) {
-		Piece* piece = m_pieces[i];
-		bool downloaded = resumeInfo->aquiredPieces()[i];
-		piece->setDownloaded(downloaded);
-		if(downloaded) {
-			m_downloadedPieces++;
-		}
-	}
-	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
-		m_downloaded = true;
+	for(Piece* piece : m_pieces) {
+		setPieceAvailable(piece, false);
 	}
 
 	m_downloadLocation = resumeInfo->downloadLocation();
@@ -387,6 +379,28 @@ bool Torrent::savePiece(int pieceNumber) {
 	return true;
 }
 
+void Torrent::setPieceAvailable(Piece *piece, bool announce) {
+	if(piece->downloaded()) {
+		return;
+	}
+
+	// Set the piece status
+	piece->setDownloaded(true);
+
+	// Increment some counters
+	m_downloadedPieces++;
+
+	// Send 'have' messages to all peers
+	for(auto peer : m_peers) {
+		peer->sendHave(piece->pieceNumber());
+	}
+
+	// Check if all pieces are downloaded
+	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
+		fullyDownloaded(announce);
+	}
+}
+
 void Torrent::successfullyAnnounced(TrackerClient::Event event) {
 	if(event == TrackerClient::Started) {
 		m_hasAnnouncedStarted = true;
@@ -542,12 +556,14 @@ void Torrent::uploadedBlock(int bytes) {
 	m_totalBytesUploaded += bytes;
 }
 
-void Torrent::fullyDownloaded() {
+void Torrent::fullyDownloaded(bool announce) {
 	qDebug() << "Torrent fully downloaded!";
 	m_downloaded = true;
 
 	// Send announce
-	m_trackerClient->announce(TrackerClient::Completed);
+	if(announce) {
+		m_trackerClient->announce(TrackerClient::Completed);
+	}
 
 	// Disconnect from all peers that have the full torrent
 	for(auto peer : m_peers) {
