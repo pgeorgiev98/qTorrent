@@ -23,8 +23,15 @@ class QFile;
  */
 class Torrent {
 public:
+	/*
+	 * Torrent status:
+	 * New - Just created
+	 * Loading - Loading torrent / Fetching torrent metainfo
+	 * Checking - Verifying downloaded pieces
+	 * Ready - Everything is ok. Can Seed/Download.
+	 */
 	enum Status {
-		New, Loading, Checking, Ready, Downloading, Completed
+		New, Loading, Checking, Ready
 	};
 
 	/* Constructor and destructor */
@@ -55,9 +62,8 @@ public:
 	bool savePiece(int pieceNumber);
 
 	/* Sets a piece's downloaded/available status.
-	 * Does not increment m_bytesDownloaded
-	 * if torrent is currently being added, announce must be true */
-	void setPieceAvailable(Piece* piece, bool announce);
+	 * if status is Ready, it will increment m_bytesDownloaded */
+	void setPieceAvailable(Piece* piece);
 
 	void successfullyAnnounced(TrackerClient::Event event);
 
@@ -107,10 +113,9 @@ public:
 	/* Called when a piece is successfully uploaded */
 	void uploadedBlock(int bytes);
 
-	/* Called when torrent is fully downloaded if announce == true,
-	 * then it will send a 'completed' announce to the tracker
-	 * Must be set to false when the torrent is still being added */
-	void fullyDownloaded(bool announce = true);
+	/* Called when torrent is fully downloaded if status is Ready,
+	 * then it will send a 'completed' announce to the tracker */
+	void fullyDownloaded();
 
 private:
 	QTorrent* m_qTorrent;

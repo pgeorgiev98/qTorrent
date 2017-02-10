@@ -48,6 +48,7 @@ Torrent::~Torrent() {
 
 bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocation) {
 	clearError();
+	m_status = Loading;
 
 	m_torrentInfo = torrentInfo;
 	m_downloadLocation = downloadLocation;
@@ -81,6 +82,7 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 
 bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeInfo) {
 	clearError();
+	m_status = Loading;
 
 	m_torrentInfo = torrentInfo;
 
@@ -113,7 +115,7 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 
 	// Set all pieces
 	for(Piece* piece : m_pieces) {
-		setPieceAvailable(piece, false);
+		setPieceAvailable(piece);
 	}
 
 	m_downloadLocation = resumeInfo->downloadLocation();
@@ -379,25 +381,28 @@ bool Torrent::savePiece(int pieceNumber) {
 	return true;
 }
 
-void Torrent::setPieceAvailable(Piece *piece, bool announce) {
+void Torrent::setPieceAvailable(Piece *piece) {
 	if(piece->downloaded()) {
 		return;
 	}
 
-	// Set the piece status
 	piece->setDownloaded(true);
 
 	// Increment some counters
 	m_downloadedPieces++;
 
-	// Send 'have' messages to all peers
-	for(auto peer : m_peers) {
-		peer->sendHave(piece->pieceNumber());
-	}
+	if(m_status == Ready) {
+		m_totalBytesDownloaded += piece->size();
 
-	// Check if all pieces are downloaded
-	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
-		fullyDownloaded(announce);
+		// Send 'have' messages to all peers
+		for(auto peer : m_peers) {
+			peer->sendHave(piece->pieceNumber());
+		}
+
+		// Check if all pieces are downloaded
+		if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
+			fullyDownloaded();
+		}
 	}
 }
 
@@ -556,12 +561,12 @@ void Torrent::uploadedBlock(int bytes) {
 	m_totalBytesUploaded += bytes;
 }
 
-void Torrent::fullyDownloaded(bool announce) {
+void Torrent::fullyDownloaded() {
 	qDebug() << "Torrent fully downloaded!";
 	m_downloaded = true;
 
-	// Send announce
-	if(announce) {
+	if(m_status == Ready) {
+		// Send announce
 		m_trackerClient->announce(TrackerClient::Completed);
 	}
 
