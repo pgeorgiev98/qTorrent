@@ -55,16 +55,29 @@ private:
 
 	// The current index in the TorrentInfo::announceUrlsList()
 	// This is incremented if connecting to the tracker failed
-	int m_urlListCurrentIndex;
+	int m_currentAnnounceListIndex;
+
+	// Set the current announce url to the next one
+	// Returns false when it reaches the end
+	bool nextAnnounceUrl();
+
+	// Returns the current announce url
+	const QByteArray& currentAnnounceUrl() const;
+
+	// Resets the current announce url
+	void resetCurrentAnnounceUrl();
+
+	// This will be called when announce failed
+	void announceFailed();
+
+	// This will be called when announce succeeded
+	void announceSucceeded();
 
 	// Holds the number of successfull announces
 	int m_numberOfAnnounces;
 
 	// Last event with which was announce() called
 	Event m_lastEvent;
-
-	// This will be called by when connection failed
-	void failedToAnnounce();
 };
 
 #endif // TRACKERCLIENT_H

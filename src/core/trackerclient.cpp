@@ -11,14 +11,14 @@
 #include <QUrl>
 #include <QDebug>
 
-TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo) :
-	m_torrent(torrent),
-	m_torrentInfo(torrentInfo),
-	m_reply(nullptr),
-	m_reannounceInterval(-1),
-	m_urlListCurrentIndex(0),
-	m_numberOfAnnounces(0),
-	m_lastEvent(None)
+TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo)
+	: m_torrent(torrent)
+	, m_torrentInfo(torrentInfo)
+	, m_reply(nullptr)
+	, m_reannounceInterval(-1)
+	, m_currentAnnounceListIndex(0)
+	, m_numberOfAnnounces(0)
+	, m_lastEvent(None)
 {
 	connect(&m_reannounceTimer, SIGNAL(timeout()), this, SLOT(reannounce()));
 }
@@ -34,12 +34,7 @@ void TrackerClient::reannounce() {
 void TrackerClient::announce(Event event) {
 	m_lastEvent = event;
 	QUrl url;
-	auto announceUrls = m_torrentInfo->announceUrlsList();
-	if(m_urlListCurrentIndex >= announceUrls.size()) {
-		// No more backup urls
-		m_urlListCurrentIndex = 0;
-	}
-	url.setUrl(announceUrls[m_urlListCurrentIndex]);
+	url.setUrl(currentAnnounceUrl());
 
 	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
 	qint64 bytesUploaded = m_torrent->bytesUploaded();
@@ -86,7 +81,7 @@ void TrackerClient::httpFinished() {
 	// Check for errors
 	if(m_reply->error()) {
 		qDebug() << "Error in httpFinished():" << m_reply->errorString();
-		failedToAnnounce();
+		announceFailed();
 		return;
 	}
 
@@ -113,7 +108,7 @@ void TrackerClient::httpFinished() {
 				QString reason = m_reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
 				qDebug() << "Error: Status code" << statusCode << ":" << reason;
 			}
-			failedToAnnounce();
+			announceFailed();
 			return;
 		}
 	}
@@ -186,26 +181,48 @@ void TrackerClient::httpFinished() {
 				 << ">>>>>>>>>>>>>>>>>>>>" << endl
 				 << m_announceResponse << endl
 				 << "<<<<<<<<<<<<<<<<<<<<";
-		failedToAnnounce();
+		announceFailed();
 		return;
 	}
-	m_numberOfAnnounces++;
-	m_torrent->successfullyAnnounced(m_lastEvent);
+	announceSucceeded();
 }
 
 void TrackerClient::httpReadyRead() {
 	m_announceResponse.push_back(m_reply->readAll());
 }
 
-void TrackerClient::failedToAnnounce() {
-	auto announceList = m_torrentInfo->announceUrlsList();
-	if(m_urlListCurrentIndex + 1 >= announceList.size()) {
-		qDebug() << "No more backup URLs";
-		return;
+bool TrackerClient::nextAnnounceUrl() {
+	const QList<QByteArray>& list = m_torrentInfo->announceUrlsList();
+	m_currentAnnounceListIndex++;
+	if(m_currentAnnounceListIndex == list.size()) {
+		m_currentAnnounceListIndex = 0;
+		return false;
 	}
-	m_urlListCurrentIndex++;
-	qDebug() << "Trying backup URL:" << announceList[m_urlListCurrentIndex];
-	announce(m_lastEvent);
+	return true;
+}
+
+const QByteArray& TrackerClient::currentAnnounceUrl() const {
+	auto& list = m_torrentInfo->announceUrlsList();
+	return list[m_currentAnnounceListIndex];
+}
+
+void TrackerClient::resetCurrentAnnounceUrl() {
+	m_currentAnnounceListIndex = 0;
+}
+
+void TrackerClient::announceFailed() {
+	if(nextAnnounceUrl()) {
+		announce(m_lastEvent);
+	} else {
+		resetCurrentAnnounceUrl();
+		qDebug() << "No more backup URLs";
+	}
+}
+
+void TrackerClient::announceSucceeded() {
+	resetCurrentAnnounceUrl();
+	m_numberOfAnnounces++;
+	m_torrent->successfullyAnnounced(m_lastEvent);
 }
 
 int TrackerClient::numberOfAnnounces() const {
