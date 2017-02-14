@@ -5,8 +5,7 @@
 #include <QString>
 #include <QDateTime>
 
-class FileInfo {
-public:
+struct FileInfo {
 	QList<QString> path;
 	qint64 length;
 };
@@ -21,7 +20,7 @@ class TorrentInfo {
 	qint64 m_length;
 	QByteArray m_torrentName;
 	qint64 m_pieceLength;
-	QByteArray m_pieces;
+	QList<QByteArray> m_pieces;
 
 	QDateTime* m_creationDate;
 	QString* m_comment;
@@ -42,7 +41,8 @@ public:
 	qint64 length() const;
 	const QByteArray& torrentName() const;
 	qint64 pieceLength() const;
-	const QByteArray& pieces() const;
+	const QList<QByteArray>& pieces() const;
+	const QByteArray& piece(int pieceIndex) const;
 
 	const QDateTime* creationDate() const;
 	const QString* comment() const;

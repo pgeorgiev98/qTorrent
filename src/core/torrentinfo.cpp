@@ -67,7 +67,7 @@ bool TorrentInfo::loadFromTorrentFile(QString filename) {
 		}
 
 		// Main dictionary
-		BencodeDictionary* mainDict = mainList[0]->toBencodeDictionary();
+		BencodeDictionary* mainDict = mainList.first()->toBencodeDictionary();
 
 		// The Info dictionary
 		BencodeDictionary* infoDict = mainDict->value("info")->toBencodeDictionary();
@@ -98,7 +98,17 @@ bool TorrentInfo::loadFromTorrentFile(QString filename) {
 		m_pieceLength = infoDict->value("piece length")->toInt();
 
 		// SHA-1 hash sums of the pieces
-		m_pieces = infoDict->value("pieces")->toByteArray();
+		QByteArray pieceData = infoDict->value("pieces")->toByteArray();
+		if(pieceData.size() % 20 != 0) {
+			throw ex << "Piece data length is not a multiple of 20";
+		}
+		for(int i = 0; i < pieceData.size();) {
+			QByteArray piece;
+			for(int j = 0; j < 20; j++) {
+				piece.append(pieceData[i++]);
+			}
+			m_pieces.append(piece);
+		}
 
 		// Information about all files in the torrent
 		if(infoDict->keyExists("length")) {
@@ -198,8 +208,12 @@ qint64 TorrentInfo::pieceLength() const {
 	return m_pieceLength;
 }
 
-const QByteArray& TorrentInfo::pieces() const {
+const QList<QByteArray>& TorrentInfo::pieces() const {
 	return m_pieces;
+}
+
+const QByteArray& TorrentInfo::piece(int pieceIndex) const {
+	return m_pieces[pieceIndex];
 }
 
 const QList<FileInfo>& TorrentInfo::fileInfos() const {

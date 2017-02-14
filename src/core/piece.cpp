@@ -102,16 +102,8 @@ void Piece::updateInfo() {
 		}
 		QCryptographicHash hash(QCryptographicHash::Sha1);
 		hash.addData(m_pieceData, m_size);
-		const QByteArray& validHash = m_torrent->torrentInfo()->pieces();
 		QByteArray actualHash = hash.result();
-		bool isValid = true;
-		for(int i = 0, j = m_pieceNumber*actualHash.size(); i < actualHash.size(); i++, j++) {
-			if(actualHash[i] != validHash[j]) {
-				isValid = false;
-				break;
-			}
-		}
-		if(!isValid) {
+		if(actualHash != m_torrent->torrentInfo()->piece(m_pieceNumber)) {
 			for(auto b : m_blocks) {
 				delete b;
 			}
