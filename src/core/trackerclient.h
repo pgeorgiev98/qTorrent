@@ -24,7 +24,7 @@ public:
 	};
 
 	/* Constructor and destructor */
-	TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo);
+	TrackerClient(Torrent* torrent);
 	~TrackerClient();
 
 	/* Used to send 'announce' to the tracker */
@@ -36,7 +36,6 @@ public:
 public slots:
 	/* For QNetworkAccessManager */
 	void httpFinished();
-	void httpReadyRead();
 
 	/* Called by a timer every m_interval seconds to reannounce */
 	void reannounce();
@@ -44,10 +43,8 @@ private:
 	Q_OBJECT
 
 	Torrent* m_torrent;
-	TorrentInfo* m_torrentInfo;
 	QNetworkAccessManager m_accessManager;
 	QNetworkReply *m_reply;
-	QByteArray m_announceResponse;
 
 	// For reannouncing
 	int m_reannounceInterval;

@@ -73,7 +73,7 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces() - 1, lastPieceLength));
 
 	// Create the tracker client
-	m_trackerClient = new TrackerClient(this, m_torrentInfo);
+	m_trackerClient = new TrackerClient(this);
 
 	m_state = Ready;
 
@@ -106,7 +106,7 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	m_pieces.push_back(new Piece(this, m_torrentInfo->numberOfPieces() - 1, lastPieceLength));
 
 	// Create the tracker client
-	m_trackerClient = new TrackerClient(this, m_torrentInfo);
+	m_trackerClient = new TrackerClient(this);
 
 	if(m_pieces.size() != resumeInfo->aquiredPieces().size()) {
 		setError("The number of pieces in the TorrentInfo does not match the one in the ResumeInfo");

@@ -11,9 +11,8 @@
 #include <QUrl>
 #include <QDebug>
 
-TrackerClient::TrackerClient(Torrent* torrent, TorrentInfo* torrentInfo)
+TrackerClient::TrackerClient(Torrent* torrent)
 	: m_torrent(torrent)
-	, m_torrentInfo(torrentInfo)
 	, m_reply(nullptr)
 	, m_reannounceInterval(-1)
 	, m_currentAnnounceListIndex(0)
@@ -47,7 +46,7 @@ void TrackerClient::announce(Event event) {
 	QString portString = QString::number(port);
 
 	QUrlQuery query(url);
-	auto hash = m_torrentInfo->infoHashPercentEncoded();
+	auto hash = m_torrent->torrentInfo()->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
 	query.addQueryItem("peer_id", m_torrent->qTorrent()->peerIdPercentEncoded());
 	query.addQueryItem("port", portString);
@@ -68,10 +67,8 @@ void TrackerClient::announce(Event event) {
 	qDebug() << "Announce" << url.toString();
 
 	QNetworkRequest request(url);
-	m_announceResponse.clear();
 	m_reply = m_accessManager.get(request);
 	connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
-	connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
 }
 
 void TrackerClient::httpFinished() {
@@ -90,18 +87,15 @@ void TrackerClient::httpFinished() {
 	if(statusCodeVariant.isValid()) {
 		int statusCode = statusCodeVariant.toInt();
 		if(statusCode != 200) {
-			if(statusCode == 301) {
-				// Moved permanently
-				qDebug() << "Moved Permanently";
+			if(statusCode >= 300 && statusCode < 400) {
+				// Redirect
 				QUrl redirectUrl = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
 				if(redirectUrl.isEmpty()) {
 					qDebug() << "Redirect URL is empty";
 				} else {
 					qDebug() << "Redirecting to" << redirectUrl;
-					m_announceResponse.clear();
 					m_reply = m_accessManager.get(QNetworkRequest(redirectUrl));
 					connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
-					connect(m_reply, &QIODevice::readyRead, this, &TrackerClient::httpReadyRead);
 					return;
 				}
 			} else {
@@ -113,6 +107,7 @@ void TrackerClient::httpFinished() {
 		}
 	}
 
+	QByteArray announceReply = m_reply->readAll();
 	BencodeParser bencodeParser;
 
 	try {
@@ -120,7 +115,7 @@ void TrackerClient::httpFinished() {
 		BencodeException ex("TrackerClient::httpFinished(): ");
 
 		// Try to parse
-		if(!bencodeParser.parse(m_announceResponse)) {
+		if(!bencodeParser.parse(announceReply)) {
 			throw ex << "Parse failed" << endl << bencodeParser.errorString();
 		}
 
@@ -132,7 +127,14 @@ void TrackerClient::httpFinished() {
 			throw ex << "Tracker response main list has a size of " << responseMainList.size() << ". Expected 1";
 		}
 
-		BencodeDictionary* mainDict = responseMainList[0]->toBencodeDictionary();
+		BencodeDictionary* mainDict = responseMainList.first()->toBencodeDictionary();
+
+		// Check if any errors have occured
+		if(mainDict->keyExists("failure reason")) {
+			qDebug() << "Error: Failure reason: " << mainDict->value("failure reason")->toByteArray();
+			announceFailed();
+			return;
+		}
 
 		// Update interval
 		m_reannounceInterval = mainDict->value("interval")->toInt();
@@ -179,7 +181,7 @@ void TrackerClient::httpFinished() {
 	} catch(BencodeException& ex) {
 		qDebug() << "Failed to parse tracker response:" << ex.what() << endl
 				 << ">>>>>>>>>>>>>>>>>>>>" << endl
-				 << m_announceResponse << endl
+				 << announceReply << endl
 				 << "<<<<<<<<<<<<<<<<<<<<";
 		announceFailed();
 		return;
@@ -187,12 +189,8 @@ void TrackerClient::httpFinished() {
 	announceSucceeded();
 }
 
-void TrackerClient::httpReadyRead() {
-	m_announceResponse.push_back(m_reply->readAll());
-}
-
 bool TrackerClient::nextAnnounceUrl() {
-	const QList<QByteArray>& list = m_torrentInfo->announceUrlsList();
+	const QList<QByteArray>& list = m_torrent->torrentInfo()->announceUrlsList();
 	m_currentAnnounceListIndex++;
 	if(m_currentAnnounceListIndex == list.size()) {
 		m_currentAnnounceListIndex = 0;
@@ -202,7 +200,7 @@ bool TrackerClient::nextAnnounceUrl() {
 }
 
 const QByteArray& TrackerClient::currentAnnounceUrl() const {
-	auto& list = m_torrentInfo->announceUrlsList();
+	auto& list = m_torrent->torrentInfo()->announceUrlsList();
 	return list[m_currentAnnounceListIndex];
 }
 
