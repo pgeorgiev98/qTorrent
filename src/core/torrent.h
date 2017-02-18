@@ -7,7 +7,6 @@
 #include <QList>
 #include <QUrl>
 
-class QTorrent;
 class Peer;
 class TorrentInfo;
 class TrackerClient;
@@ -35,7 +34,7 @@ public:
 	};
 
 	/* Constructor and destructor */
-	Torrent(QTorrent* qTorrent);
+	Torrent();
 	~Torrent();
 
 	/* Operations */
@@ -69,7 +68,6 @@ public:
 
 	/* Getters */
 
-	QTorrent* qTorrent();
 	QList<Peer*>& peers();
 	QList<Piece*>& pieces();
 	TorrentInfo* torrentInfo();
@@ -124,7 +122,6 @@ public:
 	void fullyDownloaded();
 
 private:
-	QTorrent* m_qTorrent;
 	State m_state;
 	QList<Peer*> m_peers;
 	QList<Piece*> m_pieces;

@@ -9,11 +9,16 @@
 #include <QMessageBox>
 #include <QUrlQuery>
 
+QTorrent* QTorrent::m_instance;
+
 QTorrent::QTorrent()
-	: m_torrentManager(new TorrentManager(this))
-	, m_server(new TorrentServer(this))
-	, m_mainWindow(new MainWindow(this))
 {
+	m_instance = this;
+
+	m_torrentManager = new TorrentManager;
+	m_server = new TorrentServer;
+	m_mainWindow = new MainWindow;
+
 	// Generate random peer id that starts with 'qT'
 	qsrand(QDateTime::currentMSecsSinceEpoch());
 	m_peerId.push_back("qT");
@@ -132,4 +137,8 @@ TorrentServer* QTorrent::server() {
 
 MainWindow* QTorrent::mainWindow() {
 	return m_mainWindow;
+}
+
+QTorrent* QTorrent::instance() {
+	return m_instance;
 }

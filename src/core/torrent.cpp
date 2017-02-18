@@ -8,9 +8,8 @@
 #include <QFile>
 #include <QUrlQuery>
 
-Torrent::Torrent(QTorrent *qTorrent)
-	: m_qTorrent(qTorrent)
-	, m_state(New)
+Torrent::Torrent()
+	: m_state(New)
 	, m_torrentInfo(nullptr)
 	, m_trackerClient(nullptr)
 	, m_bytesDownloadedOnStartup(0)
@@ -416,10 +415,6 @@ void Torrent::successfullyAnnounced(TrackerClient::Event event) {
 
 
 /* Getters */
-
-QTorrent* Torrent::qTorrent() {
-	return m_qTorrent;
-}
 
 QList<Peer*>& Torrent::peers() {
 	return m_peers;

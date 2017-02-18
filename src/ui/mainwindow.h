@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include <QUrl>
 
-class QTorrent;
 class Panel;
 class TorrentsList;
 class Torrent;
@@ -12,10 +11,9 @@ class Torrent;
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 public:
-	MainWindow(QTorrent* qTorrent);
+	MainWindow();
 	~MainWindow();
 
-	QTorrent* qTorrent();
 	Panel* panel();
 	TorrentsList* torrentsList();
 
@@ -28,8 +26,6 @@ public:
 	QString getDownloadLocation();
 
 private:
-	QTorrent* m_qTorrent;
-
 	Panel* m_panel;
 	TorrentsList* m_torrentsList;
 

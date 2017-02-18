@@ -10,10 +10,7 @@
 #include <QMimeData>
 #include <QMenu>
 
-const int UI_REFRESH_INTERVAL = 300;
-
-TorrentsList::TorrentsList(QTorrent *qTorrent)
-	: m_qTorrent(qTorrent)
+TorrentsList::TorrentsList()
 {
 	QFontMetrics fm = fontMetrics();
 	QStringList headers;
@@ -64,14 +61,10 @@ TorrentsList::TorrentsList(QTorrent *qTorrent)
 
 	// Don't criticize me
 
-	for(Torrent* torrent : m_qTorrent->torrents()) {
+	for(Torrent* torrent : QTorrent::instance()->torrents()) {
 		addTorrent(torrent);
 	}
 
-	m_refreshTimer.setInterval(UI_REFRESH_INTERVAL);
-	m_refreshTimer.start();
-
-	connect(&m_refreshTimer, SIGNAL(timeout()), this, SLOT(refresh()));
 	connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(openContextMenu(QPoint)));
 }
 
@@ -80,7 +73,7 @@ TorrentsList::~TorrentsList() {
 }
 
 void TorrentsList::addTorrent(Torrent *torrent) {
-	TorrentsListItem* item = new TorrentsListItem(m_qTorrent, this, torrent);
+	TorrentsListItem* item = new TorrentsListItem(this, torrent);
 	m_items.append(item);
 	item->refresh();
 }
@@ -187,7 +180,7 @@ void TorrentsList::dropEvent(QDropEvent *event) {
 	if(mimeData->hasUrls()) {
 		QList<QUrl> urlList = mimeData->urls();
 		for(QUrl url : urlList) {
-			m_qTorrent->addTorrentFromUrl(url);
+			QTorrent::instance()->addTorrentFromUrl(url);
 		}
 	}
 }

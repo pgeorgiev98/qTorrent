@@ -44,6 +44,8 @@ public:
 	TorrentServer* server();
 	MainWindow* mainWindow();
 
+	static QTorrent* instance();
+
 private:
 	QByteArray m_peerId;
 
@@ -51,6 +53,8 @@ private:
 	TorrentServer* m_server;
 
 	MainWindow* m_mainWindow;
+
+	static QTorrent* m_instance;
 };
 
 #endif // QTORRENT_H

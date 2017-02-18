@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QUrl>
 
-class QTorrent;
 class QLineEdit;
 class QPushButton;
 class QCheckBox;
@@ -14,7 +13,7 @@ class AddTorrentDialog : public QDialog
 	Q_OBJECT
 
 public:
-	AddTorrentDialog(QWidget *parent, QTorrent* qTorrent);
+	AddTorrentDialog(QWidget *parent);
 
 	void setTorrentUrl(QUrl url);
 
@@ -25,7 +24,6 @@ public slots:
 	void cancel();
 
 private:
-	QTorrent* m_qTorrent;
 	QLineEdit* m_filePath;
 	QPushButton* m_browseFilePath;
 	QLineEdit* m_downloadLocation;

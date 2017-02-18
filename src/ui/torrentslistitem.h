@@ -5,7 +5,6 @@
 #include <QVariant>
 #include <QMap>
 
-class QTorrent;
 class Torrent;
 
 class TorrentsListItem : public QObject, public QTreeWidgetItem {
@@ -17,7 +16,7 @@ public:
 		TotalDownloaded, TotalUploaded, Ratio, Downloaded, Uploaded
 	};
 
-	TorrentsListItem(QTorrent* qTorrent, QTreeWidget* view, Torrent* torrent);
+	TorrentsListItem(QTreeWidget* view, Torrent* torrent);
 
 	void setSortData(int column, QVariant data);
 	bool operator<(const QTreeWidgetItem& other) const;
@@ -46,7 +45,6 @@ public slots:
 	void onRemoveAction();
 
 private:
-	QTorrent* m_qTorrent;
 	Torrent* m_torrent;
 	QMap<int, QVariant> m_sortData;
 	static QString toPrettySize(qint64 bytes);

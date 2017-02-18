@@ -12,10 +12,9 @@
 #include <QStandardPaths>
 #include <QCloseEvent>
 
-MainWindow::MainWindow(QTorrent *qTorrent)
-	: m_qTorrent(qTorrent)
-	, m_panel(new Panel)
-	, m_torrentsList(new TorrentsList(qTorrent))
+MainWindow::MainWindow()
+	: m_panel(new Panel)
+	, m_torrentsList(new TorrentsList())
 {
 	// Set the main window size to 3/4 of the screen size
 	int width = QGuiApplication::primaryScreen()->size().width()*3/4;
@@ -39,10 +38,6 @@ MainWindow::MainWindow(QTorrent *qTorrent)
 
 MainWindow::~MainWindow() {
 
-}
-
-QTorrent* MainWindow::qTorrent() {
-	return m_qTorrent;
 }
 
 Panel* MainWindow::panel() {
@@ -79,18 +74,18 @@ QString MainWindow::getDownloadLocation() {
 }
 
 void MainWindow::addTorrentAction() {
-	AddTorrentDialog dialog(this, m_qTorrent);
+	AddTorrentDialog dialog(this);
 	dialog.exec();
 }
 
 void MainWindow::addTorrentFromUrl(QUrl url) {
-	AddTorrentDialog dialog(this, m_qTorrent);
+	AddTorrentDialog dialog(this);
 	dialog.setTorrentUrl(url);
 	dialog.exec();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-	if(m_qTorrent->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
+	if(QTorrent::instance()->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
 		event->accept();
 	} else {
 		event->ignore();

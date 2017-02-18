@@ -12,9 +12,8 @@
 #include <QMessageBox>
 #include <QGuiApplication>
 
-AddTorrentDialog::AddTorrentDialog(QWidget *parent, QTorrent* qTorrent)
+AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 	: QDialog(parent)
-	, m_qTorrent(qTorrent)
 {
 	QVBoxLayout* layout = new QVBoxLayout;
 
@@ -105,7 +104,7 @@ void AddTorrentDialog::ok() {
 	settings.setDownloadLocation(downloadLocation);
 	settings.setStartImmediately(m_startImmediately->isChecked());
 
-	m_qTorrent->addTorrentFromLocalFile(filePath, settings);
+	QTorrent::instance()->addTorrentFromLocalFile(filePath, settings);
 	close();
 }
 

@@ -38,7 +38,7 @@ void TrackerClient::announce(Event event) {
 	qint64 bytesDownloaded = m_torrent->bytesDownloaded();
 	qint64 bytesUploaded = m_torrent->bytesUploaded();
 	qint64 bytesLeft = m_torrent->bytesLeft();
-	int port = m_torrent->qTorrent()->server()->port();
+	int port = QTorrent::instance()->server()->port();
 
 	QString bytesDownloadedString = QString::number(bytesDownloaded);
 	QString bytesUploadedString = QString::number(bytesUploaded);
@@ -48,7 +48,7 @@ void TrackerClient::announce(Event event) {
 	QUrlQuery query(url);
 	auto hash = m_torrent->torrentInfo()->infoHashPercentEncoded();
 	query.addQueryItem("info_hash", hash);
-	query.addQueryItem("peer_id", m_torrent->qTorrent()->peerIdPercentEncoded());
+	query.addQueryItem("peer_id", QTorrent::instance()->peerIdPercentEncoded());
 	query.addQueryItem("port", portString);
 	query.addQueryItem("uploaded", bytesUploadedString);
 	query.addQueryItem("downloaded", bytesDownloadedString);

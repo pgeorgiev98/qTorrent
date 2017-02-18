@@ -5,14 +5,13 @@
 #include <QList>
 #include <QUrl>
 
-class QTorrent;
 class Torrent;
 class TorrentInfo;
 
 class TorrentManager
 {
 public:
-	TorrentManager(QTorrent* qTorrent);
+	TorrentManager();
 	~TorrentManager();
 
 	Torrent* addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings);
@@ -31,11 +30,9 @@ public:
 	bool removeTorrent(Torrent* torrent, bool deleteData);
 
 	/* Getters */
-	QTorrent* qTorrent();
 	const QList<Torrent*>& torrents() const;
 
 private:
-	QTorrent* m_qTorrent;
 	QList<Torrent*> m_torrents;
 };
 

@@ -2,7 +2,7 @@
 #include "peer.h"
 #include <QDebug>
 
-TorrentServer::TorrentServer(QTorrent *qTorrent) : m_qTorrent(qTorrent) {
+TorrentServer::TorrentServer() {
 	connect(&m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
@@ -39,12 +39,8 @@ bool TorrentServer::startServer(int port) {
 
 void TorrentServer::newConnection() {
 	QTcpSocket* socket = m_server.nextPendingConnection();
-	Peer* peer = Peer::createClient(m_qTorrent, socket);
+	Peer* peer = Peer::createClient(socket);
 	m_peers.push_back(peer);
-}
-
-QTorrent* TorrentServer::qTorrent() {
-	return m_qTorrent;
 }
 
 QTcpServer& TorrentServer::server() {

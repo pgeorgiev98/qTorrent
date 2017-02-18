@@ -96,7 +96,7 @@ void Peer::sendHandshake() {
 		dataToWrite.push_back(char(0));
 	}
 	dataToWrite.push_back(m_torrent->torrentInfo()->infoHash());
-	dataToWrite.push_back(m_qTorrent->peerId());
+	dataToWrite.push_back(QTorrent::instance()->peerId());
 	m_socket->write(dataToWrite);
 }
 
@@ -212,9 +212,9 @@ void Peer::fatalError() {
 	m_socket->close();
 }
 
-Peer* Peer::createClient(QTorrent *qTorrent, QTcpSocket *socket) {
+Peer* Peer::createClient(QTcpSocket *socket) {
 	Peer* peer = new Peer(Client, socket);
-	peer->initClient(qTorrent);
+	peer->initClient();
 	return peer;
 }
 
@@ -316,7 +316,7 @@ bool Peer::readHandshakeReply(bool *ok) {
 	} else {
 		// Find torrent with correct info hash
 		m_torrent = nullptr;
-		for(auto torrent : m_qTorrent->torrents()) {
+		for(auto torrent : QTorrent::instance()->torrents()) {
 			if(torrent->torrentInfo()->infoHash() == m_infoHash) {
 				m_torrent = torrent;
 				break;
@@ -590,8 +590,7 @@ void Peer::initBitfield() {
 	}
 }
 
-void Peer::initClient(QTorrent *qTorrent) {
-	m_qTorrent = qTorrent;
+void Peer::initClient() {
 	m_torrent = nullptr;
 	m_address = QByteArray(m_socket->peerAddress().toString().toUtf8());
 	m_port = m_socket->peerPort();
@@ -619,7 +618,6 @@ void Peer::initClient(QTorrent *qTorrent) {
 }
 
 void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
-	m_qTorrent = torrent->qTorrent();
 	m_torrent = torrent;
 	m_address = address;
 	m_port = port;

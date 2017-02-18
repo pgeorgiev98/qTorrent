@@ -8,8 +8,7 @@
 #include <QDir>
 #include <QStandardPaths>
 
-TorrentManager::TorrentManager(QTorrent *qTorrent)
-	: m_qTorrent(qTorrent)
+TorrentManager::TorrentManager()
 {
 }
 
@@ -23,7 +22,7 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString& filename, const 
 	// Load the torrent file
 	TorrentInfo* torrentInfo = new TorrentInfo;
 	if(!torrentInfo->loadFromTorrentFile(filename)) {
-		m_qTorrent->warning("Invalid torrent file");
+		QTorrent::instance()->warning("Invalid torrent file");
 		delete torrentInfo;
 		return nullptr;
 	}
@@ -31,29 +30,29 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString& filename, const 
 	// Check if torrent already added to list
 	for(Torrent* t : m_torrents) {
 		if(t->torrentInfo()->infoHash() == torrentInfo->infoHash()) {
-			m_qTorrent->warning("The torrent you're trying to add is already in the torrents list.");
+			QTorrent::instance()->warning("The torrent you're trying to add is already in the torrents list.");
 			delete torrentInfo;
 			return nullptr;
 		}
 	}
 
 	// Create the torrent
-	Torrent* torrent = new Torrent(m_qTorrent);
+	Torrent* torrent = new Torrent();
 	if(!torrent->createNew(torrentInfo, settings.downloadLocation())) {
-		m_qTorrent->warning(torrent->errorString());
+		QTorrent::instance()->warning(torrent->errorString());
 		delete torrent;
 		return nullptr;
 	}
 
 	// Save the torrent
 	if(!saveTorrentFile(filename, torrentInfo)) {
-		m_qTorrent->warning("Failed to save the torrent");
+		QTorrent::instance()->warning("Failed to save the torrent");
 		delete torrent;
 		return nullptr;
 	}
 
 	m_torrents.push_back(torrent);
-	m_qTorrent->mainWindow()->addTorrent(torrent);
+	QTorrent::instance()->mainWindow()->addTorrent(torrent);
 
 	if(settings.startImmediately()) {
 		torrent->start();
@@ -83,7 +82,7 @@ bool TorrentManager::resumeTorrents() {
 		return false;
 	}
 	if(!resumeFile.open(QIODevice::ReadOnly)) {
-		m_qTorrent->warning("Failed to open resume file: " + resumeFile.errorString());
+		QTorrent::instance()->warning("Failed to open resume file: " + resumeFile.errorString());
 		return false;
 	}
 	QByteArray resumeData = resumeFile.readAll();
@@ -104,13 +103,13 @@ bool TorrentManager::resumeTorrents() {
 		for(QByteArray infoHash : mainDict->keys()) {
 			QFile file(dir.path() + "/" + infoHash.toHex() + ".torrent");
 			if(!file.exists()) {
-				m_qTorrent->critical("Failed to resume torrent: file " + file.fileName() + " does not exist");
+				QTorrent::instance()->critical("Failed to resume torrent: file " + file.fileName() + " does not exist");
 				continue;
 			}
 
 			TorrentInfo* torrentInfo = new TorrentInfo;
 			if(!torrentInfo->loadFromTorrentFile(file.fileName())) {
-				m_qTorrent->critical("Failed to parse resume data while loading "
+				QTorrent::instance()->critical("Failed to parse resume data while loading "
 									 + file.fileName() + ": " + torrentInfo->errorString());
 				delete torrentInfo;
 				continue;
@@ -120,32 +119,32 @@ bool TorrentManager::resumeTorrents() {
 
 			BencodeValue* value = mainDict->value(infoHash);
 			if(!value->isDictionary()) {
-				m_qTorrent->critical("Failed to parse resume data while loading "
+				QTorrent::instance()->critical("Failed to parse resume data while loading "
 									 + file.fileName() + ": value for infohash is not a dictionary");
 				delete torrentInfo;
 				continue;
 			}
 			if(!resumeInfo.loadFromBencode(value->toBencodeDictionary())) {
 				delete torrentInfo;
-				m_qTorrent->critical("Failed to load resume data while loading"
+				QTorrent::instance()->critical("Failed to load resume data while loading"
 									 + file.fileName());
 				continue;
 			}
 
-			Torrent* torrent = new Torrent(m_qTorrent);
+			Torrent* torrent = new Torrent();
 			if(!torrent->createFromResumeInfo(torrentInfo, &resumeInfo)) {
-				m_qTorrent->critical("Failed to load torrent from resume data: " + torrent->errorString());
+				QTorrent::instance()->critical("Failed to load torrent from resume data: " + torrent->errorString());
 				delete torrent;
 				continue;
 			}
 
 			m_torrents.push_back(torrent);
-			m_qTorrent->mainWindow()->addTorrent(torrent);
+			QTorrent::instance()->mainWindow()->addTorrent(torrent);
 
 		}
 
 	} catch(BencodeException& ex) {
-		m_qTorrent->critical("Failed to read resume.dat file: " + ex.what());
+		QTorrent::instance()->critical("Failed to read resume.dat file: " + ex.what());
 		return false;
 	}
 
@@ -153,15 +152,15 @@ bool TorrentManager::resumeTorrents() {
 }
 
 Torrent* TorrentManager::addTorrentFromMagnetLink(QUrl url) {
-	Torrent* torrent = new Torrent(m_qTorrent);
+	Torrent* torrent = new Torrent();
 	if(!torrent->createFromMagnetLink(url)) {
-		m_qTorrent->warning("Failed to load torrent from magnet link\n" + torrent->errorString());
+		QTorrent::instance()->warning("Failed to load torrent from magnet link\n" + torrent->errorString());
 		delete torrent;
 		return nullptr;
 	}
 
 	m_torrents.push_back(torrent);
-	m_qTorrent->mainWindow()->addTorrent(torrent);
+	QTorrent::instance()->mainWindow()->addTorrent(torrent);
 
 	torrent->start();
 
@@ -184,7 +183,7 @@ bool TorrentManager::saveTorrentsResumeInfo() {
 	dir.cd("resume");
 	QFile resumeFile(dir.path() + "/resume.dat");
 	if(!resumeFile.open(QIODevice::WriteOnly)) {
-		m_qTorrent->critical("Failed to open resume.dat file: " + resumeFile.errorString());
+		QTorrent::instance()->critical("Failed to open resume.dat file: " + resumeFile.errorString());
 		return false;
 	}
 	BencodeDictionary* mainDict = new BencodeDictionary;
@@ -242,13 +241,9 @@ bool TorrentManager::removeTorrent(Torrent* torrent, bool deleteData) {
 		}
 	}
 	torrent->trackerClient()->announce(TrackerClient::Stopped);
-	m_qTorrent->mainWindow()->removeTorrent(torrent);
+	QTorrent::instance()->mainWindow()->removeTorrent(torrent);
 	delete torrent;
 	return true;
-}
-
-QTorrent* TorrentManager::qTorrent() {
-	return m_qTorrent;
 }
 
 const QList<Torrent*>& TorrentManager::torrents() const {

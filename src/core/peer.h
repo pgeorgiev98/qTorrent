@@ -6,7 +6,6 @@
 #include <QObject>
 #include <QAbstractSocket>
 
-class QTorrent;
 class Torrent;
 class Block;
 class QTcpSocket;
@@ -38,7 +37,6 @@ public:
 	};
 
 	/* Getter functions */
-	QTorrent* qTorrent();
 	Torrent* torrent();
 
 	QByteArray& address();
@@ -68,7 +66,6 @@ public:
 	bool isConnected();
 
 private:
-	QTorrent* m_qTorrent;
 	Torrent* m_torrent;
 
 	/* Peer-specific information */
@@ -130,7 +127,7 @@ private:
 	void initBitfield();
 
 	/* Initializes/Reinitializes connection with client */
-	void initClient(QTorrent* qTorrent);
+	void initClient();
 
 	/* Initializes/Reinitializes connection with server */
 	void initServer(Torrent* torrent, const QByteArray& address, int port);
@@ -175,7 +172,7 @@ public:
 	void fatalError();
 
 	/* Returns a newly-created peer object with peerType = Client (He downloads from us) */
-	static Peer* createClient(QTorrent* qTorrent, QTcpSocket* socket);
+	static Peer* createClient(QTcpSocket* socket);
 
 	/* Returns a newly-created peer object with peerType = Server (We download from him) */
 	static Peer* createServer(Torrent* torrent, const QByteArray& address, int port);

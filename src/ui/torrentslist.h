@@ -4,17 +4,15 @@
 #include "torrentslistitem.h"
 #include "panel.h"
 #include <QTreeWidget>
-#include <QTimer>
 #include <QList>
 
-class QTorrent;
 class Torrent;
 
 class TorrentsList : public QTreeWidget {
 	Q_OBJECT
 
 public:
-	TorrentsList(QTorrent* qTorrent);
+	TorrentsList();
 	~TorrentsList();
 
 	// Get item from list
@@ -38,9 +36,7 @@ protected:
 	void dropEvent(QDropEvent *event);
 
 private:
-	QTorrent* m_qTorrent;
 	QList<TorrentsListItem*> m_items;
-	QTimer m_refreshTimer;
 };
 
 #endif // TORRENTSLIST_H
