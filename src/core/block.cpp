@@ -47,10 +47,10 @@ void Block::setData(const Peer* peer, const char* data) {
 	for(auto p : m_assignees) {
 		if(p != peer) {
 			p->sendCancel(this);
-			p->releaseBlock(this);
 		}
+		p->releaseBlock(this);
 	}
-	m_piece->updateInfo();
+	m_piece->updateState();
 }
 
 

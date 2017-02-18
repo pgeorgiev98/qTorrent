@@ -12,19 +12,17 @@ class Piece {
 	int m_pieceNumber;
 	int m_size;
 	bool m_downloaded;
-	bool m_downloading;
 	char* m_pieceData;
 	QList<Block*> m_blocks;
 
 	void addBlock(Block* block);
-	bool checkIfDownloaded();
+	bool checkIfFullyDownloaded();
 public:
 	Piece(Torrent* torrent, int pieceNumber, int size);
 	~Piece();
 
 	/* Getters */
 
-	bool downloading() const;
 	bool downloaded() const;
 	int pieceNumber() const;
 	char* data() const;
@@ -33,7 +31,8 @@ public:
 	/* Commands */
 
 	Block* requestBlock(int size);
-	void updateInfo();
+	// Update the block state: check if it's fully downloaded
+	void updateState();
 	void deleteBlock(Block* block);
 	void unloadFromMemory();
 	void setDownloaded(bool downloaded);

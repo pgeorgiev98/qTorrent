@@ -9,13 +9,12 @@
 #include <QFile>
 #include <QDebug>
 
-Piece::Piece(Torrent* torrent, int pieceNumber, int size) :
-	m_torrent(torrent),
-	m_pieceNumber(pieceNumber),
-	m_size(size),
-	m_downloaded(false),
-	m_downloading(false),
-	m_pieceData(new char[size])
+Piece::Piece(Torrent* torrent, int pieceNumber, int size)
+	: m_torrent(torrent)
+	, m_pieceNumber(pieceNumber)
+	, m_size(size)
+	, m_downloaded(false)
+	, m_pieceData(new char[size])
 {
 }
 
@@ -26,10 +25,6 @@ Piece::~Piece() {
 	if(m_pieceData != nullptr) {
 		delete[] m_pieceData;
 	}
-}
-
-bool Piece::downloading() const {
-	return m_downloading;
 }
 
 bool Piece::downloaded() const {
@@ -73,14 +68,11 @@ void Piece::deleteBlock(Block* block) {
 	}
 }
 
-bool Piece::checkIfDownloaded() {
+bool Piece::checkIfFullyDownloaded() {
 	if(m_downloaded) { // If already marked as downloaded, don't do anything
 		return true;
 	}
-	if(m_pieceData == nullptr) {
-		qDebug() << "Fatal: Piece::checkIfDownloaded(" << this << ") - piece is not loaded!";
-		exit(1);
-	}
+	Q_ASSERT_X(m_pieceData != nullptr, "Piece::checkIfFullyDownloaded()", "Piece not loaded");
 	int pos = 0;
 	for(auto b : m_blocks) {
 		if(b->begin() == pos && b->downloaded()) {
@@ -94,12 +86,9 @@ bool Piece::checkIfDownloaded() {
 	return m_downloaded;
 }
 
-void Piece::updateInfo() {
-	if(checkIfDownloaded()) {
-		if(m_pieceData == nullptr) {
-			qDebug() << "Fatal error in Piece::updateInfo(" << this << ") - Piece is not loaded!";
-			exit(1);
-		}
+void Piece::updateState() {
+	if(checkIfFullyDownloaded()) {
+		Q_ASSERT_X(m_pieceData != nullptr, "Piece::updateState()", "Piece not loaded");
 		QCryptographicHash hash(QCryptographicHash::Sha1);
 		hash.addData(m_pieceData, m_size);
 		QByteArray actualHash = hash.result();
@@ -113,7 +102,6 @@ void Piece::updateInfo() {
 		} else {
 			m_torrent->savePiece(m_pieceNumber);
 			m_downloaded = true;
-			m_downloading = false;
 			unloadFromMemory();
 			m_torrent->downloadedPiece(this);
 		}
@@ -156,14 +144,8 @@ Block* Piece::requestBlock(int size) {
 }
 
 void Piece::unloadFromMemory() {
-	if(m_pieceData == nullptr) {
-		qDebug() << "Fatal: Tried to unload piece" << this << "(" << m_pieceNumber << "), which is not loaded!";
-		exit(1);
-	}
-	if(!checkIfDownloaded()) {
-		qDebug() << "Fatal: Tried to unload piece" << this << "(" << m_pieceNumber << "), which is not downloaded yet!";
-		exit(1);
-	}
+	Q_ASSERT_X(m_pieceData != nullptr, "Piece::unloadFromMemory()", "Piece is not loaded");
+	Q_ASSERT_X(checkIfFullyDownloaded(), "Piece::unloadFromMemory()", "Piece is not fully downloaded");
 	delete[] m_pieceData;
 	m_pieceData = nullptr;
 }
