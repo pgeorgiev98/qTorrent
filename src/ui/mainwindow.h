@@ -7,6 +7,7 @@
 
 class Panel;
 class TorrentsList;
+class TorrentInfoPanel;
 class Torrent;
 
 class MainWindow : public QMainWindow {
@@ -29,6 +30,7 @@ public:
 private:
 	Panel* m_panel;
 	TorrentsList* m_torrentsList;
+	TorrentInfoPanel* m_statusPanel;
 
 	QTimer m_refreshTimer;
 

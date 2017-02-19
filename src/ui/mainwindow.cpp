@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include "torrentslist.h"
 #include "panel.h"
+#include "torrentinfopanel.h"
 #include "addtorrentdialog.h"
 #include <QGuiApplication>
 #include <QScreen>
@@ -17,6 +18,7 @@ const int UI_REFRESH_INTERVAL = 300;
 MainWindow::MainWindow()
 	: m_panel(new Panel)
 	, m_torrentsList(new TorrentsList())
+	, m_statusPanel(new TorrentInfoPanel)
 {
 	// Set the main window size to 3/4 of the screen size
 	int width = QGuiApplication::primaryScreen()->size().width()*3/4;
@@ -24,6 +26,7 @@ MainWindow::MainWindow()
 	resize(width, height);
 
 	addToolBar(Qt::LeftToolBarArea, m_panel);
+	addToolBar(Qt::BottomToolBarArea, m_statusPanel);
 	QStackedWidget* stackedWidget = new QStackedWidget;
 	stackedWidget->addWidget(m_torrentsList);
 	setCentralWidget(stackedWidget);
