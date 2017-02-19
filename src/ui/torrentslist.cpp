@@ -167,6 +167,14 @@ TorrentsListItem* TorrentsList::torrentItem(const QString &name) {
 	return nullptr;
 }
 
+Torrent* TorrentsList::currentTorrent() {
+	TorrentsListItem* item = static_cast<TorrentsListItem*>(currentItem());
+	if(!item) {
+		return nullptr;
+	}
+	return item->torrent();
+}
+
 void TorrentsList::dragEnterEvent(QDragEnterEvent *event) {
 	event->acceptProposedAction();
 }

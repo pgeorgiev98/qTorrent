@@ -18,6 +18,7 @@ public:
 	// Get item from list
 	TorrentsListItem* torrentItem(Torrent* torrent);
 	TorrentsListItem* torrentItem(const QString& name);
+	Torrent* currentTorrent();
 
 public slots:
 	void addTorrent(Torrent* torrent);
