@@ -12,6 +12,8 @@
 #include <QStandardPaths>
 #include <QCloseEvent>
 
+const int UI_REFRESH_INTERVAL = 300;
+
 MainWindow::MainWindow()
 	: m_panel(new Panel)
 	, m_torrentsList(new TorrentsList())
@@ -34,6 +36,11 @@ MainWindow::MainWindow()
 	m_panel->openAll();
 
 	createMenus();
+
+	m_refreshTimer.setInterval(UI_REFRESH_INTERVAL);
+	m_refreshTimer.start();
+	connect(&m_refreshTimer, SIGNAL(timeout()), m_torrentsList, SLOT(refresh()));
+	connect(&m_refreshTimer, SIGNAL(timeout()), m_statusPanel, SLOT(refresh()));
 }
 
 MainWindow::~MainWindow() {

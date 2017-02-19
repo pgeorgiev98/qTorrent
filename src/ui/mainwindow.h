@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
 #include <QUrl>
 
 class Panel;
@@ -28,6 +29,8 @@ public:
 private:
 	Panel* m_panel;
 	TorrentsList* m_torrentsList;
+
+	QTimer m_refreshTimer;
 
 	// Creates all needed menus
 	void createMenus();
