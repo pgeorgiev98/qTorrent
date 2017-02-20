@@ -17,11 +17,11 @@ const int BLOCKS_TO_REQUEST = 5;
 const int MAX_MESSAGE_LENGTH = 65536;
 const int RECONNECT_INTERVAL_MSEC = 30000;
 
-Peer::Peer(PeerType peerType, QTcpSocket* socket)
+Peer::Peer(ConnectionInitiator connectionInitiator, QTcpSocket* socket)
 	: m_torrent(nullptr)
 	, m_bitfield(nullptr)
 	, m_status(Created)
-	, m_peerType(peerType)
+	, m_connectionInitiator(connectionInitiator)
 	, m_socket(socket)
 	, m_paused(false)
 {
@@ -35,10 +35,9 @@ Peer::~Peer() {
 
 
 void Peer::startConnection() {
-	if(m_peerType == Client) {
+	if(m_connectionInitiator == ConnectionInitiator::Peer) {
 		// That's not how it works
-		// It's a client's duty to connect to you, not yours!
-		qDebug() << "Error in Peer::startConnection(): called on Client Peer";
+		qDebug() << "Peer::startConnection(): Called, but connection was initiated by the Peer";
 		return;
 	}
 	if(m_socket->isOpen()) {
@@ -213,13 +212,13 @@ void Peer::fatalError() {
 }
 
 Peer* Peer::createClient(QTcpSocket *socket) {
-	Peer* peer = new Peer(Client, socket);
+	Peer* peer = new Peer(ConnectionInitiator::Client, socket);
 	peer->initClient();
 	return peer;
 }
 
 Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) {
-	Peer* peer = new Peer(Server, new QTcpSocket);
+	Peer* peer = new Peer(ConnectionInitiator::Peer, new QTcpSocket);
 	peer->initServer(torrent, address, port);
 	return peer;
 }
@@ -305,7 +304,7 @@ bool Peer::readHandshakeReply(bool *ok) {
 	}
 	m_receivedDataBuffer.remove(0, 49 + protocolLength);
 
-	if(m_peerType == Server) {
+	if(m_connectionInitiator == ConnectionInitiator::Client) {
 		// Check if info hash matches expected one
 		if(m_infoHash != m_torrent->torrentInfo()->infoHash()) {
 			// Info hash does not match the expected one
@@ -662,7 +661,7 @@ void Peer::readyRead() {
 	case Handshaking:
 		bool ok;
 		if(readHandshakeReply(&ok)) {
-			if(m_peerType == Client) {
+			if(m_connectionInitiator == ConnectionInitiator::Peer) {
 				// Initialize peer's bitfield array.
 				// Must be done after receiving handshake
 				initBitfield();
@@ -717,7 +716,7 @@ void Peer::finished() {
 		m_status = Disconnected;
 	}
 
-	if(m_peerType == Server) {
+	if(m_connectionInitiator == ConnectionInitiator::Client) {
 		// If we both have the full torrent, dont reconnect later
 		if(!downloaded() || !m_torrent->downloaded()) {
 			m_reconnectTimer.start();
@@ -790,8 +789,8 @@ Peer::Status Peer::status() {
 	return m_status;
 }
 
-Peer::PeerType Peer::peerType() {
-	return m_peerType;
+Peer::ConnectionInitiator Peer::connectionInitiator() {
+	return m_connectionInitiator;
 }
 
 bool Peer::amChoking() {

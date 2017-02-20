@@ -31,9 +31,9 @@ public:
 	};
 
 	/* The type of this peer */
-	enum PeerType {
-		Client, /* This peer is a client, I will upload to him */
-		Server  /* This peer is a server, I will download from him */
+	enum class ConnectionInitiator {
+		Client, /* We connected to the peer */
+		Peer    /* The peeer connected to us */
 	};
 
 	/* Getter functions */
@@ -49,7 +49,7 @@ public:
 	QByteArray& peerId();
 
 	Status status();
-	PeerType peerType();
+	ConnectionInitiator connectionInitiator();
 	bool amChoking();
 	bool amInterested();
 	bool peerChoking();
@@ -80,7 +80,7 @@ private:
 
 	/* Connection information */
 	Status m_status;
-	PeerType m_peerType;
+	ConnectionInitiator m_connectionInitiator;
 	bool m_amChoking;
 	bool m_amInterested;
 	bool m_peerChoking;
@@ -134,7 +134,7 @@ private:
 
 public:
 	/* Constructor and destructor */
-	Peer(PeerType peerType, QTcpSocket* socket);
+	Peer(ConnectionInitiator connectionInitiator, QTcpSocket* socket);
 	~Peer();
 
 	/* Attempt to connect to the peer */
