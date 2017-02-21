@@ -20,7 +20,7 @@ const int RECONNECT_INTERVAL_MSEC = 30000;
 Peer::Peer(ConnectionInitiator connectionInitiator, QTcpSocket* socket)
 	: m_torrent(nullptr)
 	, m_bitfield(nullptr)
-	, m_status(Created)
+	, m_state(Created)
 	, m_connectionInitiator(connectionInitiator)
 	, m_socket(socket)
 	, m_paused(false)
@@ -54,7 +54,7 @@ void Peer::startConnection() {
 	m_infoHash.clear();
 	m_peerId.clear();
 
-	m_status = Connecting;
+	m_state = Connecting;
 	m_amChoking = true;
 	m_amInterested = false;
 	m_peerChoking = true;
@@ -74,7 +74,7 @@ void Peer::startConnection() {
 
 void Peer::start() {
 	m_paused = false;
-	if(m_status == ConnectionEstablished) {
+	if(m_state == ConnectionEstablished) {
 		sendMessages();
 	} else if(m_socket->state() == QAbstractSocket::UnconnectedState) {
 		// UnconnectedState - Not connected/connecting
@@ -100,7 +100,7 @@ void Peer::sendHandshake() {
 }
 
 void Peer::sendChoke() {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	m_amChoking = true;
@@ -108,7 +108,7 @@ void Peer::sendChoke() {
 }
 
 void Peer::sendUnchoke() {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	m_amChoking = false;
@@ -116,7 +116,7 @@ void Peer::sendUnchoke() {
 }
 
 void Peer::sendInterested() {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	m_amInterested = true;
@@ -124,7 +124,7 @@ void Peer::sendInterested() {
 }
 
 void Peer::sendNotInterested() {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	m_amInterested = false;
@@ -132,21 +132,21 @@ void Peer::sendNotInterested() {
 }
 
 void Peer::sendHave(int index) {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	TorrentMessage::have(m_socket, index);
 }
 
 void Peer::sendBitfield() {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	TorrentMessage::bitfield(m_socket, m_torrent->bitfield());
 }
 
 void Peer::sendRequest(Block* block) {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 
@@ -168,7 +168,7 @@ void Peer::sendRequest(Block* block) {
 }
 
 void Peer::sendPiece(int index, int begin, const QByteArray &blockData) {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	qDebug() << "Sending piece" << index << begin << blockData.size() << "to" << addressPort();
@@ -177,7 +177,7 @@ void Peer::sendPiece(int index, int begin, const QByteArray &blockData) {
 }
 
 void Peer::sendCancel(Block* block) {
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 	int	index = block->piece()->pieceNumber();
@@ -207,7 +207,7 @@ void Peer::disconnect() {
 
 void Peer::fatalError() {
 	qDebug() << "Fatal error with" << addressPort() << "; Dropping connection";
-	m_status = Error;
+	m_state = Error;
 	m_socket->close();
 }
 
@@ -225,7 +225,7 @@ Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) 
 
 void Peer::sendMessages() {
 	// Can't do anything if not connected
-	if(m_status != ConnectionEstablished) {
+	if(m_state != ConnectionEstablished) {
 		return;
 	}
 
@@ -265,7 +265,7 @@ void Peer::sendMessages() {
 			sendUnchoke();
 		}
 
-		// Request as many bloks as we can if we are not choked
+		// Request as many blocks as we can if we are not choked
 		if(!m_peerChoking) {
 			while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
 				if(!requestBlock()) {
@@ -595,7 +595,7 @@ void Peer::initClient() {
 	m_port = m_socket->peerPort();
 	m_piecesDownloaded = 0;
 	m_bitfield = nullptr;
-	m_status = Handshaking;
+	m_state = Handshaking;
 
 	m_protocol.clear();
 	m_reserved.clear();
@@ -622,7 +622,7 @@ void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
 	m_port = port;
 	m_piecesDownloaded = 0;
 	initBitfield();
-	m_status = Created;
+	m_state = Created;
 }
 
 void Peer::releaseBlock(Block *block) {
@@ -649,7 +649,7 @@ void Peer::releaseAllBlocks() {
 void Peer::connected() {
 	qDebug() << "Connected to" << addressPort();
 
-	m_status = Handshaking;
+	m_state = Handshaking;
 	sendHandshake();
 	m_handshakeTimeoutTimer.start();
 }
@@ -657,7 +657,7 @@ void Peer::connected() {
 void Peer::readyRead() {
 	m_receivedDataBuffer.push_back(m_socket->readAll());
 
-	switch(m_status) {
+	switch(m_state) {
 	case Handshaking:
 		bool ok;
 		if(readHandshakeReply(&ok)) {
@@ -680,7 +680,7 @@ void Peer::readyRead() {
 		}
 		m_handshakeTimeoutTimer.stop();
 		qDebug() << "Handshaking completed with peer" << addressPort();
-		m_status = ConnectionEstablished;
+		m_state = ConnectionEstablished;
 		sendBitfield();
 		// Fall down
 	case ConnectionEstablished:
@@ -712,8 +712,8 @@ void Peer::finished() {
 	m_handshakeTimeoutTimer.stop();
 	m_replyTimeoutTimer.stop();
 	releaseAllBlocks();
-	if(m_status != Error) {
-		m_status = Disconnected;
+	if(m_state != Error) {
+		m_state = Disconnected;
 	}
 
 	if(m_connectionInitiator == ConnectionInitiator::Client) {
@@ -785,8 +785,8 @@ QByteArray& Peer::peerId() {
 	return m_peerId;
 }
 
-Peer::Status Peer::status() {
-	return m_status;
+Peer::State Peer::state() {
+	return m_state;
 }
 
 Peer::ConnectionInitiator Peer::connectionInitiator() {
@@ -833,8 +833,8 @@ bool Peer::downloaded() {
 	return m_piecesDownloaded == m_torrent->torrentInfo()->numberOfPieces();
 }
 
-bool Peer::hasPiece(int index) {
-	return m_bitfield[index];
+bool Peer::hasPiece(Piece *piece) {
+	return m_bitfield[piece->pieceNumber()];
 }
 
 bool Peer::isConnected() {

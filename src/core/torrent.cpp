@@ -286,26 +286,22 @@ void Torrent::addPeer(Peer *peer) {
 }
 
 Block* Torrent::requestBlock(Peer *peer, int size) {
-	Block* block = nullptr;
-	for(int i = 0; i < m_pieces.size(); i++) {
-		auto piece = m_pieces[i];
-		if(!piece->downloaded()) {
-			if(peer->hasPiece(i)) {
-				block = piece->requestBlock(size);
-				if(block != nullptr) {
-					return block;
-				}
+	Block* returnBlock = nullptr;
+	for(auto piece : m_pieces) {
+		if(!piece->downloaded() && peer->hasPiece(piece)) {
+			returnBlock = piece->requestBlock(size);
+			if(returnBlock != nullptr) {
+				return returnBlock;
 			}
 		}
 	}
 
 	// No unrequested blocks, try to find some timed-out blocks
-	for(auto p : m_peers) {
-		if(p->timedOut()) {
-			for(auto bl : p->blocksQueue()) {
-				int pieceIndex = bl->piece()->pieceNumber();
-				if(peer->hasPiece(pieceIndex)) {
-					return bl;
+	for(auto peer : m_peers) {
+		if(peer->timedOut()) {
+			for(auto block : peer->blocksQueue()) {
+				if(peer->hasPiece(block->piece())) {
+					return block;
 				}
 			}
 		}

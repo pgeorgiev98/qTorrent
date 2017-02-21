@@ -7,6 +7,7 @@
 #include <QAbstractSocket>
 
 class Torrent;
+class Piece;
 class Block;
 class QTcpSocket;
 
@@ -21,7 +22,7 @@ class Peer : public QObject {
 
 public:
 	/* The connection statuses */
-	enum Status {
+	enum State {
 		Created, /* Object was just created. Not connecting to the peer */
 		Connecting, /* Connecting. Waiting for the connected() slot. */
 		Handshaking, /* Connected. In the process of handshaking. */
@@ -48,7 +49,7 @@ public:
 	QByteArray& infoHash();
 	QByteArray& peerId();
 
-	Status status();
+	State state();
 	ConnectionInitiator connectionInitiator();
 	bool amChoking();
 	bool amInterested();
@@ -62,7 +63,7 @@ public:
 
 	QString addressPort();
 	bool downloaded();
-	bool hasPiece(int index);
+	bool hasPiece(Piece* piece);
 	bool isConnected();
 
 private:
@@ -79,7 +80,7 @@ private:
 	QByteArray m_peerId;
 
 	/* Connection information */
-	Status m_status;
+	State m_state;
 	ConnectionInitiator m_connectionInitiator;
 	bool m_amChoking;
 	bool m_amInterested;
@@ -97,11 +98,7 @@ private:
 	 * responded to a request in a certain amount of time */
 	bool m_timedOut;
 
-	/*
-	 * The blocks waiting in the queue
-	 * When m_peerType is Client: The blocks we should send to him
-	 * When m_peerType is Server: The blocks we are waiting to receive
-	 */
+	/* The blocks that we have requested */
 	QList<Block*> m_blocksQueue;
 
 	/* Is downloading/uploading paused */
@@ -126,10 +123,10 @@ private:
 	/* Creates the bitfield array and initializes it */
 	void initBitfield();
 
-	/* Initializes/Reinitializes connection with client */
+	/* Initializes variables for client peer (ConnectionInitiator::Peer) */
 	void initClient();
 
-	/* Initializes/Reinitializes connection with server */
+	/* Initializes variables for server peer (ConnectionInitiator::Client) */
 	void initServer(Torrent* torrent, const QByteArray& address, int port);
 
 public:
