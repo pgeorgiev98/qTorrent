@@ -104,6 +104,18 @@ void MainWindow::createMenus() {
 	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
 	fileMenu->addAction(tr("&Add torrent"), this, &MainWindow::addTorrentAction);
 	fileMenu->addAction(tr("&Exit"), this, &MainWindow::exitAction);
+
+	QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
+	viewMenu->addAction(tr("&Hide qTorrent"), this, &MainWindow::hide);
+	viewMenu->addSeparator();
+	m_viewTorrentsFilterPanel = viewMenu->addAction(
+				tr("Torrents filter panel"), this, &MainWindow::toggleHideShowTorrentsFilterPanel);
+	m_viewTorrentInfoPanel = viewMenu->addAction(
+				tr("Torrents info panel"), this, &MainWindow::toggleHideShowTorrentInfoPanel);
+	m_viewTorrentInfoPanel->setCheckable(true);
+	m_viewTorrentsFilterPanel->setCheckable(true);
+	connect(m_infoPanel, SIGNAL(visibilityChanged(bool)), m_viewTorrentInfoPanel, SLOT(setChecked(bool)));
+	connect(m_panel, SIGNAL(visibilityChanged(bool)), m_viewTorrentsFilterPanel, SLOT(setChecked(bool)));
 }
 
 
@@ -136,6 +148,22 @@ void MainWindow::addTorrentFromUrl(QUrl url) {
 void MainWindow::closeEvent(QCloseEvent *event) {
 	event->ignore();
 	hide();
+}
+
+void MainWindow::toggleHideShowTorrentsFilterPanel() {
+	if(m_panel->isHidden()) {
+		m_panel->show();
+	} else {
+		m_panel->hide();
+	}
+}
+
+void MainWindow::toggleHideShowTorrentInfoPanel() {
+	if(m_infoPanel->isHidden()) {
+		m_infoPanel->show();
+	} else {
+		m_infoPanel->hide();
+	}
 }
 
 void MainWindow::toggleHideShow() {

@@ -52,6 +52,9 @@ private:
 	TorrentsList* m_torrentsList;
 	TorrentInfoPanel* m_infoPanel;
 
+	QAction* m_viewTorrentsFilterPanel;
+	QAction* m_viewTorrentInfoPanel;
+
 	QMenu* m_trayIconMenu;
 	QSystemTrayIcon* m_trayIcon;
 
@@ -65,6 +68,9 @@ signals:
 public slots:
 	void addTorrentAction();
 	void exitAction();
+
+	void toggleHideShowTorrentsFilterPanel();
+	void toggleHideShowTorrentInfoPanel();
 
 	void toggleHideShow();
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
