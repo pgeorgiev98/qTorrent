@@ -31,6 +31,7 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QCloseEvent>
+#include <QApplication>
 
 const int UI_REFRESH_INTERVAL = 300;
 
@@ -90,6 +91,7 @@ void MainWindow::removeTorrent(Torrent *torrent) {
 void MainWindow::createMenus() {
 	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
 	fileMenu->addAction(tr("&Add torrent"), this, &MainWindow::addTorrentAction);
+	fileMenu->addAction(tr("&Exit"), this, &MainWindow::exitAction);
 }
 
 
@@ -107,6 +109,12 @@ void MainWindow::addTorrentAction() {
 	dialog.exec();
 }
 
+void MainWindow::exitAction() {
+	if(QTorrent::instance()->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
+		QApplication::quit();
+	}
+}
+
 void MainWindow::addTorrentFromUrl(QUrl url) {
 	AddTorrentDialog dialog(this);
 	dialog.setTorrentUrl(url);
@@ -114,9 +122,5 @@ void MainWindow::addTorrentFromUrl(QUrl url) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-	if(QTorrent::instance()->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
-		event->accept();
-	} else {
-		event->ignore();
-	}
+	event->ignore();
 }

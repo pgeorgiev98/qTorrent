@@ -60,6 +60,8 @@ signals:
 
 public slots:
 	void addTorrentAction();
+	void exitAction();
+
 	// Add torrent from url
 	void addTorrentFromUrl(QUrl url);
 };
