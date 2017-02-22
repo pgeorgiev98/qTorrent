@@ -64,6 +64,18 @@ MainWindow::MainWindow()
 	m_refreshTimer.start();
 	connect(&m_refreshTimer, SIGNAL(timeout()), m_torrentsList, SLOT(refresh()));
 	connect(&m_refreshTimer, SIGNAL(timeout()), m_statusPanel, SLOT(refresh()));
+
+	m_trayIconMenu = new QMenu(this);
+	m_trayIconMenu->addAction(tr("Hide/Show qTorrent"), this, &MainWindow::toggleHideShow);
+	m_trayIconMenu->addAction(tr("Exit"), this, &MainWindow::exitAction);
+
+	m_trayIcon = new QSystemTrayIcon(this);
+	m_trayIcon->setContextMenu(m_trayIconMenu);
+
+	m_trayIcon->show();
+
+	connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+			this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 }
 
 MainWindow::~MainWindow() {
@@ -123,4 +135,19 @@ void MainWindow::addTorrentFromUrl(QUrl url) {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
 	event->ignore();
+	hide();
+}
+
+void MainWindow::toggleHideShow() {
+	if(isHidden()) {
+		show();
+	} else {
+		hide();
+	}
+}
+
+void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
+	if(reason == QSystemTrayIcon::DoubleClick) {
+		show();
+	}
 }

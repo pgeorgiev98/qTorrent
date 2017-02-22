@@ -21,6 +21,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSystemTrayIcon>
 #include <QTimer>
 #include <QUrl>
 
@@ -51,6 +52,9 @@ private:
 	TorrentsList* m_torrentsList;
 	TorrentInfoPanel* m_statusPanel;
 
+	QMenu* m_trayIconMenu;
+	QSystemTrayIcon* m_trayIcon;
+
 	QTimer m_refreshTimer;
 
 	// Creates all needed menus
@@ -61,6 +65,9 @@ signals:
 public slots:
 	void addTorrentAction();
 	void exitAction();
+
+	void toggleHideShow();
+	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 	// Add torrent from url
 	void addTorrentFromUrl(QUrl url);
