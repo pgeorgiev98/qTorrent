@@ -34,7 +34,7 @@ public:
 		All, Completed, Downloading, Uploading
 	};
 
-	Panel();
+	Panel(QWidget* parent = nullptr);
 	~Panel();
 	Section getCurrentSection();
 

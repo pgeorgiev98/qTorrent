@@ -27,7 +27,9 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-TorrentInfoPanel::TorrentInfoPanel() {
+TorrentInfoPanel::TorrentInfoPanel(QWidget *parent)
+	: QToolBar("Info Panel", parent)
+{
 	setFloatable(false);
 	QTabWidget* tabWidget = new QTabWidget;
 

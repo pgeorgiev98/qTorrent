@@ -50,7 +50,7 @@ public:
 private:
 	Panel* m_panel;
 	TorrentsList* m_torrentsList;
-	TorrentInfoPanel* m_statusPanel;
+	TorrentInfoPanel* m_infoPanel;
 
 	QMenu* m_trayIconMenu;
 	QSystemTrayIcon* m_trayIcon;

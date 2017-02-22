@@ -24,8 +24,9 @@
 #define INACTIVE_COLOR_STRING "#414141"
 #define ACTIVE_COLOR_STRING "#262626"
 
-Panel::Panel()
-	: m_allIcon(QIcon(":/button-all.png"))
+Panel::Panel(QWidget *parent)
+	: QToolBar("Torrents Filter Panel", parent)
+	, m_allIcon(QIcon(":/button-all.png"))
 	, m_completedIcon(QIcon(":/button-completed.png"))
 	, m_downloadingIcon(QIcon(":/button-downloading.png"))
 	, m_uploadingIcon(QIcon(":/button-uploading.png"))

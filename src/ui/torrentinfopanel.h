@@ -28,7 +28,7 @@ class TorrentInfoPanel : public QToolBar {
 	Q_OBJECT
 
 public:
-	TorrentInfoPanel();
+	TorrentInfoPanel(QWidget* parent = nullptr);
 
 	void refreshInfoTab();
 
