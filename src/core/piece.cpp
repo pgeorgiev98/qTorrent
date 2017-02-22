@@ -119,7 +119,7 @@ void Piece::updateState() {
 			m_downloaded = false;
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
-			m_torrent->savePiece(m_pieceNumber);
+			m_torrent->savePiece(this);
 			m_downloaded = true;
 			unloadFromMemory();
 			m_torrent->downloadedPiece(this);

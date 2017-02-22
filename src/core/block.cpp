@@ -63,7 +63,8 @@ void Block::setData(const Peer* peer, const char* data) {
 		p[i] = data[i];
 	}
 	setDownloaded(true);
-	for(auto p : m_assignees) {
+	QList<Peer*> assignees = m_assignees;
+	for(auto p : assignees) {
 		if(p != peer) {
 			p->sendCancel(this);
 		}

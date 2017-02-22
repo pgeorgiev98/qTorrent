@@ -330,28 +330,28 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 	return nullptr;
 }
 
-bool Torrent::savePiece(int pieceNumber) {
+bool Torrent::savePiece(Piece* piece) {
 	int pieceLength = m_torrentInfo->pieceLength();
-	int thisPieceLength = m_pieces[pieceNumber]->size();
+	int thisPieceLength = piece->size();
 	auto& fileInfos = m_torrentInfo->fileInfos();
 
-	qint64 dataBegin = pieceNumber;
+	qint64 dataBegin = piece->pieceNumber();
 	dataBegin *= pieceLength;
 
 	int firstFileNumber = 0;
 	qint64 startingPos = 0;
-	qint64 tmp = 0;
+	qint64 pos = 0;
 	for(int i = 0; i < fileInfos.size(); i++) {
-		tmp += fileInfos[i].length;
+		pos += fileInfos[i].length;
 		firstFileNumber = i;
-		if(tmp > dataBegin) {
-			tmp -= fileInfos[i].length;
-			startingPos = dataBegin - tmp;
+		if(pos > dataBegin) {
+			pos -= fileInfos[i].length;
+			startingPos = dataBegin - pos;
 			break;
 		}
 	}
 
-	char* dataPtr = m_pieces[pieceNumber]->data();
+	char* dataPtr = piece->data();
 
 	int bytesToWrite = thisPieceLength;
 	for(int i = firstFileNumber;; i++) {

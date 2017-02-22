@@ -77,7 +77,7 @@ public:
 
 	Block* requestBlock(Peer* client, int size);
 
-	bool savePiece(int pieceNumber);
+	bool savePiece(Piece* piece);
 
 	/* Sets a piece's downloaded/available state.
 	 * if state is Ready, it will increment m_bytesDownloaded */
