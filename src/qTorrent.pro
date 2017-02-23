@@ -23,6 +23,7 @@ SOURCES += main.cpp \
     core/resumeinfo.cpp \
     core/torrentmanager.cpp \
     core/torrentsettings.cpp \
+    core/remote.cpp \
     ui/mainwindow.cpp \
     ui/panel.cpp \
     ui/torrentslist.cpp \
@@ -46,6 +47,7 @@ HEADERS += \
     core/resumeinfo.h \
     core/torrentmanager.h \
     core/torrentsettings.h \
+    core/remote.h \
     ui/mainwindow.h \
     ui/panel.h \
     ui/torrentslist.h \

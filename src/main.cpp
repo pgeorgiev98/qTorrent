@@ -18,12 +18,19 @@
  */
 
 #include "qtorrent.h"
+#include "core/remote.h"
 #include <QApplication>
 #include <QDebug>
 
 int main(int argc, char *argv[]) {
 	QApplication app(argc, argv);
 	app.setApplicationName("qTorrent");
+
+	Remote remote;
+	if(!remote.start()) {
+		qDebug() << "Already running";
+		return 0;
+	}
 
 	QTorrent qTorrent;
 
