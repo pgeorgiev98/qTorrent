@@ -24,11 +24,13 @@
 #include <QLocalServer>
 
 #define SERVER_NAME "qTorrent"
+#define TIMEOUT 100 // milliseconds connection time-out
 
 Remote::Remote()
 	: m_server(new QLocalServer)
 	, m_socket(nullptr)
 {
+	connect(m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
 Remote::~Remote() {
@@ -37,33 +39,33 @@ Remote::~Remote() {
 }
 
 bool Remote::start() {
-	if(m_server->listen(SERVER_NAME)) {
-		// Not running
-		connect(m_server, SIGNAL(newConnection()),
-				this, SLOT(newConnection()));
-		return true;
-	} else {
-		// Already running
-		m_socket = new QLocalSocket;
-		m_socket->connectToServer(SERVER_NAME);
-
-		if(!m_socket->waitForConnected()) {
-			// Failed to connect, probably server has crashed?
-			if(QLocalServer::removeServer(SERVER_NAME)) {
-				if(m_server->listen(SERVER_NAME)) {
-					delete m_socket;
-					m_socket = nullptr;
-					connect(m_server, SIGNAL(newConnection()),
-							this, SLOT(newConnection()));
-					return true;
-				}
-			}
-			return false;
-		}
-
+	m_socket = new QLocalSocket;
+	m_socket->connectToServer(SERVER_NAME);
+	if(m_socket->waitForConnected(TIMEOUT)) {
+		// Connected to main application instance
 		sendShowWindow();
 		return false;
 	}
+
+	// This is the main instance
+	// Try to start server
+	delete m_socket;
+	m_socket = nullptr;
+	bool serverStarted = false;
+	if(!m_server->listen(SERVER_NAME)) {
+		// For UNIX - remove server and retry
+		if(m_server->serverError() == QAbstractSocket::AddressInUseError) {
+			if(QLocalServer::removeServer(SERVER_NAME)) {
+				if(m_server->listen(SERVER_NAME)) {
+					serverStarted = true;
+				}
+			}
+		}
+	} else {
+		serverStarted = true;
+	}
+
+	return serverStarted;
 }
 
 void Remote::newConnection() {
