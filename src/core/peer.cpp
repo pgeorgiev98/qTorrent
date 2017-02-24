@@ -42,7 +42,7 @@ Peer::Peer(ConnectionInitiator connectionInitiator, QTcpSocket* socket)
 	, m_state(Created)
 	, m_connectionInitiator(connectionInitiator)
 	, m_socket(socket)
-	, m_paused(false)
+	, m_isPaused(false)
 {
 	connectAll();
 }
@@ -84,7 +84,7 @@ void Peer::startConnection() {
 	m_handshakeTimeoutTimer.stop();
 	m_reconnectTimer.stop();
 
-	m_timedOut = false;
+	m_hasTimedOut = false;
 	m_blocksQueue.clear();
 
 	qDebug() << "Connecting to" << addressPort();
@@ -92,7 +92,7 @@ void Peer::startConnection() {
 }
 
 void Peer::start() {
-	m_paused = false;
+	m_isPaused = false;
 	if(m_state == ConnectionEstablished) {
 		sendMessages();
 	} else if(m_socket->state() == QAbstractSocket::UnconnectedState) {
@@ -102,7 +102,7 @@ void Peer::start() {
 }
 
 void Peer::pause() {
-	m_paused = true;
+	m_isPaused = true;
 	sendMessages();
 }
 
@@ -249,12 +249,12 @@ void Peer::sendMessages() {
 	}
 
 	// If both of us have the full torrent, disconnect
-	if(m_torrent->downloaded() && downloaded()) {
+	if(m_torrent->isDownloaded() && isDownloaded()) {
 		disconnect();
 		return;
 	}
 
-	if(m_paused) {
+	if(m_isPaused) {
 		/* Paused */
 
 		// Paused means we are not interested in anybody
@@ -395,7 +395,7 @@ bool Peer::readPeerMessage(bool* ok) {
 		m_peerChoking = true;
 		releaseAllBlocks();
 		m_replyTimeoutTimer.stop();
-		m_timedOut = false;
+		m_hasTimedOut = false;
 		break;
 	}
 	case TorrentMessage::Unchoke:
@@ -550,9 +550,9 @@ bool Peer::readPeerMessage(bool* ok) {
 			qDebug() << "Error: received unrequested block from peer" << addressPort()
 					 << ". Block(" << index << begin << blockLength << ")";
 		} else {
-			m_timedOut = false;
+			m_hasTimedOut = false;
 			const char* blockData = m_receivedDataBuffer.data() + i;
-			if(!block->downloaded()) {
+			if(!block->isDownloaded()) {
 				block->setData(this, blockData);
 				releaseBlock(block);
 			}
@@ -633,7 +633,7 @@ void Peer::initClient() {
 	m_handshakeTimeoutTimer.stop();
 	m_reconnectTimer.stop();
 
-	m_timedOut = false;
+	m_hasTimedOut = false;
 	m_blocksQueue.clear();
 }
 
@@ -649,7 +649,7 @@ void Peer::initServer(Torrent *torrent, const QByteArray &address, int port) {
 void Peer::releaseBlock(Block *block) {
 	block->removeAssignee(this);
 	m_blocksQueue.removeAll(block);
-	if(block->assignees().isEmpty() && !block->downloaded()) {
+	if(!block->hasAssignees() && !block->isDownloaded()) {
 		block->piece()->deleteBlock(block);
 	}
 }
@@ -659,7 +659,7 @@ void Peer::releaseAllBlocks() {
 	for(Block* block : blocks) {
 		block->removeAssignee(this);
 		m_blocksQueue.removeAll(block);
-		if(block->assignees().isEmpty() && !block->downloaded()) {
+		if(!block->hasAssignees() && !block->isDownloaded()) {
 			block->piece()->deleteBlock(block);
 		}
 	}
@@ -739,7 +739,7 @@ void Peer::finished() {
 
 	if(m_connectionInitiator == ConnectionInitiator::Client) {
 		// If we both have the full torrent, dont reconnect later
-		if(!downloaded() || !m_torrent->downloaded()) {
+		if(!isDownloaded() || !m_torrent->isDownloaded()) {
 			m_reconnectTimer.start();
 		}
 	}
@@ -753,7 +753,7 @@ void Peer::error(QAbstractSocket::SocketError socketError) {
 
 void Peer::replyTimeout() {
 	qDebug() << "Peer" << addressPort() << "took too long to reply";
-	m_timedOut = true;
+	m_hasTimedOut = true;
 	m_replyTimeoutTimer.stop();
 }
 
@@ -834,8 +834,8 @@ QTcpSocket* Peer::socket() {
 	return m_socket;
 }
 
-bool Peer::timedOut() {
-	return m_timedOut;
+bool Peer::hasTimedOut() {
+	return m_hasTimedOut;
 }
 
 QList<Block*>& Peer::blocksQueue() {
@@ -843,14 +843,14 @@ QList<Block*>& Peer::blocksQueue() {
 }
 
 bool Peer::isPaused() const {
-	return m_paused;
+	return m_isPaused;
 }
 
 QString Peer::addressPort() {
 	return QString(m_address) + ":" + QString::number(m_port);
 }
 
-bool Peer::downloaded() {
+bool Peer::isDownloaded() {
 	return m_piecesDownloaded == m_torrent->torrentInfo()->numberOfPieces();
 }
 
@@ -864,12 +864,12 @@ bool Peer::isConnected() {
 
 bool Peer::isInteresting() {
 	// No peer is interesting when the torrent is downloaded
-	if(m_torrent->downloaded()) {
+	if(m_torrent->isDownloaded()) {
 		return false;
 	}
 	// Check if peer has pieces that we don't
 	for(Piece* piece : m_torrent->pieces()) {
-		if(!piece->downloaded() && hasPiece(piece)) {
+		if(!piece->isDownloaded() && hasPiece(piece)) {
 			return true;
 		}
 	}

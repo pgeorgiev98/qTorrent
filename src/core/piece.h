@@ -30,7 +30,7 @@ class Piece {
 	Torrent* m_torrent;
 	int m_pieceNumber;
 	int m_size;
-	bool m_downloaded;
+	bool m_isDownloaded;
 	char* m_pieceData;
 	QList<Block*> m_blocks;
 
@@ -42,7 +42,7 @@ public:
 
 	/* Getters */
 
-	bool downloaded() const;
+	bool isDownloaded() const;
 	int pieceNumber() const;
 	char* data() const;
 	int size() const;
@@ -54,7 +54,7 @@ public:
 	void updateState();
 	void deleteBlock(Block* block);
 	void unloadFromMemory();
-	void setDownloaded(bool downloaded);
+	void setDownloaded(bool isDownloaded);
 	// Gets data for a block. Reads from files if needed
 	bool getBlockData(int begin, int size, QByteArray& blockData);
 	// Returns a pointer to an existing block or nullptr if no such block exists

@@ -26,7 +26,7 @@ Block::Block(Piece* piece, int begin, int size) :
 	m_piece(piece),
 	m_begin(begin),
 	m_size(size),
-	m_downloaded(false)
+	m_isDownloaded(false)
 {
 }
 
@@ -45,16 +45,16 @@ int Block::size() const {
 	return m_size;
 }
 
-bool Block::downloaded() {
-	return m_downloaded;
+bool Block::isDownloaded() {
+	return m_isDownloaded;
 }
 
 void Block::setDownloaded(bool downloaded) {
-	m_downloaded = downloaded;
+	m_isDownloaded = downloaded;
 }
 
 void Block::setData(const Peer* peer, const char* data) {
-	if(downloaded()) {
+	if(isDownloaded()) {
 		return;
 	}
 
@@ -94,4 +94,8 @@ void Block::clearAssignees() {
 
 QList<Peer*>& Block::assignees() {
 	return m_assignees;
+}
+
+bool Block::hasAssignees() const {
+	return !m_assignees.isEmpty();
 }

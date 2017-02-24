@@ -105,7 +105,7 @@ public:
 	qint64 bytesLeft() const;
 
 	int downloadedPieces();
-	bool downloaded();
+	bool isDownloaded();
 	bool isPaused() const;
 	bool hasAnnouncedStarted() const;
 	int connectedPeersCount() const;
@@ -159,10 +159,10 @@ private:
 	int m_downloadedPieces;
 
 	/* This flag is set when the torrent is completely downloaded */
-	bool m_downloaded;
+	bool m_isDownloaded;
 
 	/* Is the downloading/uploading paused? */
-	bool m_paused;
+	bool m_isPaused;
 
 	/* Have we sent a 'Started' announce to the tracker */
 	bool m_hasAnnouncedStarted;

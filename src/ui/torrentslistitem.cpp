@@ -79,9 +79,9 @@ bool TorrentsListItem::belongsToSection() {
 	case Panel::All:
 		return true;
 	case Panel::Completed:
-		return torrent()->downloaded();
+		return torrent()->isDownloaded();
 	case Panel::Downloading:
-		return !torrent()->downloaded();
+		return !torrent()->isDownloaded();
 	case Panel::Uploading:
 		return true; // TODO
 	}

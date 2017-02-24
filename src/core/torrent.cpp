@@ -36,8 +36,8 @@ Torrent::Torrent()
 	, m_totalBytesDownloaded(0)
 	, m_totalBytesUploaded(0)
 	, m_downloadedPieces(0)
-	, m_downloaded(false)
-	, m_paused(true)
+	, m_isDownloaded(false)
+	, m_isPaused(true)
 	, m_hasAnnouncedStarted(false)
 {
 }
@@ -236,7 +236,7 @@ ResumeInfo Torrent::getResumeInfo() const {
 	resumeInfo.setDownloadLocation(m_downloadLocation);
 	resumeInfo.setTotalBytesDownloaded(m_totalBytesDownloaded);
 	resumeInfo.setTotalBytesUploaded(m_totalBytesUploaded);
-	resumeInfo.setPaused(m_paused);
+	resumeInfo.setPaused(m_isPaused);
 	resumeInfo.setAquiredPieces(bitfield());
 	return resumeInfo;
 }
@@ -254,7 +254,7 @@ void Torrent::start() {
 	for(Peer* peer :  m_peers) {
 		peer->start();
 	}
-	m_paused = false;
+	m_isPaused = false;
 }
 
 void Torrent::pause() {
@@ -262,7 +262,7 @@ void Torrent::pause() {
 	for(Peer* peer : m_peers) {
 		peer->pause();
 	}
-	m_paused = true;
+	m_isPaused = true;
 }
 
 Peer* Torrent::addPeer(const QByteArray &address, int port) {
@@ -281,7 +281,7 @@ Peer* Torrent::addPeer(const QByteArray &address, int port) {
 	peer->startConnection();
 
 	// Pause the peer if needed
-	if(m_paused) {
+	if(m_isPaused) {
 		peer->pause();
 	}
 
@@ -307,7 +307,7 @@ void Torrent::addPeer(Peer *peer) {
 Block* Torrent::requestBlock(Peer *peer, int size) {
 	Block* returnBlock = nullptr;
 	for(auto piece : m_pieces) {
-		if(!piece->downloaded() && peer->hasPiece(piece)) {
+		if(!piece->isDownloaded() && peer->hasPiece(piece)) {
 			returnBlock = piece->requestBlock(size);
 			if(returnBlock != nullptr) {
 				return returnBlock;
@@ -317,7 +317,7 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 
 	// No unrequested blocks, try to find some timed-out blocks
 	for(auto peer : m_peers) {
-		if(peer->timedOut()) {
+		if(peer->hasTimedOut()) {
 			for(auto block : peer->blocksQueue()) {
 				if(peer->hasPiece(block->piece())) {
 					return block;
@@ -396,7 +396,7 @@ bool Torrent::savePiece(Piece* piece) {
 }
 
 void Torrent::setPieceAvailable(Piece *piece) {
-	if(piece->downloaded()) {
+	if(piece->isDownloaded()) {
 		return;
 	}
 
@@ -477,7 +477,7 @@ qint64 Torrent::totalBytesUploaded() const {
 qint64 Torrent::bytesAvailable() const {
 	qint64 bytes = 0;
 	for(Piece* piece : m_pieces) {
-		if(piece->downloaded()) {
+		if(piece->isDownloaded()) {
 			bytes += piece->size();
 		}
 	}
@@ -493,12 +493,12 @@ int Torrent::downloadedPieces() {
 	return m_downloadedPieces;
 }
 
-bool Torrent::downloaded() {
-	return m_downloaded;
+bool Torrent::isDownloaded() {
+	return m_isDownloaded;
 }
 
 bool Torrent::isPaused() const {
-	return m_paused;
+	return m_isPaused;
 }
 
 bool Torrent::hasAnnouncedStarted() const {
@@ -530,9 +530,9 @@ QString Torrent::stateString() const {
 		return "Loading torrent";
 	} else if(m_state == Checking) {
 		return "Checking torrent";
-	} else if(m_paused) {
+	} else if(m_isPaused) {
 		return "Paused";
-	} else if(m_downloaded) {
+	} else if(m_isDownloaded) {
 		return "Completed";
 	} else {
 		return "Downloading";
@@ -554,7 +554,7 @@ float Torrent::percentDownloaded() {
 QVector<bool> Torrent::bitfield() const {
 	QVector<bool> bf;
 	for(auto p : m_pieces) {
-		bf.push_back(p->downloaded());
+		bf.push_back(p->isDownloaded());
 	}
 	return bf;
 }
@@ -593,7 +593,7 @@ void Torrent::uploadedBlock(int bytes) {
 
 void Torrent::fullyDownloaded() {
 	qDebug() << "Torrent fully downloaded!";
-	m_downloaded = true;
+	m_isDownloaded = true;
 
 	if(m_state == Ready) {
 		// Send announce
@@ -602,7 +602,7 @@ void Torrent::fullyDownloaded() {
 
 	// Disconnect from all peers that have the full torrent
 	for(auto peer : m_peers) {
-		if(peer->downloaded() || peer->isConnected()) {
+		if(peer->isDownloaded() || peer->isConnected()) {
 			peer->disconnect();
 		}
 	}

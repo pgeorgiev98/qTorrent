@@ -149,14 +149,14 @@ void TorrentsList::showAll() {
 
 void TorrentsList::showCompleted() {
 	for(TorrentsListItem* item : m_items) {
-		bool downloaded = item->torrent()->downloaded();
+		bool downloaded = item->torrent()->isDownloaded();
 		item->setHidden(!downloaded);
 	}
 }
 
 void TorrentsList::showDownloading() {
 	for(TorrentsListItem* item : m_items) {
-		bool downloaded = item->torrent()->downloaded();
+		bool downloaded = item->torrent()->isDownloaded();
 		item->setHidden(downloaded);
 	}
 }

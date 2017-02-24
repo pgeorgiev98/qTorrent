@@ -32,7 +32,7 @@ Piece::Piece(Torrent* torrent, int pieceNumber, int size)
 	: m_torrent(torrent)
 	, m_pieceNumber(pieceNumber)
 	, m_size(size)
-	, m_downloaded(false)
+	, m_isDownloaded(false)
 	, m_pieceData(new char[size])
 {
 }
@@ -46,8 +46,8 @@ Piece::~Piece() {
 	}
 }
 
-bool Piece::downloaded() const {
-	return m_downloaded;
+bool Piece::isDownloaded() const {
+	return m_isDownloaded;
 }
 
 int Piece::pieceNumber() const {
@@ -88,21 +88,21 @@ void Piece::deleteBlock(Block* block) {
 }
 
 bool Piece::checkIfFullyDownloaded() {
-	if(m_downloaded) { // If already marked as downloaded, don't do anything
+	if(m_isDownloaded) { // If already marked as downloaded, don't do anything
 		return true;
 	}
 	Q_ASSERT_X(m_pieceData != nullptr, "Piece::checkIfFullyDownloaded()", "Piece not loaded");
 	int pos = 0;
 	for(auto b : m_blocks) {
-		if(b->begin() == pos && b->downloaded()) {
+		if(b->begin() == pos && b->isDownloaded()) {
 			pos += b->size();
 		} else {
-			m_downloaded = false;
+			m_isDownloaded = false;
 			return false;
 		}
 	}
-	m_downloaded = (m_size == pos);
-	return m_downloaded;
+	m_isDownloaded = (m_size == pos);
+	return m_isDownloaded;
 }
 
 void Piece::updateState() {
@@ -116,11 +116,11 @@ void Piece::updateState() {
 				delete b;
 			}
 			m_blocks.clear();
-			m_downloaded = false;
+			m_isDownloaded = false;
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
 			m_torrent->savePiece(this);
-			m_downloaded = true;
+			m_isDownloaded = true;
 			unloadFromMemory();
 			m_torrent->downloadedPiece(this);
 		}
@@ -133,7 +133,7 @@ Block* Piece::requestBlock(int size) {
 	Block* block = nullptr;
 
 	for(auto b : m_blocks) {
-		if(!b->downloaded() && b->assignees().isEmpty()) {
+		if(!b->isDownloaded() && !b->hasAssignees()) {
 			return b;
 		}
 		if(tmp < b->begin()) {
@@ -170,7 +170,7 @@ void Piece::unloadFromMemory() {
 }
 
 void Piece::setDownloaded(bool downloaded) {
-	m_downloaded = downloaded;
+	m_isDownloaded = downloaded;
 }
 
 bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {

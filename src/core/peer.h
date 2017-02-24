@@ -76,12 +76,12 @@ public:
 	bool peerInterested();
 
 	QTcpSocket* socket();
-	bool timedOut();
+	bool hasTimedOut();
 	QList<Block*>& blocksQueue();
 	bool isPaused() const;
 
 	QString addressPort();
-	bool downloaded();
+	bool isDownloaded();
 	bool hasPiece(Piece* piece);
 	bool isConnected();
 	bool isInteresting();
@@ -116,15 +116,14 @@ private:
 
 	/* This flag will be set when the peer hasn't
 	 * responded to a request in a certain amount of time */
-	bool m_timedOut;
+	bool m_hasTimedOut;
 
 	/* The blocks that we have requested */
 	QList<Block*> m_blocksQueue;
 
 	/* Is downloading/uploading paused */
-	bool m_paused;
+	bool m_isPaused;
 
-private:
 	/* Try to read handshake reply from the buffer
 	 * Returns true on successful message parse, false on
 	 * error or incomplete message.

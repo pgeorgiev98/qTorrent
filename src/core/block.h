@@ -30,7 +30,7 @@ class Block {
 	Piece* m_piece;
 	int m_begin;
 	int m_size;
-	bool m_downloaded;
+	bool m_isDownloaded;
 
 	/* The peers to which this Block is
 	 * assigned to be downloaded from. */
@@ -41,8 +41,8 @@ public:
 	Piece* piece();
 	int begin() const;
 	int size() const;
-	bool downloaded();
-	void setDownloaded(bool downloaded);
+	bool isDownloaded();
+	void setDownloaded(bool isDownloaded);
 	void setData(const Peer* peer, const char* data);
 
 	/* Assignee operations */
@@ -50,6 +50,7 @@ public:
 	void removeAssignee(Peer* peer);
 	void clearAssignees();
 	QList<Peer*>& assignees();
+	bool hasAssignees() const;
 };
 
 #endif // BLOCK_H
