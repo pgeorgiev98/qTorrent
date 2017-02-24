@@ -231,13 +231,13 @@ void Peer::fatalError() {
 }
 
 Peer* Peer::createClient(QTcpSocket *socket) {
-	Peer* peer = new Peer(ConnectionInitiator::Client, socket);
+	Peer* peer = new Peer(ConnectionInitiator::Peer, socket);
 	peer->initClient();
 	return peer;
 }
 
 Peer* Peer::createServer(Torrent *torrent, const QByteArray &address, int port) {
-	Peer* peer = new Peer(ConnectionInitiator::Peer, new QTcpSocket);
+	Peer* peer = new Peer(ConnectionInitiator::Client, new QTcpSocket);
 	peer->initServer(torrent, address, port);
 	return peer;
 }
