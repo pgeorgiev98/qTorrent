@@ -286,8 +286,8 @@ void Peer::sendMessages() {
 			sendUnchoke();
 		}
 
-		// Request as many blocks as we can if we are not choked
-		if(!m_peerChoking) {
+		// Request as many blocks as we can if we are interested and not choked
+		if(!m_peerChoking && m_amInterested) {
 			while(m_blocksQueue.size() < BLOCKS_TO_REQUEST) {
 				if(!requestBlock()) {
 					break;
