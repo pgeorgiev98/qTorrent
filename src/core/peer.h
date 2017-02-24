@@ -84,6 +84,7 @@ public:
 	bool downloaded();
 	bool hasPiece(Piece* piece);
 	bool isConnected();
+	bool isInteresting();
 
 private:
 	Torrent* m_torrent;

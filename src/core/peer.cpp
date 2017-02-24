@@ -274,9 +274,11 @@ void Peer::sendMessages() {
 	} else {
 		/* Not Paused */
 
-		// We are always interested [TODO]
+		// Send 'interested' if we feel the desire
 		if(!m_amInterested) {
-			sendInterested();
+			if(isInteresting()) {
+				sendInterested();
+			}
 		}
 
 		// Unchoke if peer is interested
@@ -858,4 +860,18 @@ bool Peer::hasPiece(Piece *piece) {
 
 bool Peer::isConnected() {
 	return m_socket->state() == QAbstractSocket::ConnectedState;
+}
+
+bool Peer::isInteresting() {
+	// No peer is interesting when the torrent is downloaded
+	if(m_torrent->downloaded()) {
+		return false;
+	}
+	// Check if peer has pieces that we don't
+	for(Piece* piece : m_torrent->pieces()) {
+		if(!piece->downloaded() && hasPiece(piece)) {
+			return true;
+		}
+	}
+	return false;
 }
