@@ -107,6 +107,7 @@ void MainWindow::removeTorrent(Torrent *torrent) {
 
 
 void MainWindow::createMenus() {
+	menuBar()->show();
 	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
 	QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
 
