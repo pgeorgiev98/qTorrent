@@ -23,7 +23,7 @@
 #include <QLocalSocket>
 #include <QLocalServer>
 
-#define SERVER_NAME "qTorrent"
+#define SERVER_NAME ".qTorrent-localServer-socket"
 #define TIMEOUT 100 // milliseconds connection time-out
 
 Remote::Remote()
