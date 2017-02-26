@@ -66,8 +66,14 @@ MainWindow::MainWindow()
 	connect(&m_refreshTimer, SIGNAL(timeout()), m_infoPanel, SLOT(refresh()));
 
 	m_trayIconMenu = new QMenu(this);
-	m_trayIconMenu->addAction(tr("Hide/Show qTorrent"), this, &MainWindow::toggleHideShow);
-	m_trayIconMenu->addAction(tr("Exit"), this, &MainWindow::exitAction);
+
+	QAction* hideClientAction = new QAction(tr("Hide/Show qTorrent"), this);
+	connect(hideClientAction, &QAction::triggered, this, &MainWindow::toggleHideShow);
+	m_trayIconMenu->addAction(hideClientAction);
+
+	QAction* exitAction = new QAction(tr("Exit"), this);
+	connect(exitAction, &QAction::triggered, this, &MainWindow::exitAction);
+	m_trayIconMenu->addAction(exitAction);
 
 	m_trayIcon = new QSystemTrayIcon(this);
 	m_trayIcon->setContextMenu(m_trayIconMenu);
@@ -102,18 +108,31 @@ void MainWindow::removeTorrent(Torrent *torrent) {
 
 void MainWindow::createMenus() {
 	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
-	fileMenu->addAction(tr("&Add torrent"), this, &MainWindow::addTorrentAction);
-	fileMenu->addAction(tr("&Exit"), this, &MainWindow::exitAction);
-
 	QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
-	viewMenu->addAction(tr("&Hide qTorrent"), this, &MainWindow::hide);
-	viewMenu->addSeparator();
-	m_viewTorrentsFilterPanel = viewMenu->addAction(
-				tr("Torrents filter panel"), this, &MainWindow::toggleHideShowTorrentsFilterPanel);
-	m_viewTorrentInfoPanel = viewMenu->addAction(
-				tr("Torrents info panel"), this, &MainWindow::toggleHideShowTorrentInfoPanel);
-	m_viewTorrentInfoPanel->setCheckable(true);
+
+	QAction* addTorrentAction = new QAction(tr("&Add torrent"), this);
+	QAction* exitAction = new QAction(tr("&Exit"), this);
+	QAction* hideClientAction = new QAction(tr("Hide qTorrent"), this);
+	m_viewTorrentsFilterPanel = new QAction(tr("Torrents filter panel"), this);
+	m_viewTorrentInfoPanel = new QAction(tr("Torrents info panel"), this);
+
 	m_viewTorrentsFilterPanel->setCheckable(true);
+	m_viewTorrentInfoPanel->setCheckable(true);
+
+	connect(addTorrentAction, &QAction::triggered, this, &MainWindow::addTorrentAction);
+	connect(exitAction, &QAction::triggered, this, &MainWindow::exitAction);
+	connect(hideClientAction, &QAction::triggered, this, &MainWindow::hide);
+	connect(m_viewTorrentsFilterPanel, &QAction::triggered, this, &MainWindow::toggleHideShowTorrentsFilterPanel);
+	connect(m_viewTorrentInfoPanel, &QAction::triggered, this, &MainWindow::toggleHideShowTorrentInfoPanel);
+
+	fileMenu->addAction(addTorrentAction);
+	fileMenu->addAction(exitAction);
+
+	viewMenu->addAction(hideClientAction);
+	viewMenu->addSeparator();
+	viewMenu->addAction(m_viewTorrentsFilterPanel);
+	viewMenu->addAction(m_viewTorrentInfoPanel);
+
 	connect(m_infoPanel, SIGNAL(visibilityChanged(bool)), m_viewTorrentInfoPanel, SLOT(setChecked(bool)));
 	connect(m_panel, SIGNAL(visibilityChanged(bool)), m_viewTorrentsFilterPanel, SLOT(setChecked(bool)));
 }
