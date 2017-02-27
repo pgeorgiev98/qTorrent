@@ -21,8 +21,11 @@
 #include <QToolButton>
 
 #define ICON_SIZE QSize(80, 60)
-#define INACTIVE_COLOR_STRING "#414141"
-#define ACTIVE_COLOR_STRING "#262626"
+#define DEFAULT_COLOR "#414141"
+#define CHECKED_COLOR "#262626"
+#define HOVERED_COLOR "#505050"
+#define HOVERED_CHECKED_COLOR "#303030"
+#define PRESSED_COLOR "#323232"
 
 Panel::Panel(QWidget *parent)
 	: QToolBar("Torrents Filter Panel", parent)
@@ -56,7 +59,12 @@ Panel::Panel(QWidget *parent)
 	}
 
 	setIconSize(ICON_SIZE);
-	setStyleSheet("background-color: " INACTIVE_COLOR_STRING);
+	setStyleSheet("QToolBar { background: " DEFAULT_COLOR "; border: none; spacing: 0px; } "
+				  "QToolButton { background-color: " DEFAULT_COLOR "; border: none } "
+				  "QToolButton:checked { background-color: " CHECKED_COLOR " } "
+				  "QToolButton:hover { background-color: " HOVERED_COLOR " } "
+				  "QToolButton:hover:checked { background-color: " HOVERED_CHECKED_COLOR " } "
+				  "QToolButton:pressed { background-color: " PRESSED_COLOR " }");
 
 	setFloatable(false);
 
@@ -92,16 +100,11 @@ void Panel::resetButtons() {
 	m_completed->setIcon(m_completedIcon);
 	m_downloading->setIcon(m_downloadingIcon);
 	m_uploading->setIcon(m_uploadingIcon);
-
-	for(auto button : m_toolButtons) {
-		button->setStyleSheet("background-color: " INACTIVE_COLOR_STRING);
-	}
 }
 
 void Panel::openAll() {
 	resetButtons();
 	m_all->setIcon(m_allIconActive);
-	m_all->setStyleSheet("background-color: " ACTIVE_COLOR_STRING);
 	m_all->setChecked(true);
 	emit showAll();
 }
@@ -109,7 +112,6 @@ void Panel::openAll() {
 void Panel::openCompleted() {
 	resetButtons();
 	m_completed->setIcon(m_completedIconActive);
-	m_completed->setStyleSheet("background-color: " ACTIVE_COLOR_STRING);
 	m_completed->setChecked(true);
 	emit showCompleted();
 }
@@ -117,7 +119,6 @@ void Panel::openCompleted() {
 void Panel::openDownloading() {
 	resetButtons();
 	m_downloading->setIcon(m_downloadingIconActive);
-	m_downloading->setStyleSheet("background-color: " ACTIVE_COLOR_STRING);
 	m_downloading->setChecked(true);
 	emit showDownloading();
 }
@@ -125,7 +126,6 @@ void Panel::openDownloading() {
 void Panel::openUploading() {
 	resetButtons();
 	m_uploading->setIcon(m_uploadingIconActive);
-	m_uploading->setStyleSheet("background-color: " ACTIVE_COLOR_STRING);
 	m_uploading->setChecked(true);
 	emit showUploading();
 }
