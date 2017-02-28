@@ -206,17 +206,8 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 				seek = blockBegin - fileBegin;
 			}
 
-			qint64 bytesToRead = fileInfo.length;
-
-			// Is this the last file?
-			if(fileEnd >= blockEnd) {
-				// Read until the end of the block
-				if(blockBegin > fileBegin) {
-					bytesToRead = size;
-				} else {
-					bytesToRead = blockEnd - fileBegin;
-				}
-			}
+			// Calculate the number of bytes we have to read from this file
+			qint64 bytesToRead = qMin(blockEnd, fileEnd) - qMax(blockBegin, fileBegin);
 
 			// Open file
 			if(!file->open(QFile::ReadOnly)) {
