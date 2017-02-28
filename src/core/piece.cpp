@@ -186,13 +186,8 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 	QList<QFile*>& files = m_torrent->files();
 
 	// Find this block's absolute indexes
-	qint64 blockBegin = 0;
-	for(const Piece* piece : m_torrent->pieces()) {
-		if(piece == this) {
-			break;
-		}
-		blockBegin += piece->size();
-	}
+	qint64 blockBegin = m_torrent->torrentInfo()->pieceLength();
+	blockBegin *= m_pieceNumber;
 	blockBegin += begin;
 	qint64 blockEnd = blockBegin + size;
 
