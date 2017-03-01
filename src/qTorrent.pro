@@ -57,9 +57,5 @@ HEADERS += \
 RESOURCES += \
     resources.qrc
 
-unix {
-    target.path = /usr/bin
-    documentation.path = /usr/share/man/man1
-    documentation.files = ../doc/*
-    INSTALLS += target documentation
-}
+# UNIX-specific configuration
+unix:!macx: include(../unixconf.pri)
