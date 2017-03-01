@@ -26,6 +26,8 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QContextMenuEvent>
+#include <QMenu>
 
 TorrentInfoPanel::TorrentInfoPanel(QWidget *parent)
 	: QTabWidget(parent)
@@ -83,4 +85,17 @@ void TorrentInfoPanel::refreshInfoTab() {
 
 void TorrentInfoPanel::refresh() {
 	refreshInfoTab();
+}
+
+void TorrentInfoPanel::contextMenuEvent(QContextMenuEvent *event) {
+	QMenu menu(this);
+	QAction* hide = new QAction(tr("Hide Info Panel"));
+	menu.addAction(hide);
+	connect(hide, &QAction::triggered, this, &TorrentInfoPanel::hide);
+	menu.exec(event->globalPos());
+}
+
+void TorrentInfoPanel::hide() {
+	QWidget::hide();
+	emit visibilityChanged(false);
 }

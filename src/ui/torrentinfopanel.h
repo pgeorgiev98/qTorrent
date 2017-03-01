@@ -34,6 +34,13 @@ public:
 
 public slots:
 	void refresh();
+	void hide();
+
+protected:
+	void contextMenuEvent(QContextMenuEvent* event);
+
+signals:
+	void visibilityChanged(bool visible);
 
 private:
 	QLabel* m_torrentName;
