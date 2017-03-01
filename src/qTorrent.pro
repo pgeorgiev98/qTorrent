@@ -59,5 +59,7 @@ RESOURCES += \
 
 unix {
     target.path = /usr/bin
-    INSTALLS += target
+    documentation.path = /usr/share/man/man1
+    documentation.files = ../doc/*
+    INSTALLS += target documentation
 }
