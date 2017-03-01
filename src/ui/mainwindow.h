@@ -72,6 +72,8 @@ public slots:
 	void toggleHideShowTorrentsFilterPanel();
 	void toggleHideShowTorrentInfoPanel();
 
+	void aboutAction();
+
 	void toggleHideShow();
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 

@@ -108,24 +108,29 @@ void MainWindow::removeTorrent(Torrent *torrent) {
 
 void MainWindow::createMenus() {
 	menuBar()->show();
+
+	// Menus
 	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
 	QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
+	QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
 
+	// Actions
 	QAction* addTorrentAction = new QAction(tr("&Add torrent"), this);
 	QAction* exitAction = new QAction(tr("&Exit"), this);
 	QAction* hideClientAction = new QAction(tr("Hide qTorrent"), this);
 	m_viewTorrentsFilterPanel = new QAction(tr("Torrents filter panel"), this);
 	m_viewTorrentInfoPanel = new QAction(tr("Torrents info panel"), this);
+	QAction* aboutAction = new QAction(tr("&About"), this);
 
-	m_viewTorrentsFilterPanel->setCheckable(true);
-	m_viewTorrentInfoPanel->setCheckable(true);
-
+	// Connect actions
 	connect(addTorrentAction, &QAction::triggered, this, &MainWindow::addTorrentAction);
 	connect(exitAction, &QAction::triggered, this, &MainWindow::exitAction);
 	connect(hideClientAction, &QAction::triggered, this, &MainWindow::hide);
 	connect(m_viewTorrentsFilterPanel, &QAction::triggered, this, &MainWindow::toggleHideShowTorrentsFilterPanel);
 	connect(m_viewTorrentInfoPanel, &QAction::triggered, this, &MainWindow::toggleHideShowTorrentInfoPanel);
+	connect(aboutAction, &QAction::triggered, this, &MainWindow::aboutAction);
 
+	// Add actions to menus
 	fileMenu->addAction(addTorrentAction);
 	fileMenu->addAction(exitAction);
 
@@ -133,6 +138,12 @@ void MainWindow::createMenus() {
 	viewMenu->addSeparator();
 	viewMenu->addAction(m_viewTorrentsFilterPanel);
 	viewMenu->addAction(m_viewTorrentInfoPanel);
+
+	helpMenu->addAction(aboutAction);
+
+
+	m_viewTorrentsFilterPanel->setCheckable(true);
+	m_viewTorrentInfoPanel->setCheckable(true);
 
 	connect(m_infoPanel, SIGNAL(visibilityChanged(bool)), m_viewTorrentInfoPanel, SLOT(setChecked(bool)));
 	connect(m_panel, SIGNAL(visibilityChanged(bool)), m_viewTorrentsFilterPanel, SLOT(setChecked(bool)));
@@ -192,6 +203,14 @@ void MainWindow::toggleHideShow() {
 	} else {
 		hide();
 	}
+}
+
+void MainWindow::aboutAction() {
+	QMessageBox::about(this, tr("About qTorrent"),
+					   tr("<p><b>qTorrent</b> is a simple BitTorrent client, written from "
+						  "scratch in C++ with Qt5. qTorrent aims to be a good, lightweight "
+						  "alternative to all the other BitTorrent clients.</p>"
+						  "<p>It is licensed under the GNU General Public License v3.0</p>"));
 }
 
 void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
