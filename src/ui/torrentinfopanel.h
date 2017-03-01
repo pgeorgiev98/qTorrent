@@ -20,11 +20,11 @@
 #ifndef TORRENTSTATUSBAR_H
 #define TORRENTSTATUSBAR_H
 
-#include <QToolBar>
+#include <QTabWidget>
 
 class QLabel;
 
-class TorrentInfoPanel : public QToolBar {
+class TorrentInfoPanel : public QTabWidget {
 	Q_OBJECT
 
 public:

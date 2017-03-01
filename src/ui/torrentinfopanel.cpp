@@ -28,10 +28,9 @@
 #include <QVBoxLayout>
 
 TorrentInfoPanel::TorrentInfoPanel(QWidget *parent)
-	: QToolBar("Info Panel", parent)
+	: QTabWidget(parent)
 {
-	setFloatable(false);
-	QTabWidget* tabWidget = new QTabWidget;
+	setFixedHeight(200);
 
 	QWidget* infoTab = new QWidget;
 	QVBoxLayout* infoLayout = new QVBoxLayout;
@@ -43,9 +42,8 @@ TorrentInfoPanel::TorrentInfoPanel(QWidget *parent)
 	infoLayout->addWidget(m_createdBy = new QLabel);
 	infoLayout->addWidget(m_comment = new QLabel);
 	infoTab->setLayout(infoLayout);
-	tabWidget->addTab(infoTab, "Info");
 
-	addWidget(tabWidget);
+	addTab(infoTab, "Info");
 }
 
 void TorrentInfoPanel::refreshInfoTab() {

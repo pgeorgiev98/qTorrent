@@ -32,6 +32,7 @@
 #include <QStandardPaths>
 #include <QCloseEvent>
 #include <QApplication>
+#include <QVBoxLayout>
 
 const int UI_REFRESH_INTERVAL = 300;
 
@@ -46,9 +47,14 @@ MainWindow::MainWindow()
 	resize(width, height);
 
 	addToolBar(Qt::LeftToolBarArea, m_panel);
-	addToolBar(Qt::BottomToolBarArea, m_infoPanel);
+
 	QStackedWidget* stackedWidget = new QStackedWidget;
-	stackedWidget->addWidget(m_torrentsList);
+	QWidget* torrentsListWidget = new QWidget;
+	QVBoxLayout* torrentsListLayout = new QVBoxLayout;
+	torrentsListLayout->addWidget(m_torrentsList);
+	torrentsListLayout->addWidget(m_infoPanel);
+	torrentsListWidget->setLayout(torrentsListLayout);
+	stackedWidget->addWidget(torrentsListWidget);
 	setCentralWidget(stackedWidget);
 
 	connect(m_panel, SIGNAL(showAll()), m_torrentsList, SLOT(showAll()));
@@ -148,6 +154,8 @@ void MainWindow::createMenus() {
 	// Configure actions
 	m_viewTorrentsFilterPanel->setCheckable(true);
 	m_viewTorrentInfoPanel->setCheckable(true);
+	m_viewTorrentsFilterPanel->setChecked(true);
+	m_viewTorrentInfoPanel->setChecked(true);
 	connect(m_infoPanel, SIGNAL(visibilityChanged(bool)), m_viewTorrentInfoPanel, SLOT(setChecked(bool)));
 	connect(m_panel, SIGNAL(visibilityChanged(bool)), m_viewTorrentsFilterPanel, SLOT(setChecked(bool)));
 }
