@@ -130,6 +130,10 @@ void MainWindow::createMenus() {
 	connect(m_viewTorrentInfoPanel, &QAction::triggered, this, &MainWindow::toggleHideShowTorrentInfoPanel);
 	connect(aboutAction, &QAction::triggered, this, &MainWindow::aboutAction);
 
+	// Action shortcuts
+	addTorrentAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+	exitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+
 	// Add actions to menus
 	fileMenu->addAction(addTorrentAction);
 	fileMenu->addAction(exitAction);
@@ -141,10 +145,9 @@ void MainWindow::createMenus() {
 
 	helpMenu->addAction(aboutAction);
 
-
+	// Configure actions
 	m_viewTorrentsFilterPanel->setCheckable(true);
 	m_viewTorrentInfoPanel->setCheckable(true);
-
 	connect(m_infoPanel, SIGNAL(visibilityChanged(bool)), m_viewTorrentInfoPanel, SLOT(setChecked(bool)));
 	connect(m_panel, SIGNAL(visibilityChanged(bool)), m_viewTorrentsFilterPanel, SLOT(setChecked(bool)));
 }
