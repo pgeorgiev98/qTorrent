@@ -50,9 +50,11 @@ public:
 
 	/* Getters */
 	const QList<Torrent*>& torrents() const;
+	const QString& errorString() const;
 
 private:
 	QList<Torrent*> m_torrents;
+	QString m_errorString;
 };
 
 #endif // TORRENTMANAGER_H

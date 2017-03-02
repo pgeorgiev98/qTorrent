@@ -58,15 +58,22 @@ bool QTorrent::startServer() {
 }
 
 bool QTorrent::resumeTorrents() {
-	return m_torrentManager->resumeTorrents();
+	if(m_torrentManager->resumeTorrents()) {
+		return true;
+	}
+	critical("Failed to resume torrents: " + m_torrentManager->errorString());
+	return false;
 }
 
 bool QTorrent::addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings) {
 	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename, settings);
 	if(torrent == nullptr) {
+		warning("Failed to add torrent: " + m_torrentManager->errorString());
 		return false;
 	}
-	m_torrentManager->saveTorrentsResumeInfo();
+	if(!m_torrentManager->saveTorrentsResumeInfo()) {
+		critical("Failed to save torrent resume info: " + m_torrentManager->errorString());
+	}
 	return true;
 }
 
@@ -96,7 +103,9 @@ void QTorrent::shutDown() {
 		TrackerClient* tracker = torrent->trackerClient();
 		tracker->announce(TrackerClient::Stopped);
 	}
-	m_torrentManager->saveTorrentsResumeInfo();
+	if(!m_torrentManager->saveTorrentsResumeInfo()) {
+		critical("Failed to save torrents resume info: " + m_torrentManager->errorString());
+	}
 }
 
 void QTorrent::showMainWindow() {
