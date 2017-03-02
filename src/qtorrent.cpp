@@ -64,7 +64,6 @@ bool QTorrent::resumeTorrents() {
 bool QTorrent::addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings) {
 	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename, settings);
 	if(torrent == nullptr) {
-		delete torrent;
 		return false;
 	}
 	m_torrentManager->saveTorrentsResumeInfo();
@@ -74,7 +73,6 @@ bool QTorrent::addTorrentFromLocalFile(const QString& filename, const TorrentSet
 bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
 	Torrent* torrent = torrentManager()->addTorrentFromMagnetLink(url);
 	if(torrent == nullptr) {
-		delete torrent;
 		return false;
 	}
 	return true;
