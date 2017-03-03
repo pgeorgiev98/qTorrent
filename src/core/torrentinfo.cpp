@@ -55,6 +55,7 @@ TorrentInfo::~TorrentInfo() {
 }
 
 bool TorrentInfo::loadFromTorrentFile(QString filename) {
+	m_creationFileName = filename;
 	BencodeParser bencodeParser;
 
 	/* Read torrent file */
@@ -250,6 +251,10 @@ QByteArray TorrentInfo::infoHashPercentEncoded() const {
 		encoded += QByteArray::number(b, 16).right(2).rightJustified(2, '0');
 	}
 	return encoded;
+}
+
+const QString& TorrentInfo::creationFileName() const {
+	return m_creationFileName;
 }
 
 int TorrentInfo::numberOfPieces() const {

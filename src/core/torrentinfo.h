@@ -50,6 +50,8 @@ class TorrentInfo {
 
 	QByteArray m_infoHash;
 
+	QString m_creationFileName;
+
 	int m_numberOfPieces;
 public:
 	QString errorString() const;
@@ -72,6 +74,8 @@ public:
 
 	const QByteArray& infoHash() const;
 	QByteArray infoHashPercentEncoded() const;
+
+	const QString& creationFileName() const;
 
 	int numberOfPieces() const;
 	int bitfieldSize() const;
