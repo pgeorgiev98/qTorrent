@@ -28,6 +28,7 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QFileDialog>
+#include <QGroupBox>
 #include <QDir>
 #include <QStandardPaths>
 #include <QMessageBox>
@@ -39,20 +40,26 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 {
 	QVBoxLayout* layout = new QVBoxLayout;
 
-	layout->addWidget(new QLabel("File Path:"));
+	QGroupBox* filePathBox = new QGroupBox("File path");
 	QHBoxLayout* filePathLayout = new QHBoxLayout;
-	filePathLayout->addWidget(m_filePath = new QLineEdit);
+	filePathLayout->addWidget(m_filePath = new QLabel);
 	filePathLayout->addWidget(m_browseFilePath= new QPushButton("Browse"));
-	layout->addLayout(filePathLayout);
+	filePathBox->setLayout(filePathLayout);
+	layout->addWidget(filePathBox);
 
-	layout->addWidget(new QLabel("Download Location:"));
+	QGroupBox* downloadLocationBox = new QGroupBox("Download location");
 	QHBoxLayout* downloadLocationLayout = new QHBoxLayout;
 	downloadLocationLayout->addWidget(m_downloadLocation = new QLineEdit);
 	downloadLocationLayout->addWidget(m_browseDownloadLocation= new QPushButton("Browse"));
-	layout->addLayout(downloadLocationLayout);
+	downloadLocationBox->setLayout(downloadLocationLayout);
+	layout->addWidget(downloadLocationBox);
 
-	layout->addWidget(m_startImmediately = new QCheckBox("Start Immediately"));
+	QGroupBox* settingsBox = new QGroupBox("Torrent settings");
+	QGridLayout* settingsLayout = new QGridLayout;
+	settingsLayout->addWidget(m_startImmediately = new QCheckBox("Start Immediately"));
 	m_startImmediately->setChecked(true);
+	settingsBox->setLayout(settingsLayout);
+	layout->addWidget(settingsBox);
 
 	QHBoxLayout* bottomLayout = new QHBoxLayout;
 	bottomLayout->addWidget(m_ok = new QPushButton("Ok"));
@@ -67,6 +74,8 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 
 	// Default download location
 	m_downloadLocation->setText(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
+
+	m_browseFilePath->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
 	// ok must be disabled
 	m_ok->setEnabled(false);

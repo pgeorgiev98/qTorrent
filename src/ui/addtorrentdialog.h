@@ -26,6 +26,7 @@
 class QLineEdit;
 class QPushButton;
 class QCheckBox;
+class QLabel;
 class TorrentInfo;
 
 class AddTorrentDialog : public QDialog
@@ -44,7 +45,7 @@ public slots:
 	void cancel();
 
 private:
-	QLineEdit* m_filePath;
+	QLabel* m_filePath;
 	QPushButton* m_browseFilePath;
 	QLineEdit* m_downloadLocation;
 	QPushButton* m_browseDownloadLocation;
