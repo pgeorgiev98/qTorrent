@@ -34,6 +34,7 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QGuiApplication>
+#include <QScreen>
 
 AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 	: QDialog(parent)
@@ -81,7 +82,8 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 
 	setLayout(layout);
 
-	setFixedWidth(parent->width()/3);
+	int screenWidth = QGuiApplication::primaryScreen()->size().width();
+	setFixedWidth(screenWidth / 3);
 
 	connectAll();
 
