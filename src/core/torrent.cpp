@@ -38,7 +38,6 @@ Torrent::Torrent()
 	, m_downloadedPieces(0)
 	, m_isDownloaded(false)
 	, m_isPaused(true)
-	, m_hasAnnouncedStarted(false)
 {
 }
 
@@ -244,7 +243,7 @@ ResumeInfo Torrent::getResumeInfo() const {
 }
 
 void Torrent::start() {
-	if(!m_hasAnnouncedStarted) {
+	if(!m_trackerClient->hasAnnouncedStarted()) {
 		// Send the first announce to the tracker
 		m_trackerClient->announce(TrackerClient::Started);
 	} else if(m_trackerClient->numberOfAnnounces() == 0) {
@@ -424,7 +423,6 @@ void Torrent::setPieceAvailable(Piece *piece) {
 
 void Torrent::successfullyAnnounced(TrackerClient::Event event) {
 	if(event == TrackerClient::Started) {
-		m_hasAnnouncedStarted = true;
 		m_bytesDownloadedOnStartup = m_totalBytesDownloaded;
 		m_bytesUploadedOnStartup = m_totalBytesUploaded;
 	}
@@ -455,14 +453,14 @@ QList<QFile*>& Torrent::files() {
 
 
 qint64 Torrent::bytesDownloaded() const {
-	if(!m_hasAnnouncedStarted) {
+	if(!m_trackerClient->hasAnnouncedStarted()) {
 		return 0;
 	}
 	return m_totalBytesDownloaded - m_bytesDownloadedOnStartup;
 }
 
 qint64 Torrent::bytesUploaded() const {
-	if(!m_hasAnnouncedStarted) {
+	if(!m_trackerClient->hasAnnouncedStarted()) {
 		return 0;
 	}
 	return m_totalBytesUploaded - m_bytesUploadedOnStartup;
@@ -501,10 +499,6 @@ bool Torrent::isDownloaded() {
 
 bool Torrent::isPaused() const {
 	return m_isPaused;
-}
-
-bool Torrent::hasAnnouncedStarted() const {
-	return m_hasAnnouncedStarted;
 }
 
 int Torrent::connectedPeersCount() const {

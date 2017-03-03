@@ -107,7 +107,6 @@ public:
 	int downloadedPieces();
 	bool isDownloaded();
 	bool isPaused() const;
-	bool hasAnnouncedStarted() const;
 	int connectedPeersCount() const;
 	int allPeersCount() const;
 
@@ -163,9 +162,6 @@ private:
 
 	/* Is the downloading/uploading paused? */
 	bool m_isPaused;
-
-	/* Have we sent a 'Started' announce to the tracker */
-	bool m_hasAnnouncedStarted;
 
 	/* The torrent's download location */
 	QString m_downloadLocation;

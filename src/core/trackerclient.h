@@ -52,6 +52,8 @@ public:
 	/* Returns the number of successfull announces */
 	int numberOfAnnounces() const;
 
+	bool hasAnnouncedStarted() const;
+
 public slots:
 	/* For QNetworkAccessManager */
 	void httpFinished();
@@ -76,6 +78,9 @@ private:
 	// Set the current announce url to the next one
 	// Returns false when it reaches the end
 	bool nextAnnounceUrl();
+
+	// Have we sent a 'Started' announce to the tracker
+	bool m_hasAnnouncedStarted;
 
 	// Returns the current announce url
 	const QByteArray& currentAnnounceUrl() const;

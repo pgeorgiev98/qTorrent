@@ -35,6 +35,7 @@ TrackerClient::TrackerClient(Torrent* torrent)
 	, m_reply(nullptr)
 	, m_reannounceInterval(-1)
 	, m_currentAnnounceListIndex(0)
+	, m_hasAnnouncedStarted(false)
 	, m_numberOfAnnounces(0)
 	, m_lastEvent(None)
 {
@@ -239,9 +240,16 @@ void TrackerClient::announceFailed() {
 void TrackerClient::announceSucceeded() {
 	resetCurrentAnnounceUrl();
 	m_numberOfAnnounces++;
+	if(m_lastEvent == Started) {
+		m_hasAnnouncedStarted = true;
+	}
 	m_torrent->successfullyAnnounced(m_lastEvent);
 }
 
 int TrackerClient::numberOfAnnounces() const {
 	return m_numberOfAnnounces;
+}
+
+bool TrackerClient::hasAnnouncedStarted() const {
+	return m_hasAnnouncedStarted;
 }
