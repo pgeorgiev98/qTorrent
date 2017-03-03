@@ -35,20 +35,19 @@ class AddTorrentDialog : public QDialog
 
 public:
 	AddTorrentDialog(QWidget *parent);
+	~AddTorrentDialog();
 
 	bool setTorrentUrl(QUrl url);
+	bool browseFilePath();
 
 	void updateInfo();
 
 public slots:
-	void browseFilePath();
 	void browseDownloadLocation();
 	void ok();
 	void cancel();
 
 private:
-	QLabel* m_filePath;
-	QPushButton* m_browseFilePath;
 	QLineEdit* m_downloadLocation;
 	QPushButton* m_browseDownloadLocation;
 	QCheckBox* m_startImmediately;

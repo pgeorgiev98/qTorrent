@@ -172,7 +172,9 @@ QString MainWindow::getDownloadLocation() {
 
 void MainWindow::addTorrentAction() {
 	AddTorrentDialog dialog(this);
-	dialog.exec();
+	if(dialog.browseFilePath()) {
+		dialog.exec();
+	}
 }
 
 void MainWindow::exitAction() {
