@@ -9,6 +9,7 @@ TEMPLATE = app
 CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 
 SOURCES += main.cpp \
+    global.cpp \
     qtorrent.cpp \
     core/bencodeparser.cpp \
     core/bencodevalue.cpp \
@@ -34,6 +35,7 @@ SOURCES += main.cpp \
 
 HEADERS += \
     qtorrent.h \
+    global.h \
     core/bencodeparser.h \
     core/bencodevalue.h \
     core/torrentinfo.h \
