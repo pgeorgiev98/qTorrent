@@ -35,7 +35,7 @@ class AddTorrentDialog : public QDialog
 public:
 	AddTorrentDialog(QWidget *parent);
 
-	void setTorrentUrl(QUrl url);
+	bool setTorrentUrl(QUrl url);
 
 public slots:
 	void browseFilePath();

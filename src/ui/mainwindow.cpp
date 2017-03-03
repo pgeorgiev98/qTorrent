@@ -183,8 +183,9 @@ void MainWindow::exitAction() {
 
 void MainWindow::addTorrentFromUrl(QUrl url) {
 	AddTorrentDialog dialog(this);
-	dialog.setTorrentUrl(url);
-	dialog.exec();
+	if(dialog.setTorrentUrl(url)) {
+		dialog.exec();
+	}
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

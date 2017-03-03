@@ -67,6 +67,9 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 
 	// Default download location
 	m_downloadLocation->setText(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
+
+	// ok must be disabled
+	m_ok->setEnabled(false);
 }
 
 void AddTorrentDialog::connectAll() {
@@ -76,10 +79,24 @@ void AddTorrentDialog::connectAll() {
 	connect(m_cancel, SIGNAL(clicked()), this, SLOT(cancel()));
 }
 
-void AddTorrentDialog::setTorrentUrl(QUrl url) {
+bool AddTorrentDialog::setTorrentUrl(QUrl url) {
 	if(url.isLocalFile()) {
-		m_filePath->setText(url.path());
+		QString filePath = url.path();
+
+		// If TorrentInfo is loaded - delete it
+		if(m_torrentInfo) {
+			delete m_torrentInfo;
+			m_torrentInfo = nullptr;
+		}
+
+		// Load the torrent
+		if(loadTorrent(filePath)) {
+			m_filePath->setText(filePath);
+			m_ok->setEnabled(true);
+			return true;
+		}
 	}
+	return false;
 }
 
 void AddTorrentDialog::browseFilePath() {
@@ -96,11 +113,13 @@ void AddTorrentDialog::browseFilePath() {
 														QDir::homePath(), tr("Torrent Files (*.torrent)"));
 		// Stop if the user clicked 'cancel'
 		if(filePath.isEmpty()) {
+			m_ok->setEnabled(false);
 			break;
 		}
 
 		// Load the torrent
 		if(loadTorrent(filePath)) {
+			m_ok->setEnabled(true);
 			break;
 		}
 	}
