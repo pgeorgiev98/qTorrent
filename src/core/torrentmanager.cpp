@@ -91,18 +91,20 @@ bool TorrentManager::resumeTorrents() {
 	QDir dir(dataPath);
 	if(!dir.exists()) {
 		if(!dir.mkpath(dataPath)) {
+			m_errorString = "Failed to create data path " + dataPath;
 			return false;
 		}
 	}
 	if(!dir.exists("resume")) {
 		if(!dir.mkdir("resume")) {
+			m_errorString = "Failed to create resume directory";
 			return false;
 		}
 	}
 	dir.cd("resume");
 	QFile resumeFile(dir.path() + "/resume.dat");
 	if(!resumeFile.exists()) {
-		return false;
+		return true;
 	}
 	if(!resumeFile.open(QIODevice::ReadOnly)) {
 		m_errorString = "Failed to open resume file: " + resumeFile.errorString();
