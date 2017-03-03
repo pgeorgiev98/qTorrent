@@ -23,6 +23,7 @@
 #include "panel.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include "global.h"
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -94,35 +95,12 @@ Torrent* TorrentsListItem::torrent() const {
 }
 
 
-QString TorrentsListItem::toPrettySize(qint64 bytes) {
-	int i;
-	qint64 nw = bytes, mul = 1;
-	for(i = 0; nw >= 1024 && i < 7; i++, mul *= 1024, nw /= 1024);
-	double nbytes = (double)bytes/mul;
-
-
-	QString str = QString::number(nbytes, 'f', 2);
-	str += ' ';
-
-	switch(i) {
-	case 0: return str + "B";
-	case 1: return str + "KiB";
-	case 2: return str + "MiB";
-	case 3: return str + "GiB";
-	case 4: return str + "TiB";
-	case 5: return str + "PiB";
-	case 6: return str + "EiB";
-	default: return str + "ZiB";
-	}
-}
-
-
 void TorrentsListItem::setName(const QString &value) {
 	setText(Name, value);
 }
 
 void TorrentsListItem::setSize(qint64 value) {
-	setText(Size, toPrettySize(value));
+	setText(Size, formatSize(value));
 	setSortData(Size, value);
 }
 
@@ -142,22 +120,22 @@ void TorrentsListItem::setProgress(float value) {
 }
 
 void TorrentsListItem::setAvailable(qint64 value) {
-	setText(Available, toPrettySize(value));
+	setText(Available, formatSize(value));
 	setSortData(Available, value);
 }
 
 void TorrentsListItem::setLeft(qint64 value) {
-	setText(Left, toPrettySize(value));
+	setText(Left, formatSize(value));
 	setSortData(Left, value);
 }
 
 void TorrentsListItem::setTotalDownloaded(qint64 value) {
-	setText(TotalDownloaded, toPrettySize(value));
+	setText(TotalDownloaded, formatSize(value));
 	setSortData(TotalDownloaded, value);
 }
 
 void TorrentsListItem::setTotalUploaded(qint64 value) {
-	setText(TotalUploaded, toPrettySize(value));
+	setText(TotalUploaded, formatSize(value));
 	setSortData(TotalUploaded, value);
 }
 
@@ -167,12 +145,12 @@ void TorrentsListItem::setRatio(float value) {
 }
 
 void TorrentsListItem::setDownloaded(qint64 value) {
-	setText(Downloaded, toPrettySize(value));
+	setText(Downloaded, formatSize(value));
 	setSortData(Downloaded, value);
 }
 
 void TorrentsListItem::setUploaded(qint64 value) {
-	setText(Uploaded, toPrettySize(value));
+	setText(Uploaded, formatSize(value));
 	setSortData(Uploaded, value);
 }
 

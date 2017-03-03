@@ -66,7 +66,6 @@ public slots:
 private:
 	Torrent* m_torrent;
 	QMap<int, QVariant> m_sortData;
-	static QString toPrettySize(qint64 bytes);
 };
 
 #endif // TORRENTSLISTITEM_H
