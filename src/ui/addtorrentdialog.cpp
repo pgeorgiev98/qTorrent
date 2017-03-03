@@ -76,8 +76,10 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 	layout->addWidget(infoBox);
 
 	QHBoxLayout* bottomLayout = new QHBoxLayout;
-	bottomLayout->addWidget(m_ok = new QPushButton("Ok"));
-	bottomLayout->addWidget(m_cancel = new QPushButton("Cancel"));
+	bottomLayout->addWidget(m_ok = new QPushButton("Ok"), 0, Qt::AlignRight);
+	bottomLayout->addWidget(m_cancel = new QPushButton("Cancel"), Qt::AlignRight);
+	m_ok->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+	m_cancel->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 	layout->addLayout(bottomLayout);
 
 	setLayout(layout);
