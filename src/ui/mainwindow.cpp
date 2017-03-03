@@ -23,6 +23,8 @@
 #include "panel.h"
 #include "torrentinfopanel.h"
 #include "addtorrentdialog.h"
+#include "core/torrent.h"
+#include "core/torrentinfo.h"
 #include <QGuiApplication>
 #include <QScreen>
 #include <QStackedWidget>
@@ -231,4 +233,10 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
 	if(reason == QSystemTrayIcon::DoubleClick) {
 		show();
 	}
+}
+
+void MainWindow::torrentFullyDownloaded(Torrent *torrent) {
+	m_trayIcon->showMessage(tr("Torrent downloaded successfully"),
+							tr("The torrent %1 was successfully downloaded")
+							.arg(QString::fromUtf8(torrent->torrentInfo()->torrentName())));
 }

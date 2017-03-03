@@ -23,6 +23,8 @@
 #include "piece.h"
 #include "block.h"
 #include "torrentmessage.h"
+#include "qtorrent.h"
+#include "ui/mainwindow.h"
 #include <QDir>
 #include <QFile>
 #include <QUrlQuery>
@@ -595,6 +597,7 @@ void Torrent::uploadedBlock(int bytes) {
 
 void Torrent::fullyDownloaded() {
 	qDebug() << "Torrent fully downloaded!";
+	QTorrent::instance()->mainWindow()->torrentFullyDownloaded(this);
 	m_isDownloaded = true;
 
 	if(m_state == Ready) {

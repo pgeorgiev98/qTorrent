@@ -77,6 +77,8 @@ public slots:
 	void toggleHideShow();
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
+	void torrentFullyDownloaded(Torrent* torrent);
+
 	// Add torrent from url
 	void addTorrentFromUrl(QUrl url);
 };
