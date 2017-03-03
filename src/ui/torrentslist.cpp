@@ -28,6 +28,7 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QMenu>
+#include <QVariant>
 
 TorrentsList::TorrentsList()
 {
@@ -53,6 +54,7 @@ TorrentsList::TorrentsList()
 
 	headerView->setSectionsMovable(true);
 	headerView->setSectionsClickable(true);
+	headerView->setContextMenuPolicy(Qt::CustomContextMenu);
 
 	const int typicalSizeWidth = fm.width(" 987.65 MiB ");
 
@@ -85,6 +87,7 @@ TorrentsList::TorrentsList()
 	}
 
 	connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(openContextMenu(QPoint)));
+	connect(headerView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(openHeaderContextMenu(QPoint)));
 }
 
 TorrentsList::~TorrentsList() {
@@ -139,6 +142,23 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 	connect(removeAct, SIGNAL(triggered()), item, SLOT(onRemoveAction()));
 
 	menu.exec(mapToGlobal(pos));
+}
+
+void TorrentsList::openHeaderContextMenu(const QPoint &pos) {
+	QList<QAction*> actions;
+	QMenu menu(header());
+	for(int i = 0; i < header()->count(); i++) {
+		QString label = header()->model()->headerData(i, Qt::Horizontal).toString();
+		QAction* action = new QAction(label);
+		action->setCheckable(true);
+		action->setChecked(!header()->isSectionHidden(i));
+		menu.addAction(action);
+		actions.append(action);
+	}
+	menu.exec(mapToGlobal(pos));
+	for(int i = 0; i < header()->count(); i++) {
+		header()->setSectionHidden(i, !actions[i]->isChecked());
+	}
 }
 
 void TorrentsList::showAll() {

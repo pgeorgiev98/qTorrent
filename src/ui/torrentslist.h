@@ -44,6 +44,7 @@ public slots:
 	void removeTorrent(Torrent* torrent);
 	void refresh();
 	void openContextMenu(const QPoint& pos);
+	void openHeaderContextMenu(const QPoint& pos);
 	void showAll();
 	void showCompleted();
 	void showDownloading();
