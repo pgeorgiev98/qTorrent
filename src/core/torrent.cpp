@@ -131,9 +131,11 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 		return false;
 	}
 
-	// Set all pieces
+	// Set all aquired pieces
 	for(Piece* piece : m_pieces) {
-		setPieceAvailable(piece);
+		if(resumeInfo->aquiredPieces().at(piece->pieceNumber())) {
+			setPieceAvailable(piece);
+		}
 	}
 
 	m_downloadLocation = resumeInfo->downloadLocation();
