@@ -38,6 +38,8 @@ public:
 
 	bool setTorrentUrl(QUrl url);
 
+	void updateInfo();
+
 public slots:
 	void browseFilePath();
 	void browseDownloadLocation();
@@ -52,6 +54,13 @@ private:
 	QCheckBox* m_startImmediately;
 	QPushButton* m_ok;
 	QPushButton* m_cancel;
+
+	QLabel* m_name;
+	QLabel* m_size;
+	QLabel* m_infoHash;
+	QLabel* m_creationDate;
+	QLabel* m_createdBy;
+	QLabel* m_comment;
 
 	TorrentInfo* m_torrentInfo;
 

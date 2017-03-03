@@ -61,6 +61,25 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 	settingsBox->setLayout(settingsLayout);
 	layout->addWidget(settingsBox);
 
+	QGroupBox* infoBox = new QGroupBox("Torrent info");
+	QGridLayout* infoLayout = new QGridLayout;
+
+	infoLayout->addWidget(new QLabel("Name: "), 0, 0, 1, 1);
+	infoLayout->addWidget(m_name = new QLabel(), 0, 1, 1, 1);
+	infoLayout->addWidget(new QLabel("Size: "), 1, 0, 1, 1);
+	infoLayout->addWidget(m_size = new QLabel(), 1, 1, 1, 1);
+	infoLayout->addWidget(new QLabel("Info Hash: "), 2, 0, 1, 1);
+	infoLayout->addWidget(m_infoHash = new QLabel(), 2, 1, 1, 1);
+	infoLayout->addWidget(new QLabel("Creation date: "), 3, 0, 1, 1);
+	infoLayout->addWidget(m_creationDate = new QLabel(), 3, 1, 1, 1);
+	infoLayout->addWidget(new QLabel("Created by: "), 4, 0 , 1, 1);
+	infoLayout->addWidget(m_createdBy = new QLabel(), 4, 1, 1, 1);
+	infoLayout->addWidget(new QLabel("Comment: "), 5, 0, 1, 1);
+	infoLayout->addWidget(m_comment = new QLabel(), 5, 1, 1, 1);
+
+	infoBox->setLayout(infoLayout);
+	layout->addWidget(infoBox);
+
 	QHBoxLayout* bottomLayout = new QHBoxLayout;
 	bottomLayout->addWidget(m_ok = new QPushButton("Ok"));
 	bottomLayout->addWidget(m_cancel = new QPushButton("Cancel"));
@@ -102,6 +121,7 @@ bool AddTorrentDialog::setTorrentUrl(QUrl url) {
 		if(loadTorrent(filePath)) {
 			m_filePath->setText(filePath);
 			m_ok->setEnabled(true);
+			updateInfo();
 			return true;
 		}
 	}
@@ -133,6 +153,7 @@ void AddTorrentDialog::browseFilePath() {
 		}
 	}
 
+	updateInfo();
 	m_filePath->setText(filePath);
 }
 
@@ -221,4 +242,22 @@ void AddTorrentDialog::cancel() {
 		delete m_torrentInfo;
 	}
 	close();
+}
+
+void AddTorrentDialog::updateInfo() {
+	if(m_torrentInfo) {
+		m_name->setText(m_torrentInfo->torrentName());
+		m_size->setText(QString::number(m_torrentInfo->length()));
+		m_infoHash->setText(m_torrentInfo->infoHash().toHex());
+		m_creationDate->setText(m_torrentInfo->creationDate() ? m_torrentInfo->creationDate()->toString() : "N/A");
+		m_createdBy->setText(m_torrentInfo->createdBy() ? *m_torrentInfo->createdBy() : "N/A");
+		m_comment->setText(m_torrentInfo->comment() ? *m_torrentInfo->comment() : "N/A");
+	} else {
+		m_name->clear();
+		m_size->clear();
+		m_infoHash->clear();
+		m_creationDate->clear();
+		m_createdBy->clear();
+		m_comment->clear();
+	}
 }
