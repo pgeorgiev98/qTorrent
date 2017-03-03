@@ -46,7 +46,11 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString& filename, const 
 		return nullptr;
 	}
 
-	// Check if torrent already added to list
+	return addTorrentFromInfo(torrentInfo, settings);
+}
+
+Torrent* TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings) {
+	// Check if torrent is already added to the list
 	for(Torrent* t : m_torrents) {
 		if(t->torrentInfo()->infoHash() == torrentInfo->infoHash()) {
 			m_errorString = "The torrent you're trying to add is already in the torrents list";
@@ -64,7 +68,7 @@ Torrent* TorrentManager::addTorrentFromLocalFile(const QString& filename, const 
 	}
 
 	// Save the torrent
-	if(!saveTorrentFile(filename, torrentInfo)) {
+	if(!saveTorrentFile(torrentInfo->creationFileName(), torrentInfo)) {
 		m_errorString = "Failed to save the torrent";
 		delete torrent;
 		return nullptr;

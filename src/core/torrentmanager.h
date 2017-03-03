@@ -34,6 +34,7 @@ public:
 	~TorrentManager();
 
 	Torrent* addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings);
+	Torrent* addTorrentFromInfo(TorrentInfo* torrentInfo, const TorrentSettings& settings);
 
 	// Loads all saved for resuming torrents
 	bool resumeTorrents();
