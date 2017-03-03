@@ -265,7 +265,7 @@ bool TorrentManager::removeTorrent(Torrent* torrent, bool deleteData) {
 			}
 		}
 	}
-	torrent->trackerClient()->announce(TrackerClient::Stopped);
+	torrent->stop();
 	QTorrent::instance()->mainWindow()->removeTorrent(torrent);
 	delete torrent;
 	return true;

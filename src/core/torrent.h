@@ -69,6 +69,8 @@ public:
 	void start();
 	// Pause the torrent
 	void pause();
+	// Stop the torrent
+	void stop();
 
 	/* Creates a peer and connects to him */
 	Peer* addPeer(const QByteArray& address, int port);

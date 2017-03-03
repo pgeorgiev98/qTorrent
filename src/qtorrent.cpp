@@ -100,8 +100,7 @@ bool QTorrent::removeTorrent(Torrent* torrent, bool deleteData) {
 
 void QTorrent::shutDown() {
 	for(Torrent* torrent : torrents()) {
-		TrackerClient* tracker = torrent->trackerClient();
-		tracker->announce(TrackerClient::Stopped);
+		torrent->stop();
 	}
 	if(!m_torrentManager->saveTorrentsResumeInfo()) {
 		critical("Failed to save torrents resume info: " + m_torrentManager->errorString());

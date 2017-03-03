@@ -266,6 +266,12 @@ void Torrent::pause() {
 	m_isPaused = true;
 }
 
+void Torrent::stop() {
+	if(m_trackerClient->hasAnnouncedStarted()) {
+		m_trackerClient->announce(TrackerClient::Stopped);
+	}
+}
+
 Peer* Torrent::addPeer(const QByteArray &address, int port) {
 	// Don't add the peer if he's already added
 	for(auto p : m_peers) {
