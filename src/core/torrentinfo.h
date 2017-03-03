@@ -73,7 +73,6 @@ public:
 	const QList<FileInfo>& fileInfos() const;
 
 	const QByteArray& infoHash() const;
-	QByteArray infoHashPercentEncoded() const;
 
 	const QString& creationFileName() const;
 

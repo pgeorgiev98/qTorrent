@@ -244,15 +244,6 @@ const QByteArray& TorrentInfo::infoHash() const {
 	return m_infoHash;
 }
 
-QByteArray TorrentInfo::infoHashPercentEncoded() const {
-	QByteArray encoded;
-	for(char b : m_infoHash) {
-		encoded += '%';
-		encoded += QByteArray::number(b, 16).right(2).rightJustified(2, '0');
-	}
-	return encoded;
-}
-
 const QString& TorrentInfo::creationFileName() const {
 	return m_creationFileName;
 }

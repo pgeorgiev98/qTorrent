@@ -137,15 +137,6 @@ const QByteArray& QTorrent::peerId() const {
 	return m_peerId;
 }
 
-QByteArray QTorrent::peerIdPercentEncoded() const {
-	QByteArray encoded;
-	for(char b : m_peerId) {
-		encoded += '%';
-		encoded += QByteArray::number(b, 16).right(2).rightJustified(2, '0');
-	}
-	return encoded;
-}
-
 
 const QList<Torrent*>& QTorrent::torrents() const {
 	return m_torrentManager->torrents();

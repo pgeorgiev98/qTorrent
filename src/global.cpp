@@ -40,3 +40,12 @@ QString formatSize(qint64 size) {
 	default: return str + "ZiB";
 	}
 }
+
+QByteArray percentEncode(const QByteArray &data) {
+	QByteArray encoded;
+	for(char b : data) {
+		encoded += '%';
+		encoded += QByteArray::number(b, 16).right(2).rightJustified(2, '0');
+	}
+	return encoded;
+}

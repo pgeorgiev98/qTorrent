@@ -23,6 +23,7 @@
 #include "peer.h"
 #include "torrentserver.h"
 #include "trackerclient.h"
+#include "global.h"
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -66,9 +67,9 @@ void TrackerClient::announce(Event event) {
 	QString portString = QString::number(port);
 
 	QUrlQuery query(url);
-	auto hash = m_torrent->torrentInfo()->infoHashPercentEncoded();
+	auto hash = percentEncode(m_torrent->torrentInfo()->infoHash());
 	query.addQueryItem("info_hash", hash);
-	query.addQueryItem("peer_id", QTorrent::instance()->peerIdPercentEncoded());
+	query.addQueryItem("peer_id", percentEncode(QTorrent::instance()->peerId()));
 	query.addQueryItem("port", portString);
 	query.addQueryItem("uploaded", bytesUploadedString);
 	query.addQueryItem("downloaded", bytesDownloadedString);
