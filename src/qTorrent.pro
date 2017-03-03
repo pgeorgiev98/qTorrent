@@ -6,6 +6,8 @@ TARGET = qTorrent
 
 TEMPLATE = app
 
+CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
+
 SOURCES += main.cpp \
     qtorrent.cpp \
     core/bencodeparser.cpp \
