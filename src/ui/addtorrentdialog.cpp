@@ -21,6 +21,7 @@
 #include "qtorrent.h"
 #include "core/torrentinfo.h"
 #include "core/torrentmanager.h"
+#include "global.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
@@ -247,7 +248,9 @@ void AddTorrentDialog::cancel() {
 void AddTorrentDialog::updateInfo() {
 	if(m_torrentInfo) {
 		m_name->setText(m_torrentInfo->torrentName());
-		m_size->setText(QString::number(m_torrentInfo->length()));
+		m_size->setText(tr("%1 (%2 bytes)")
+						.arg(formatSize(m_torrentInfo->length()))
+						.arg(QString::number(m_torrentInfo->length())));
 		m_infoHash->setText(m_torrentInfo->infoHash().toHex());
 		m_creationDate->setText(m_torrentInfo->creationDate() ? m_torrentInfo->creationDate()->toString() : "N/A");
 		m_createdBy->setText(m_torrentInfo->createdBy() ? *m_torrentInfo->createdBy() : "N/A");

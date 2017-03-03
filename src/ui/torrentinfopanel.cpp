@@ -23,6 +23,7 @@
 #include "torrentslist.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include "global.h"
 #include <QTabWidget>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -52,21 +53,25 @@ void TorrentInfoPanel::refreshInfoTab() {
 	Torrent* torrent = QTorrent::instance()->mainWindow()->
 			torrentsList()->currentTorrent();
 	if(!torrent) {
-		m_torrentName->setText("");
-		m_torrentSize->setText("");
-		m_pieceSize->setText("");
-		m_infoHash->setText("");
-		m_creationDate->setText("");
-		m_createdBy->setText("");
-		m_comment->setText("");
+		m_torrentName->clear();
+		m_torrentSize->clear();
+		m_pieceSize->clear();
+		m_infoHash->clear();
+		m_creationDate->clear();
+		m_createdBy->clear();
+		m_comment->clear();
 		return;
 	}
 	TorrentInfo* info = torrent->torrentInfo();
 
 	m_torrentName->setText(tr("Name: %1").arg(
 							   QString::fromUtf8(info->torrentName())));
-	m_torrentSize->setText(tr("Total Size: %1 bytes").arg(info->length()));
-	m_pieceSize->setText(tr("Piece size: %1 bytes").arg(info->pieceLength()));
+	m_torrentSize->setText(tr("Total Size: %1 (%2 bytes)")
+						   .arg(formatSize(info->length()))
+						   .arg(info->length()));
+	m_pieceSize->setText(tr("Piece size: %1 (%2 bytes)")
+						 .arg(formatSize(info->pieceLength()))
+						 .arg(info->pieceLength()));
 	m_infoHash->setText(tr("Info hash: %1").arg(
 							QString::fromUtf8(info->infoHash().toHex())));
 	m_creationDate->setText(tr("Creation date: %1")
