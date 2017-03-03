@@ -19,6 +19,8 @@
 
 #include "addtorrentdialog.h"
 #include "qtorrent.h"
+#include "core/torrentinfo.h"
+#include "core/torrentmanager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
@@ -33,6 +35,7 @@
 
 AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 	: QDialog(parent)
+	, m_torrentInfo(nullptr)
 {
 	QVBoxLayout* layout = new QVBoxLayout;
 
@@ -80,11 +83,26 @@ void AddTorrentDialog::setTorrentUrl(QUrl url) {
 }
 
 void AddTorrentDialog::browseFilePath() {
-	// Open a dialog box that accepts only torrent files
-	QString filePath = QFileDialog::getOpenFileName(this, tr("Open torrent"),
-													QDir::homePath(), tr("Torrent Files (*.torrent)"));
-	if(filePath.isEmpty()) {
-		return;
+	QString filePath;
+	for(;;) {
+		// If TorrentInfo is loaded - delete it
+		if(m_torrentInfo) {
+			delete m_torrentInfo;
+			m_torrentInfo = nullptr;
+		}
+
+		// Open a dialog box that accepts only torrent files
+		filePath = QFileDialog::getOpenFileName(this, tr("Open torrent"),
+														QDir::homePath(), tr("Torrent Files (*.torrent)"));
+		// Stop if the user clicked 'cancel'
+		if(filePath.isEmpty()) {
+			break;
+		}
+
+		// Load the torrent
+		if(loadTorrent(filePath)) {
+			break;
+		}
 	}
 
 	m_filePath->setText(filePath);
@@ -103,19 +121,52 @@ void AddTorrentDialog::browseDownloadLocation() {
 	m_downloadLocation->setText(downloadLocation);
 }
 
+bool AddTorrentDialog::loadTorrent(const QString &filePath) {
+	if(!filePath.endsWith(".torrent", Qt::CaseInsensitive)) {
+		// Accept only files with a '.torrent' extention
+		QMessageBox::warning(this, tr("Add torrent"),
+							 tr("Please select a valid torrent file"));
+		return false;
+	}
+
+	// Check if file exists
+	if(!QFile::exists(filePath)) {
+		QMessageBox::warning(this, tr("Add torrent"),
+							 tr("File '%1' not found")
+							 .arg(filePath));
+		return false;
+	}
+
+	// Delete existing TorrentInfo object
+	if(m_torrentInfo) {
+		delete m_torrentInfo;
+	}
+
+	// Load torrent file
+	m_torrentInfo = new TorrentInfo;
+	if(!m_torrentInfo->loadFromTorrentFile(filePath)) {
+		// Failed to load torrent
+		QMessageBox::warning(this, tr("Add torrent"),
+							 tr("Failed to add torrent file\n\nReason: %1")
+							 .arg(m_torrentInfo->errorString()));
+		return false;
+	}
+	return true;
+}
+
 void AddTorrentDialog::ok() {
-	QString filePath = m_filePath->text();
-	QFile file(filePath);
-	if(!file.exists() || !filePath.endsWith(".torrent", Qt::CaseInsensitive)) {
-		QMessageBox::warning(this, QGuiApplication::applicationDisplayName(),
-							 "Please select a valid torrent file");
+	// If torrent is not loaded
+	if(!m_torrentInfo) {
+		QMessageBox::warning(this, tr("Add torrent"),
+							 tr("No torrent file chosen. Please choose a torrent file."));
 		return;
 	}
+
 	QString downloadLocation = m_downloadLocation->text();
 	QDir dir(downloadLocation);
 	if(!dir.exists()) {
-		QMessageBox::warning(this, QGuiApplication::applicationDisplayName(),
-							 "Please select a valid directory");
+		QMessageBox::warning(this, tr("Add torrent"),
+							 tr("Please select a valid directory"));
 		return;
 	}
 
@@ -123,10 +174,23 @@ void AddTorrentDialog::ok() {
 	settings.setDownloadLocation(downloadLocation);
 	settings.setStartImmediately(m_startImmediately->isChecked());
 
-	QTorrent::instance()->addTorrentFromLocalFile(filePath, settings);
+	TorrentManager* manager = QTorrent::instance()->torrentManager();
+	Torrent* torrent = manager->addTorrentFromInfo(m_torrentInfo, settings);
+	if(torrent == nullptr) {
+		QMessageBox::warning(this, tr("Add torrent"),
+							 tr("Failed to add torrent: %1").arg(manager->errorString()));
+		return;
+	}
+	if(!manager->saveTorrentsResumeInfo()) {
+		QMessageBox::critical(this, tr("Add torrent"),
+							  tr("Failed to save torrents resume info: %1").arg(manager->errorString()));
+	}
 	close();
 }
 
 void AddTorrentDialog::cancel() {
+	if(m_torrentInfo) {
+		delete m_torrentInfo;
+	}
 	close();
 }

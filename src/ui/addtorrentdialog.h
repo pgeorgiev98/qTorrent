@@ -26,6 +26,7 @@
 class QLineEdit;
 class QPushButton;
 class QCheckBox;
+class TorrentInfo;
 
 class AddTorrentDialog : public QDialog
 {
@@ -51,8 +52,10 @@ private:
 	QPushButton* m_ok;
 	QPushButton* m_cancel;
 
-	void connectAll();
+	TorrentInfo* m_torrentInfo;
 
+	void connectAll();
+	bool loadTorrent(const QString& filePath);
 };
 
 #endif // ADDTORRENTDIALOG_H
