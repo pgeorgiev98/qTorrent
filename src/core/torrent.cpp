@@ -596,8 +596,9 @@ void Torrent::uploadedBlock(int bytes) {
 }
 
 void Torrent::fullyDownloaded() {
-	qDebug() << "Torrent fully downloaded!";
-	QTorrent::instance()->mainWindow()->torrentFullyDownloaded(this);
+	if(m_state == Ready) {
+		QTorrent::instance()->mainWindow()->torrentFullyDownloaded(this);
+	}
 	m_isDownloaded = true;
 
 	if(m_state == Ready) {
