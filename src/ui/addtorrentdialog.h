@@ -38,7 +38,7 @@ public:
 	~AddTorrentDialog();
 
 	bool setTorrentUrl(QUrl url);
-	bool browseFilePath();
+	bool browseFilePath(QWidget* parent);
 
 	void updateInfo();
 

@@ -124,7 +124,7 @@ bool AddTorrentDialog::setTorrentUrl(QUrl url) {
 	return false;
 }
 
-bool AddTorrentDialog::browseFilePath() {
+bool AddTorrentDialog::browseFilePath(QWidget *parent) {
 	QString filePath;
 	for(;;) {
 		// If TorrentInfo is loaded - delete it
@@ -134,7 +134,7 @@ bool AddTorrentDialog::browseFilePath() {
 		}
 
 		// Open a dialog box that accepts only torrent files
-		filePath = QFileDialog::getOpenFileName(this, tr("Open torrent"),
+		filePath = QFileDialog::getOpenFileName(parent, tr("Open torrent"),
 														QDir::homePath(), tr("Torrent Files (*.torrent)"));
 		// Stop if the user clicked 'cancel'
 		if(filePath.isEmpty()) {
