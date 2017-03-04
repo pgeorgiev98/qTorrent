@@ -91,7 +91,7 @@ QVector<bool> ResumeInfo::toBitArray(const QByteArray& data) {
 		}
 	}
 	int trailingBits = 8 - (m_torrentInfo->numberOfPieces() % 8);
-	if(trailingBits) {
+	if(trailingBits > 0 && trailingBits < 8) {
 		ret.remove(ret.size() - trailingBits, trailingBits);
 	}
 	return ret;
