@@ -162,6 +162,10 @@ void TorrentsListItem::onStartAction() {
 	m_torrent->start();
 }
 
+void TorrentsListItem::onStopAction() {
+	m_torrent->stop();
+}
+
 void TorrentsListItem::onRecheckAction() {
 	m_torrent->check();
 }

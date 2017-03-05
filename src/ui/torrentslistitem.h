@@ -61,6 +61,7 @@ public:
 public slots:
 	void onPauseAction();
 	void onStartAction();
+	void onStopAction();
 	void onRecheckAction();
 	void onRemoveAction();
 
