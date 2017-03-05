@@ -47,6 +47,7 @@ MainWindow::MainWindow()
 	int width = QGuiApplication::primaryScreen()->size().width()*3/4;
 	int height = QGuiApplication::primaryScreen()->size().height()*3/4;
 	resize(width, height);
+	setWindowIcon(QIcon(":/qtorrent.ico"));
 
 	addToolBar(Qt::LeftToolBarArea, m_panel);
 
@@ -84,6 +85,7 @@ MainWindow::MainWindow()
 	m_trayIconMenu->addAction(exitAction);
 
 	m_trayIcon = new QSystemTrayIcon(this);
+	m_trayIcon->setIcon(QIcon(":/qtorrent.ico"));
 	m_trayIcon->setContextMenu(m_trayIconMenu);
 
 	m_trayIcon->show();

@@ -63,5 +63,8 @@ HEADERS += \
 RESOURCES += \
     resources.qrc
 
+win32:RC_ICONS = ../res/icons/qtorrent.ico
+macx:ICON = ../res/icons/qtorrent.icns
+
 # UNIX-specific configuration
 unix:!macx: include(../unixconf.pri)
