@@ -129,8 +129,16 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 	QAction* recheckAct = new QAction(tr("&Recheck"), this);
 	QAction* removeAct = new QAction(tr("&Remove"), this);
 
-	if(item->torrent()->isPaused()) {
+	Torrent* torrent = item->torrent();
+	if(torrent->isPaused()) {
 		pauseAct->setEnabled(false);
+	}
+	if(!torrent->isPaused() && torrent->state() == Torrent::Started) {
+		startAct->setEnabled(false);
+	}
+	if(torrent->state() == Torrent::Stopped) {
+		pauseAct->setEnabled(false);
+		stopAct->setEnabled(false);
 	}
 
 	QMenu menu(this);
