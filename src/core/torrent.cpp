@@ -24,6 +24,7 @@
 #include "block.h"
 #include "torrentmessage.h"
 #include "qtorrent.h"
+#include "filecontroller.h"
 #include "ui/mainwindow.h"
 #include <QDir>
 #include <QFile>
@@ -33,6 +34,7 @@ Torrent::Torrent()
 	: m_state(New)
 	, m_torrentInfo(nullptr)
 	, m_trackerClient(nullptr)
+	, m_fileController(nullptr)
 	, m_bytesDownloadedOnStartup(0)
 	, m_bytesUploadedOnStartup(0)
 	, m_totalBytesDownloaded(0)
@@ -94,6 +96,11 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	// Create the tracker client
 	m_trackerClient = new TrackerClient(this);
 
+	// Create the file controller
+	m_fileController = new FileController(this);
+	connect(this, &Torrent::checkSignal, m_fileController, &FileController::checkTorrent);
+	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::checked);
+
 	m_state = Ready;
 
 	return true;
@@ -126,6 +133,11 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 
 	// Create the tracker client
 	m_trackerClient = new TrackerClient(this);
+
+	// Create the file controller
+	m_fileController = new FileController(this);
+	connect(this, &Torrent::checkSignal, m_fileController, &FileController::checkTorrent);
+	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::checked);
 
 	if(m_pieces.size() != resumeInfo->aquiredPieces().size()) {
 		setError("The number of pieces in the TorrentInfo does not match the one in the ResumeInfo");
@@ -272,6 +284,15 @@ void Torrent::stop() {
 	if(m_trackerClient->hasAnnouncedStarted()) {
 		m_trackerClient->announce(TrackerClient::Stopped);
 	}
+}
+
+void Torrent::check() {
+	if(m_state != Ready && !m_paused) {
+		// TODO
+		return;
+	}
+	m_state = Checking;
+	emit checkSignal();
 }
 
 Peer* Torrent::addPeer(const QByteArray &address, int port) {
@@ -620,4 +641,9 @@ void Torrent::clearError() {
 
 void Torrent::setError(const QString &errorString) {
 	m_errorString = errorString;
+}
+
+
+void Torrent::checked() {
+	m_state = Ready;
 }

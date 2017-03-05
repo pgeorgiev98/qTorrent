@@ -29,6 +29,7 @@
 class Peer;
 class TorrentInfo;
 class TrackerClient;
+class FileController;
 class Piece;
 class Block;
 class QFile;
@@ -39,7 +40,9 @@ class QFile;
  * links to the files, peers, tracker client, pieces, etc.
  * Can be used to control the uploading/downloading of this torrent
  */
-class Torrent {
+class Torrent : public QObject {
+	Q_OBJECT
+
 public:
 	/*
 	 * Torrent state:
@@ -71,6 +74,8 @@ public:
 	void pause();
 	// Stop the torrent
 	void stop();
+	// Check the torrent
+	void check();
 
 	/* Creates a peer and connects to him */
 	Peer* addPeer(const QByteArray& address, int port);
@@ -129,8 +134,6 @@ public:
 	QString errorString() const;
 
 
-	/* Signals */
-
 	/* Called when a piece is successfully downloaded */
 	void downloadedPiece(Piece* piece);
 
@@ -141,6 +144,12 @@ public:
 	 * then it will send a 'completed' announce to the tracker */
 	void fullyDownloaded();
 
+signals:
+	void checkSignal();
+
+public slots:
+	void checked();
+
 private:
 	State m_state;
 	QList<Peer*> m_peers;
@@ -148,6 +157,7 @@ private:
 	TorrentInfo* m_torrentInfo;
 	TrackerClient* m_trackerClient;
 	QList<QFile*> m_files;
+	FileController *m_fileController;
 
 	// The number of bytes on startup
 	qint64 m_bytesDownloadedOnStartup;
