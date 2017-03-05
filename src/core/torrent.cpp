@@ -557,9 +557,9 @@ QString Torrent::stateString() const {
 	if(m_state == New) {
 		return "Created";
 	} else if(m_state == Loading) {
-		return "Loading torrent";
+		return "Loading";
 	} else if(m_state == Checking) {
-		return "Checking torrent";
+		return "Checking";
 	} else if(m_isPaused) {
 		return "Paused";
 	} else if(m_isDownloaded) {
