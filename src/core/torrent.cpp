@@ -42,6 +42,7 @@ Torrent::Torrent()
 	, m_downloadedPieces(0)
 	, m_isDownloaded(false)
 	, m_isPaused(true)
+	, m_startAfterChecking(false)
 {
 }
 
@@ -101,7 +102,7 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	connect(this, &Torrent::checkSignal, m_fileController, &FileController::checkTorrent);
 	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::checked);
 
-	m_state = Ready;
+	m_state = Stopped;
 
 	return true;
 }
@@ -156,7 +157,7 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	m_totalBytesDownloaded = resumeInfo->totalBytesDownloaded();
 	m_totalBytesUploaded = resumeInfo->totalBytesUploaded();
 
-	m_state = Ready;
+	m_state = Stopped;
 
 	if(resumeInfo->paused()) {
 		pause();
@@ -270,6 +271,7 @@ void Torrent::start() {
 		peer->start();
 	}
 	m_isPaused = false;
+	m_state = Started;
 }
 
 void Torrent::pause() {
@@ -281,14 +283,23 @@ void Torrent::pause() {
 }
 
 void Torrent::stop() {
+	if(m_state != Started) {
+		return;
+	}
 	if(m_trackerClient->hasAnnouncedStarted()) {
 		m_trackerClient->announce(TrackerClient::Stopped);
 	}
+	for(Peer* peer : m_peers) {
+		peer->disconnect();
+	}
+	m_state = Stopped;
 }
 
 void Torrent::check() {
-	if(m_state != Ready && !m_isPaused) {
-		// TODO
+	if(m_state == Started) {
+		stop();
+		m_startAfterChecking = true;
+	} else if(m_state != Stopped) {
 		return;
 	}
 	m_state = Checking;
@@ -434,7 +445,7 @@ void Torrent::setPieceAvailable(Piece *piece, bool available) {
 		// Increment some counters
 		m_downloadedPieces++;
 
-		if(m_state == Ready) {
+		if(m_state == Started) {
 			m_totalBytesDownloaded += piece->size();
 
 			// Send 'have' messages to all peers
@@ -554,18 +565,23 @@ Torrent::State Torrent::state() const {
 }
 
 QString Torrent::stateString() const {
-	if(m_state == New) {
+	switch(m_state) {
+	case New:
 		return "Created";
-	} else if(m_state == Loading) {
+	case Loading:
 		return "Loading";
-	} else if(m_state == Checking) {
+	case Checking:
 		return "Checking";
-	} else if(m_isPaused) {
-		return "Paused";
-	} else if(m_isDownloaded) {
-		return "Completed";
-	} else {
-		return "Downloading";
+	case Stopped:
+		return "Stopped";
+	default:
+		if(m_isPaused) {
+			return "Paused";
+		} else if(m_isDownloaded) {
+			return "Completed";
+		} else {
+			return "Downloading";
+		}
 	}
 }
 
@@ -622,15 +638,12 @@ void Torrent::uploadedBlock(int bytes) {
 }
 
 void Torrent::fullyDownloaded() {
-	if(m_state == Ready) {
+	if(m_state == Started) {
 		QTorrent::instance()->mainWindow()->torrentFullyDownloaded(this);
-	}
-	m_isDownloaded = true;
-
-	if(m_state == Ready) {
 		// Send announce
 		m_trackerClient->announce(TrackerClient::Completed);
 	}
+	m_isDownloaded = true;
 
 	// Disconnect from all peers that have the full torrent
 	for(auto peer : m_peers) {
@@ -650,5 +663,8 @@ void Torrent::setError(const QString &errorString) {
 
 
 void Torrent::checked() {
-	m_state = Ready;
+	m_state = Stopped;
+	if(m_startAfterChecking) {
+		start();
+	}
 }

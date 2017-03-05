@@ -49,10 +49,11 @@ public:
 	 * New - Just created
 	 * Loading - Loading torrent / Fetching torrent metainfo
 	 * Checking - Verifying downloaded pieces
-	 * Ready - Everything is ok. Can Seed/Download.
+	 * Stopped - Downloading/Uploading is stopped.
+	 * Started - Downloading/Uploading is allowed.
 	 */
 	enum State {
-		New, Loading, Checking, Ready
+		New, Loading, Checking, Stopped, Started
 	};
 
 	/* Constructor and destructor */
@@ -87,7 +88,7 @@ public:
 	bool savePiece(Piece* piece);
 
 	/* Sets a piece's downloaded/available state.
-	 * if state is Ready, it will increment m_bytesDownloaded */
+	 * if state is Started, it will increment m_bytesDownloaded */
 	void setPieceAvailable(Piece* piece, bool available = true);
 
 	void successfullyAnnounced(TrackerClient::Event event);
@@ -140,7 +141,7 @@ public:
 	/* Called when a piece is successfully uploaded */
 	void uploadedBlock(int bytes);
 
-	/* Called when torrent is fully downloaded if state is 'Ready',
+	/* Called when torrent is fully downloaded. If state is 'Started',
 	 * then it will send a 'completed' announce to the tracker */
 	void fullyDownloaded();
 
@@ -174,6 +175,9 @@ private:
 
 	/* Is the downloading/uploading paused? */
 	bool m_isPaused;
+
+	/* Start torrent after checking? */
+	bool m_startAfterChecking;
 
 	/* The torrent's download location */
 	QString m_downloadLocation;
