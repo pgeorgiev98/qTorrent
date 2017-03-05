@@ -88,7 +88,7 @@ public:
 
 	/* Sets a piece's downloaded/available state.
 	 * if state is Ready, it will increment m_bytesDownloaded */
-	void setPieceAvailable(Piece* piece);
+	void setPieceAvailable(Piece* piece, bool available = true);
 
 	void successfullyAnnounced(TrackerClient::Event event);
 

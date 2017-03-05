@@ -287,7 +287,7 @@ void Torrent::stop() {
 }
 
 void Torrent::check() {
-	if(m_state != Ready && !m_paused) {
+	if(m_state != Ready && !m_isPaused) {
 		// TODO
 		return;
 	}
@@ -425,29 +425,34 @@ bool Torrent::savePiece(Piece* piece) {
 	return true;
 }
 
-void Torrent::setPieceAvailable(Piece *piece) {
-	if(piece->isDownloaded()) {
+void Torrent::setPieceAvailable(Piece *piece, bool available) {
+	if(piece->isDownloaded() == available) {
 		return;
 	}
 
-	piece->setDownloaded(true);
+	if(available) {
+		// Increment some counters
+		m_downloadedPieces++;
 
-	// Increment some counters
-	m_downloadedPieces++;
+		if(m_state == Ready) {
+			m_totalBytesDownloaded += piece->size();
 
-	if(m_state == Ready) {
-		m_totalBytesDownloaded += piece->size();
-
-		// Send 'have' messages to all peers
-		for(auto peer : m_peers) {
-			peer->sendHave(piece->pieceNumber());
+			// Send 'have' messages to all peers
+			for(auto peer : m_peers) {
+				peer->sendHave(piece->pieceNumber());
+			}
 		}
+
+		// Check if all pieces are downloaded
+		if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
+			fullyDownloaded();
+		}
+	} else {
+		m_downloadedPieces--;
+		m_isDownloaded = false;
 	}
 
-	// Check if all pieces are downloaded
-	if(m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
-		fullyDownloaded();
-	}
+	piece->setDownloaded(available);
 }
 
 void Torrent::successfullyAnnounced(TrackerClient::Event event) {
