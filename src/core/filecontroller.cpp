@@ -56,14 +56,17 @@ void FileControllerWorker::checkTorrent()
 	TorrentInfo *info = m_torrent->torrentInfo();
 	QList<Piece *> &pieces = m_torrent->pieces();
 	for(Piece *piece : pieces) {
+		m_torrent->setPieceAvailable(piece, false);
+	}
+	for(Piece *piece : pieces) {
 		QByteArray pieceData, pieceHash;
 		if(!piece->getPieceData(pieceData)) {
+			m_torrent->setPieceAvailable(piece, false);
 			continue;
 		}
 		pieceHash = QCryptographicHash::hash(pieceData, QCryptographicHash::Sha1);
-		if(pieceHash == info->piece(piece->pieceNumber())) {
-			m_torrent->setPieceAvailable(piece);
-		}
+		bool pieceIsValid = (pieceHash == info->piece(piece->pieceNumber()));
+		m_torrent->setPieceAvailable(piece, pieceIsValid);
 		// TODO report some kind of percentage
 	}
 	emit torrentChecked();
