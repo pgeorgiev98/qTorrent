@@ -86,6 +86,9 @@ void TrackerClient::announce(Event event) {
 
 	url.setQuery(query);
 	qDebug() << "Announce" << url.toString();
+	if(event == Stopped) {
+		m_hasAnnouncedStarted = false;
+	}
 
 	QNetworkRequest request(url);
 	m_reply = m_accessManager.get(request);
