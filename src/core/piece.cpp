@@ -177,7 +177,7 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 	blockData.clear();
 
 	// Check if piece is loaded in memory (unlikely)
-	if(m_pieceData) {
+	if(m_pieceData && m_isDownloaded) {
 		blockData.append(m_pieceData + begin, size);
 		return true;
 	}
