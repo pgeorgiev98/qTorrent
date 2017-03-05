@@ -125,6 +125,7 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 
 	QAction* pauseAct = new QAction(tr("&Pause"), this);
 	QAction* startAct = new QAction(tr("&Start"), this);
+	QAction* recheckAct = new QAction(tr("&Recheck"), this);
 	QAction* removeAct = new QAction(tr("&Remove"), this);
 
 	if(item->torrent()->isPaused()) {
@@ -135,10 +136,12 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 
 	menu.addAction(pauseAct);
 	menu.addAction(startAct);
+	menu.addAction(recheckAct);
 	menu.addAction(removeAct);
 
 	connect(pauseAct, SIGNAL(triggered()), item, SLOT(onPauseAction()));
 	connect(startAct, SIGNAL(triggered()), item, SLOT(onStartAction()));
+	connect(recheckAct, SIGNAL(triggered()), item, SLOT(onRecheckAction()));
 	connect(removeAct, SIGNAL(triggered()), item, SLOT(onRemoveAction()));
 
 	menu.exec(mapToGlobal(pos));

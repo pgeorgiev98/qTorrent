@@ -162,6 +162,10 @@ void TorrentsListItem::onStartAction() {
 	m_torrent->start();
 }
 
+void TorrentsListItem::onRecheckAction() {
+	m_torrent->check();
+}
+
 void TorrentsListItem::onRemoveAction() {
 	QDialog dialog(QTorrent::instance()->mainWindow());
 	QVBoxLayout* layout = new QVBoxLayout;
