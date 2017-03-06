@@ -33,7 +33,7 @@ Piece::Piece(Torrent* torrent, int pieceNumber, int size)
 	, m_pieceNumber(pieceNumber)
 	, m_size(size)
 	, m_isDownloaded(false)
-	, m_pieceData(new char[size])
+	, m_pieceData(nullptr)
 {
 }
 
@@ -130,6 +130,13 @@ void Piece::updateState() {
 Block* Piece::requestBlock(int size) {
 	int tmp = 0;
 	int s = size;
+	if(m_isDownloaded) {
+		// WTF?!
+		return nullptr;
+	}
+	if(m_pieceData == nullptr) {
+		m_pieceData = new char[m_size];
+	}
 	Block* block = nullptr;
 
 	for(auto b : m_blocks) {
