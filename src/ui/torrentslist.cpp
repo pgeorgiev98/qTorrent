@@ -123,6 +123,7 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 		return;
 	}
 
+	QAction* openAct = new QAction(tr("Open"), this);
 	QAction* openLocationAct = new QAction(tr("Open containing folder"), this);
 	QAction* pauseAct = new QAction(tr("Pause"), this);
 	QAction* startAct = new QAction(tr("Start"), this);
@@ -131,6 +132,9 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 	QAction* removeAct = new QAction(tr("Remove"), this);
 
 	Torrent* torrent = item->torrent();
+	if(!torrent->torrentInfo()->isSingleFile() || !torrent->isDownloaded()) {
+		openAct->setEnabled(false);
+	}
 	if(torrent->isPaused()) {
 		pauseAct->setEnabled(false);
 	}
@@ -144,6 +148,7 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 
 	QMenu menu(this);
 
+	menu.addAction(openAct);
 	menu.addAction(openLocationAct);
 	menu.addSeparator();
 	menu.addAction(pauseAct);
@@ -152,6 +157,7 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 	menu.addAction(recheckAct);
 	menu.addAction(removeAct);
 
+	connect(openAct, SIGNAL(triggered()), item, SLOT(onOpenAction()));
 	connect(openLocationAct, SIGNAL(triggered()), item, SLOT(onOpenLocationAction()));
 	connect(pauseAct, SIGNAL(triggered()), item, SLOT(onPauseAction()));
 	connect(startAct, SIGNAL(triggered()), item, SLOT(onStartAction()));
