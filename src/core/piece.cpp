@@ -27,6 +27,11 @@
 #include <QTcpSocket>
 #include <QFile>
 #include <QDebug>
+#include <QMutex>
+
+// Synchronization for setDownloaded and isDownloaded
+// TODO: implement this in a less complex way
+static QMutex pieceDownloadedMutex;
 
 Piece::Piece(Torrent* torrent, int pieceNumber, int size)
 	: m_torrent(torrent)
@@ -47,7 +52,10 @@ Piece::~Piece() {
 }
 
 bool Piece::isDownloaded() const {
-	return m_isDownloaded;
+	pieceDownloadedMutex.lock();
+	bool ret = m_isDownloaded;
+	pieceDownloadedMutex.unlock();
+	return ret;;
 }
 
 int Piece::pieceNumber() const {
@@ -177,11 +185,13 @@ void Piece::unloadFromMemory() {
 }
 
 void Piece::setDownloaded(bool downloaded) {
+	pieceDownloadedMutex.lock();
 	m_isDownloaded = downloaded;
 	for(Block* block : m_blocks) {
 		delete block;
 	}
 	m_blocks.clear();
+	pieceDownloadedMutex.unlock();
 }
 
 bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
