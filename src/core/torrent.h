@@ -65,7 +65,7 @@ public:
 	bool createNew(TorrentInfo* torrentInfo, const QString& downloadLocation);
 	bool createFromResumeInfo(TorrentInfo* torrentInfo, ResumeInfo* resumeInfo);
 	bool createFromMagnetLink(QUrl url);
-	bool createFileTree(const QString& directory);
+	void loadFileDescriptors();
 
 	ResumeInfo getResumeInfo() const;
 

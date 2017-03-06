@@ -75,12 +75,6 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	m_torrentInfo = torrentInfo;
 	m_downloadLocation = downloadLocation;
 
-	// Create all files and directories
-	if(!createFileTree(downloadLocation)) {
-		setError("Failed to create file tree");
-		return false;
-	}
-
 	// Create all pieces but the last
 	// The last piece could have a different size than the others
 	for(int i = 0; i < m_torrentInfo->numberOfPieces() - 1; i++) {
@@ -104,6 +98,12 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 
 	m_state = Stopped;
 
+	// Creates QFile objects
+	loadFileDescriptors();
+
+	// Check the torrent;
+	check();
+
 	return true;
 }
 
@@ -112,12 +112,6 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	m_state = Loading;
 
 	m_torrentInfo = torrentInfo;
-
-	// Create all files and directories
-	if(!createFileTree(resumeInfo->downloadLocation())) {
-		setError("Failed to create file tree");
-		return false;
-	}
 
 	// Create all pieces but the last
 	// The last piece could have a different size than the others
@@ -158,6 +152,9 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	m_totalBytesUploaded = resumeInfo->totalBytesUploaded();
 
 	m_state = Stopped;
+
+	// Creates QFile objects
+	loadFileDescriptors();
 
 	if(resumeInfo->paused()) {
 		pause();
@@ -213,38 +210,27 @@ bool Torrent::createFromMagnetLink(QUrl url) {
 	return false;
 }
 
-bool Torrent::createFileTree(const QString &directory) {
-	const auto& files = m_torrentInfo->fileInfos();
-	QDir rootDir(directory);
-	for(auto& f : files) {
-		QDir dir(rootDir);
-		for(int i = 0; i < f.path.size() - 1; i++) {
-			if(!dir.exists(f.path[i])) {
-				if(!dir.mkdir(f.path[i])) {
-					setError("Failed to create directory " + f.path[i]);
-					return false;
-				}
+void Torrent::loadFileDescriptors() {
+	const QList<FileInfo>& fileInfos = m_torrentInfo->fileInfos();
+	for(int i = 0; i < fileInfos.size(); i++) {
+		FileInfo info = fileInfos[i];
+		if(info.path.size() > 1) {
+			QString path = m_downloadLocation;
+			if(path[path.size()-1] == '/') {
+				path.remove(path.size()-1, 1);
 			}
-			dir.cd(f.path[i]);
+			for(int j = 0; j < info.path.size() - 1; j++) {
+				path += '/';
+				path += info.path[j];
+			}
+			qDebug() << "mkpath" << path;
+			QDir dir;
+			dir.mkpath(path);
+			path += '/';
+			path += info.path.last();
+			m_files.append(new QFile(path));
 		}
-		QFile* file = new QFile();
-		file->setFileName(dir.absoluteFilePath(f.path.last()));
-		if(!file->exists() || file->size() != f.length) {
-			if(!file->open(QFile::ReadWrite)) {
-				setError("Failed to open file " + file->fileName() + ": " + file->errorString());
-				return false;
-			}
-			if(!file->resize(f.length)) {
-				setError("Failed to resize file " + file->fileName() + ": " + file->errorString());
-				return false;
-			}
-			file->close();
-		} else {
-			qDebug() << "File" << file->fileName() << "exists";
-		}
-		m_files.push_back(file);
 	}
-	return true;
 }
 
 ResumeInfo Torrent::getResumeInfo() const {
@@ -258,6 +244,10 @@ ResumeInfo Torrent::getResumeInfo() const {
 }
 
 void Torrent::start() {
+	if(m_state == Checking) {
+		m_startAfterChecking = true;
+		return;
+	}
 	if(!m_trackerClient->hasAnnouncedStarted()) {
 		// Send the first announce to the tracker
 		m_trackerClient->announce(TrackerClient::Started);
@@ -374,7 +364,7 @@ Block* Torrent::requestBlock(Peer *peer, int size) {
 bool Torrent::savePiece(Piece* piece) {
 	int pieceLength = m_torrentInfo->pieceLength();
 	int thisPieceLength = piece->size();
-	auto& fileInfos = m_torrentInfo->fileInfos();
+	const QList<FileInfo>& fileInfos = m_torrentInfo->fileInfos();
 
 	qint64 dataBegin = piece->pieceNumber();
 	dataBegin *= pieceLength;
@@ -396,7 +386,24 @@ bool Torrent::savePiece(Piece* piece) {
 
 	int bytesToWrite = thisPieceLength;
 	for(int i = firstFileNumber;; i++) {
+		FileInfo info = fileInfos[i];
+		if(info.path.size() > 1) {
+			QString path = m_downloadLocation;
+			if(path[path.size()-1] == '/') {
+				path.remove(path.size()-1, 1);
+			}
+			for(int j = 0; j < info.path.size() - 1; j++) {
+				path += '/';
+				path += info.path[j];
+			}
+			QDir dir;
+			dir.mkpath(path);
+		}
+
 		QFile* file = m_files[i];
+		if(!file->exists() || file->size() != info.length) {
+			file->resize(info.length);
+		}
 		if(!file->open(QIODevice::ReadWrite)) { // Append causes bugs with seek
 			qDebug() << "Failed to open file" << i << file->fileName() << ":" << file->errorString();
 			return false;
