@@ -178,6 +178,10 @@ void Piece::unloadFromMemory() {
 
 void Piece::setDownloaded(bool downloaded) {
 	m_isDownloaded = downloaded;
+	for(Block* block : m_blocks) {
+		delete block;
+	}
+	m_blocks.clear();
 }
 
 bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
