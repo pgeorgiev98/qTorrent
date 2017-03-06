@@ -107,7 +107,7 @@ void AddTorrentDialog::connectAll() {
 
 bool AddTorrentDialog::setTorrentUrl(QUrl url) {
 	if(url.isLocalFile()) {
-		QString filePath = url.path();
+		QString filePath = url.toLocalFile();
 
 		// If TorrentInfo is loaded - delete it
 		if(m_torrentInfo) {
