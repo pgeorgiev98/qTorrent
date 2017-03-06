@@ -30,6 +30,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QDesktopServices>
 
 TorrentsListItem::TorrentsListItem(QTreeWidget *view, Torrent *torrent)
 	: QTreeWidgetItem(view)
@@ -152,6 +153,11 @@ void TorrentsListItem::setDownloaded(qint64 value) {
 void TorrentsListItem::setUploaded(qint64 value) {
 	setText(Uploaded, formatSize(value));
 	setSortData(Uploaded, value);
+}
+
+void TorrentsListItem::onOpenLocationAction() {
+	QUrl url = QUrl::fromLocalFile(m_torrent->downloadLocation());
+	QDesktopServices::openUrl(url);
 }
 
 void TorrentsListItem::onPauseAction() {

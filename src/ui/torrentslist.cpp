@@ -123,11 +123,12 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 		return;
 	}
 
-	QAction* pauseAct = new QAction(tr("&Pause"), this);
-	QAction* startAct = new QAction(tr("&Start"), this);
-	QAction* stopAct = new QAction(tr("&Stop"), this);
-	QAction* recheckAct = new QAction(tr("&Recheck"), this);
-	QAction* removeAct = new QAction(tr("&Remove"), this);
+	QAction* openLocationAct = new QAction(tr("Open containing folder"), this);
+	QAction* pauseAct = new QAction(tr("Pause"), this);
+	QAction* startAct = new QAction(tr("Start"), this);
+	QAction* stopAct = new QAction(tr("Stop"), this);
+	QAction* recheckAct = new QAction(tr("Recheck"), this);
+	QAction* removeAct = new QAction(tr("Remove"), this);
 
 	Torrent* torrent = item->torrent();
 	if(torrent->isPaused()) {
@@ -143,12 +144,15 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 
 	QMenu menu(this);
 
+	menu.addAction(openLocationAct);
+	menu.addSeparator();
 	menu.addAction(pauseAct);
 	menu.addAction(startAct);
 	menu.addAction(stopAct);
 	menu.addAction(recheckAct);
 	menu.addAction(removeAct);
 
+	connect(openLocationAct, SIGNAL(triggered()), item, SLOT(onOpenLocationAction()));
 	connect(pauseAct, SIGNAL(triggered()), item, SLOT(onPauseAction()));
 	connect(startAct, SIGNAL(triggered()), item, SLOT(onStartAction()));
 	connect(stopAct, SIGNAL(triggered()), item, SLOT(onStopAction()));

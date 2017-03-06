@@ -59,6 +59,7 @@ public:
 	void setUploaded(qint64 value);
 
 public slots:
+	void onOpenLocationAction();
 	void onPauseAction();
 	void onStartAction();
 	void onStopAction();
