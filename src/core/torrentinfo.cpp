@@ -240,6 +240,10 @@ const QList<FileInfo>& TorrentInfo::fileInfos() const {
 	return m_fileInfos;
 }
 
+bool TorrentInfo::isSingleFile() const {
+	return (m_fileInfos.size() == 1);
+}
+
 const QByteArray& TorrentInfo::infoHash() const {
 	return m_infoHash;
 }

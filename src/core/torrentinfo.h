@@ -71,6 +71,7 @@ public:
 	const QString* encoding() const;
 
 	const QList<FileInfo>& fileInfos() const;
+	bool isSingleFile() const;
 
 	const QByteArray& infoHash() const;
 
