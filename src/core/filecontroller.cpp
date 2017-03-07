@@ -21,6 +21,7 @@
 #include "torrent.h"
 #include "torrentinfo.h"
 #include "piece.h"
+#include <QCryptographicHash>
 #include <QThread>
 
 FileController::FileController(Torrent *torrent)
