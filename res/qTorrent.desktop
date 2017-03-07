@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=qTorrent
+Encoding=UTF-8
+Categories=Network;FileTransfer;P2P;Qt;
+Keywords=bittorrent;torrent;download;p2p;
+GenericName=BitTorrent client
+Exec=qTorrent 
+Comment=Download and share files over BitTorrent
+Icon=qtorrent.png
+Terminal=false

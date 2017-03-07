@@ -8,6 +8,6 @@
 	<file alias="button-downloading-active.png">../res/icons/buttons/downloading-active.png</file>
 	<file alias="button-uploading.png">../res/icons/buttons/uploading.png</file>
 	<file alias="button-uploading-active.png">../res/icons/buttons/uploading-active.png</file>
-	<file alias="qtorrent.ico">../res/icons/qtorrent.ico</file>
+	<file alias="qtorrent.ico">../res/icons/qTorrent/qtorrent.ico</file>
 </qresource>
 </RCC>
