@@ -228,6 +228,7 @@ void MainWindow::aboutAction() {
 					   tr("<p><b>qTorrent</b> is a simple BitTorrent client, written from "
 						  "scratch in C++ with Qt5. qTorrent aims to be a good, lightweight "
 						  "alternative to all the other BitTorrent clients.</p>"
+						  "<p>You are currently using <b>version " VERSION "</b></p>"
 						  "<p>It is licensed under the GNU General Public License v3.0</p>"));
 }
 

@@ -66,5 +66,8 @@ RESOURCES += \
 win32:RC_ICONS = ../res/icons/qTorrent/qtorrent.ico
 macx:ICON = ../res/icons/qTorrent/qtorrent.icns
 
+# Version definition
+include(../version.pri)
+
 # UNIX-specific configuration
 unix:!macx: include(../unixconf.pri)
