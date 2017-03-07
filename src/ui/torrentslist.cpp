@@ -173,7 +173,7 @@ void TorrentsList::openHeaderContextMenu(const QPoint &pos) {
 	QMenu menu(header());
 	for(int i = 0; i < header()->count(); i++) {
 		QString label = header()->model()->headerData(i, Qt::Horizontal).toString();
-		QAction* action = new QAction(label);
+		QAction* action = new QAction(label, &menu);
 		action->setCheckable(true);
 		action->setChecked(!header()->isSectionHidden(i));
 		menu.addAction(action);

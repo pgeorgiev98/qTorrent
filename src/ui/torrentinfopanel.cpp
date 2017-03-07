@@ -94,7 +94,7 @@ void TorrentInfoPanel::refresh() {
 
 void TorrentInfoPanel::contextMenuEvent(QContextMenuEvent *event) {
 	QMenu menu(this);
-	QAction* hide = new QAction(tr("Hide Info Panel"));
+	QAction* hide = new QAction(tr("Hide Info Panel"), &menu);
 	menu.addAction(hide);
 	connect(hide, &QAction::triggered, this, &TorrentInfoPanel::hide);
 	menu.exec(event->globalPos());
