@@ -1,0 +1,10 @@
+* Tue Mar 07 2017 - Petko Georgiev <petko.vas.georgiev@gmail.com> - v0.1
+	- Initial release
+	- Added torrent downloading
+	- Added torrent uploading
+	- Added piece request queuing
+	- Added peer time-out
+	- Added basic user interface
+	- Added torrent resuming
+	- Added torrent checking/rechecking
+	- Added icon
