@@ -28,7 +28,7 @@
 #include <QMessageBox>
 #include <QUrlQuery>
 
-QTorrent* QTorrent::m_instance;
+QTorrent *QTorrent::m_instance;
 
 QTorrent::QTorrent()
 {
@@ -41,120 +41,139 @@ QTorrent::QTorrent()
 	// Generate random peer id that starts with 'qT'
 	qsrand(QDateTime::currentMSecsSinceEpoch());
 	m_peerId.push_back("qT");
-	while(m_peerId.size() < 20) {
+	while (m_peerId.size() < 20) {
 		m_peerId.push_back(char(qrand() % 256));
 	}
 }
 
-QTorrent::~QTorrent() {
+QTorrent::~QTorrent()
+{
 	delete m_torrentManager;
 	delete m_server;
 	delete m_mainWindow;
 }
 
 
-bool QTorrent::startServer() {
+bool QTorrent::startServer()
+{
 	return m_server->startServer();
 }
 
-bool QTorrent::resumeTorrents() {
-	if(m_torrentManager->resumeTorrents()) {
+bool QTorrent::resumeTorrents()
+{
+	if (m_torrentManager->resumeTorrents()) {
 		return true;
 	}
 	critical("Failed to resume torrents: " + m_torrentManager->errorString());
 	return false;
 }
 
-bool QTorrent::addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings) {
-	Torrent* torrent = m_torrentManager->addTorrentFromLocalFile(filename, settings);
-	if(torrent == nullptr) {
+bool QTorrent::addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings)
+{
+	Torrent *torrent = m_torrentManager->addTorrentFromLocalFile(filename, settings);
+	if (torrent == nullptr) {
 		warning("Failed to add torrent: " + m_torrentManager->errorString());
 		return false;
 	}
-	if(!m_torrentManager->saveTorrentsResumeInfo()) {
+	if (!m_torrentManager->saveTorrentsResumeInfo()) {
 		critical("Failed to save torrent resume info: " + m_torrentManager->errorString());
 	}
 	return true;
 }
 
-bool QTorrent::addTorrentFromMagnetLink(QUrl url) {
-	Torrent* torrent = torrentManager()->addTorrentFromMagnetLink(url);
-	if(torrent == nullptr) {
+bool QTorrent::addTorrentFromMagnetLink(QUrl url)
+{
+	Torrent *torrent = torrentManager()->addTorrentFromMagnetLink(url);
+	if (torrent == nullptr) {
 		return false;
 	}
 	return true;
 }
 
-bool QTorrent::addTorrentFromUrl(QUrl url) {
-	if(url.isLocalFile()) {
+bool QTorrent::addTorrentFromUrl(QUrl url)
+{
+	if (url.isLocalFile()) {
 		m_mainWindow->addTorrentFromUrl(url);
-	} else if(url.scheme() == "magnet") {
+	} else if (url.scheme() == "magnet") {
 
 	}
 	return false;
 }
 
-bool QTorrent::removeTorrent(Torrent* torrent, bool deleteData) {
+bool QTorrent::removeTorrent(Torrent *torrent, bool deleteData)
+{
 	return m_torrentManager->removeTorrent(torrent, deleteData);
 }
 
-void QTorrent::shutDown() {
-	for(Torrent* torrent : torrents()) {
+void QTorrent::shutDown()
+{
+	for (Torrent *torrent : torrents()) {
 		torrent->stop();
 	}
-	if(!m_torrentManager->saveTorrentsResumeInfo()) {
+	if (!m_torrentManager->saveTorrentsResumeInfo()) {
 		critical("Failed to save torrents resume info: " + m_torrentManager->errorString());
 	}
 }
 
-void QTorrent::showMainWindow() {
+void QTorrent::showMainWindow()
+{
 	m_mainWindow->show();
 }
 
 
 /* Message Boxes */
 
-void QTorrent::critical(const QString &text) {
+void QTorrent::critical(const QString &text)
+{
 	QMessageBox::critical(m_mainWindow, QGuiApplication::applicationDisplayName(), text);
 }
 
-void QTorrent::information(const QString &text) {
+void QTorrent::information(const QString &text)
+{
 	QMessageBox::information(m_mainWindow, QGuiApplication::applicationDisplayName(), text);
 }
 
-bool QTorrent::question(const QString &text) {
+bool QTorrent::question(const QString &text)
+{
 	QMessageBox::StandardButton ans;
 	ans = QMessageBox::question(m_mainWindow, QGuiApplication::applicationDisplayName(), text);
 	return ans == QMessageBox::Yes;
 }
 
-void QTorrent::warning(const QString &text) {
+void QTorrent::warning(const QString &text)
+{
 	QMessageBox::warning(m_mainWindow, QGuiApplication::applicationDisplayName(), text);
 }
 
 
-const QByteArray& QTorrent::peerId() const {
+const QByteArray &QTorrent::peerId() const
+{
 	return m_peerId;
 }
 
 
-const QList<Torrent*>& QTorrent::torrents() const {
+const QList<Torrent *> &QTorrent::torrents() const
+{
 	return m_torrentManager->torrents();
 }
 
-TorrentManager* QTorrent::torrentManager() {
+TorrentManager *QTorrent::torrentManager()
+{
 	return m_torrentManager;
 }
 
-TorrentServer* QTorrent::server() {
+TorrentServer *QTorrent::server()
+{
 	return m_server;
 }
 
 
-MainWindow* QTorrent::mainWindow() {
+MainWindow *QTorrent::mainWindow()
+{
 	return m_mainWindow;
 }
 
-QTorrent* QTorrent::instance() {
+QTorrent *QTorrent::instance()
+{
 	return m_instance;
 }

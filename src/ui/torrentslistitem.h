@@ -26,7 +26,8 @@
 
 class Torrent;
 
-class TorrentsListItem : public QObject, public QTreeWidgetItem {
+class TorrentsListItem : public QObject, public QTreeWidgetItem
+{
 	Q_OBJECT
 
 public:
@@ -35,20 +36,20 @@ public:
 		TotalDownloaded, TotalUploaded, Ratio, Downloaded, Uploaded
 	};
 
-	TorrentsListItem(QTreeWidget* view, Torrent* torrent);
+	TorrentsListItem(QTreeWidget *view, Torrent *torrent);
 
 	void setSortData(int column, QVariant data);
-	bool operator<(const QTreeWidgetItem& other) const;
+	bool operator<(const QTreeWidgetItem &other) const;
 	void refresh();
 	// true if this torrent belongs to the currently opened section
 	bool belongsToSection();
 
-	Torrent* torrent() const;
+	Torrent *torrent() const;
 
-	void setName(const QString& value);
+	void setName(const QString &value);
 	void setSize(qint64 value);
 	void setPeers(int connected, int all);
-	void setState(const QString& state);
+	void setState(const QString &state);
 	void setProgress(float value);
 	void setAvailable(qint64 value);
 	void setLeft(qint64 value);
@@ -68,7 +69,7 @@ public slots:
 	void onRemoveAction();
 
 private:
-	Torrent* m_torrent;
+	Torrent *m_torrent;
 	QMap<int, QVariant> m_sortData;
 };
 

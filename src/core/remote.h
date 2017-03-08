@@ -31,7 +31,6 @@ class QLocalServer;
  * to show the main window.
  * It could be used for remote access to the client if modified a little
  */
-
 class Remote : public QObject
 {
 	Q_OBJECT
@@ -51,8 +50,8 @@ public slots:
 	void readyRead();
 
 private:
-	QLocalServer* m_server;
-	QLocalSocket* m_socket;
+	QLocalServer *m_server;
+	QLocalSocket *m_socket;
 	QByteArray m_buffer;
 
 	void readMessages();

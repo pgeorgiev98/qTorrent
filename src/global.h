@@ -28,6 +28,6 @@
 QString formatSize(qint64 size);
 
 /* Returns percent-encoded version of the argument */
-QByteArray percentEncode(const QByteArray& data);
+QByteArray percentEncode(const QByteArray &data);
 
 #endif // GLOBAL_H

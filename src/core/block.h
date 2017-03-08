@@ -26,30 +26,32 @@
 class Piece;
 class Peer;
 
-class Block {
-	Piece* m_piece;
+class Block
+{
+	Piece *m_piece;
 	int m_begin;
 	int m_size;
 	bool m_isDownloaded;
 
 	/* The peers to which this Block is
 	 * assigned to be downloaded from. */
-	QList<Peer*> m_assignees;
+	QList<Peer *> m_assignees;
+
 public:
-	Block(Piece* piece, int begin, int size);
+	Block(Piece *piece, int begin, int size);
 	~Block();
-	Piece* piece();
+	Piece *piece();
 	int begin() const;
 	int size() const;
 	bool isDownloaded();
 	void setDownloaded(bool isDownloaded);
-	void setData(const Peer* peer, const char* data);
+	void setData(const Peer *peer, const char *data);
 
 	/* Assignee operations */
-	void addAssignee(Peer* peer);
-	void removeAssignee(Peer* peer);
+	void addAssignee(Peer *peer);
+	void removeAssignee(Peer *peer);
 	void clearAssignees();
-	QList<Peer*>& assignees();
+	QList<Peer *> &assignees();
 	bool hasAssignees() const;
 };
 

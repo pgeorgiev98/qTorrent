@@ -56,12 +56,12 @@ void FileControllerWorker::checkTorrent()
 {
 	TorrentInfo *info = m_torrent->torrentInfo();
 	QList<Piece *> &pieces = m_torrent->pieces();
-	for(Piece *piece : pieces) {
+	for (Piece *piece : pieces) {
 		m_torrent->setPieceAvailable(piece, false);
 	}
-	for(Piece *piece : pieces) {
+	for (Piece *piece : pieces) {
 		QByteArray pieceData, pieceHash;
-		if(!piece->getPieceData(pieceData)) {
+		if (!piece->getPieceData(pieceData)) {
 			m_torrent->setPieceAvailable(piece, false);
 			continue;
 		}

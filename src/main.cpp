@@ -22,19 +22,20 @@
 #include <QApplication>
 #include <QDebug>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	QApplication app(argc, argv);
 	app.setApplicationName("qTorrent");
 
 	Remote remote;
-	if(!remote.start()) {
+	if (!remote.start()) {
 		qDebug() << "Already running";
 		return 0;
 	}
 
 	QTorrent qTorrent;
 
-	if(!qTorrent.startServer()) {
+	if (!qTorrent.startServer()) {
 		qDebug() << "Failed to start server";
 		return 1;
 	}

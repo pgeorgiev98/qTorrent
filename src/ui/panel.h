@@ -26,7 +26,8 @@
 
 class QToolButton;
 
-class Panel : public QToolBar {
+class Panel : public QToolBar
+{
 	Q_OBJECT
 
 public:
@@ -34,7 +35,7 @@ public:
 		All, Completed, Downloading, Uploading
 	};
 
-	Panel(QWidget* parent = nullptr);
+	Panel(QWidget *parent = nullptr);
 	~Panel();
 	Section getCurrentSection();
 
@@ -63,12 +64,12 @@ private:
 	QIcon m_downloadingIconActive;
 	QIcon m_uploadingIconActive;
 
-	QList<QToolButton*> m_toolButtons;
+	QList<QToolButton *> m_toolButtons;
 
-	QToolButton* m_all;
-	QToolButton* m_completed;
-	QToolButton* m_downloading;
-	QToolButton* m_uploading;
+	QToolButton *m_all;
+	QToolButton *m_completed;
+	QToolButton *m_downloading;
+	QToolButton *m_uploading;
 
 };
 

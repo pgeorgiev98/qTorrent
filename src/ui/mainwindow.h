@@ -30,40 +30,39 @@ class TorrentsList;
 class TorrentInfoPanel;
 class Torrent;
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow
+{
 	Q_OBJECT
 public:
 	MainWindow();
 	~MainWindow();
 
-	Panel* panel();
-	TorrentsList* torrentsList();
+	Panel *panel();
+	TorrentsList *torrentsList();
 
 	// Add and remove torrent from list
-	void addTorrent(Torrent* torrent);
-	void removeTorrent(Torrent* torrent);
+	void addTorrent(Torrent *torrent);
+	void removeTorrent(Torrent *torrent);
 
 	void closeEvent(QCloseEvent *event);
 
 	QString getDownloadLocation();
 
 private:
-	Panel* m_panel;
-	TorrentsList* m_torrentsList;
-	TorrentInfoPanel* m_infoPanel;
+	Panel *m_panel;
+	TorrentsList *m_torrentsList;
+	TorrentInfoPanel *m_infoPanel;
 
-	QAction* m_viewTorrentsFilterPanel;
-	QAction* m_viewTorrentInfoPanel;
+	QAction *m_viewTorrentsFilterPanel;
+	QAction *m_viewTorrentInfoPanel;
 
-	QMenu* m_trayIconMenu;
-	QSystemTrayIcon* m_trayIcon;
+	QMenu *m_trayIconMenu;
+	QSystemTrayIcon *m_trayIcon;
 
 	QTimer m_refreshTimer;
 
 	// Creates all needed menus
 	void createMenus();
-
-signals:
 
 public slots:
 	void addTorrentAction();
@@ -77,7 +76,7 @@ public slots:
 	void toggleHideShow();
 	void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
-	void torrentFullyDownloaded(Torrent* torrent);
+	void torrentFullyDownloaded(Torrent *torrent);
 
 	// Add torrent from url
 	void addTorrentFromUrl(QUrl url);

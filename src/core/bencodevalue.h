@@ -32,27 +32,35 @@ class BencodeString;
 class BencodeList;
 class BencodeDictionary;
 
-class BencodeException {
+class BencodeException
+{
 	QString m_errorString;
+
 public:
-	BencodeException(const QString& errorString) : m_errorString(errorString) {}
+	BencodeException(const QString &errorString) : m_errorString(errorString) {}
 	BencodeException() {}
 
 	template<typename T>
-	BencodeException& operator<<(const T& toAppend) {
+	BencodeException &operator<<(const T &toAppend)
+	{
 		QTextStream stream(&m_errorString);
 		stream << toAppend;
 		return *this;
 	}
 
-	const QString& what() const {
+	const QString &what() const
+	{
 		return m_errorString;
 	}
 };
 
-class BencodeValue {
+class BencodeValue
+{
 public:
-	enum class Type { Integer, String, List, Dictionary };
+	enum class Type
+	{
+		Integer, String, List, Dictionary
+	};
 
 protected:
 	// Stores the type of the value
@@ -61,11 +69,12 @@ protected:
 	// The location of this value in the main byte array
 	int m_dataPosBegin;
 	int m_dataPosEnd;
-	const QByteArray* m_bencodeData;
+	const QByteArray *m_bencodeData;
 
 	// Loads this value by reading from data, starting from position index
 	// Throws BencodeException on error
-	virtual void loadFromByteArray(const QByteArray& data, int& position) = 0;
+	virtual void loadFromByteArray(const QByteArray &data, int &position) = 0;
+
 public:
 	BencodeValue(Type type);
 	virtual ~BencodeValue();
@@ -81,14 +90,14 @@ public:
 	// Conversion functions
 	// All of these throw BencodeException on error
 
-	BencodeInteger* toBencodeInteger();
-	BencodeString* toBencodeString();
-	BencodeList* toBencodeList();
-	BencodeDictionary* toBencodeDictionary();
+	BencodeInteger *toBencodeInteger();
+	BencodeString *toBencodeString();
+	BencodeList *toBencodeList();
+	BencodeDictionary *toBencodeDictionary();
 
 	virtual qint64 toInt();
 	virtual QByteArray toByteArray();
-	virtual QList<BencodeValue*> toList();
+	virtual QList<BencodeValue *> toList();
 
 	// Bencodes the value
 	virtual QByteArray bencode(bool includeMetadata = true) const = 0;
@@ -98,17 +107,18 @@ public:
 
 	// Creates a new BencodeValue by reading from data from position index
 	// Throws BencodeException on error
-	static BencodeValue* createFromByteArray(const QByteArray& data, int& position);
+	static BencodeValue *createFromByteArray(const QByteArray &data, int &position);
 
-	virtual void print(QTextStream& out) const = 0;
-	virtual bool equalTo(BencodeValue* other) const = 0;
+	virtual void print(QTextStream &out) const = 0;
+	virtual bool equalTo(BencodeValue *other) const = 0;
 };
 
-class BencodeInteger : public BencodeValue {
+class BencodeInteger : public BencodeValue
+{
 protected:
 	qint64 m_value;
 
-	void loadFromByteArray(const QByteArray& data, int& position);
+	void loadFromByteArray(const QByteArray &data, int &position);
 
 public:
 	BencodeInteger();
@@ -118,64 +128,67 @@ public:
 	qint64 toInt();
 	void setValue(qint64 value);
 	QByteArray bencode(bool includeMetadata = true) const;
-	void print(QTextStream& out) const;
+	void print(QTextStream &out) const;
 	bool equalTo(BencodeValue *other) const;
 };
 
-class BencodeString : public BencodeValue {
+class BencodeString : public BencodeValue
+{
 protected:
 	QByteArray m_value;
 
-	void loadFromByteArray(const QByteArray& data, int& position);
+	void loadFromByteArray(const QByteArray &data, int &position);
 
 public:
 	BencodeString();
-	BencodeString(const QByteArray& value);
+	BencodeString(const QByteArray &value);
 	~BencodeString();
 
 	QByteArray toByteArray();
-	void setValue(const QByteArray& value);
+	void setValue(const QByteArray &value);
 	QByteArray bencode(bool includeMetadata = true) const;
-	void print(QTextStream& out) const;
+	void print(QTextStream &out) const;
 	bool equalTo(BencodeValue *other) const;
 };
 
-class BencodeList : public BencodeValue {
+class BencodeList : public BencodeValue
+{
 protected:
-	QList<BencodeValue*> m_values;
+	QList<BencodeValue *> m_values;
 
-	void loadFromByteArray(const QByteArray& data, int& position);
+	void loadFromByteArray(const QByteArray &data, int &position);
 
 public:
 	BencodeList();
 	~BencodeList();
 
-	QList<BencodeValue*> toList();
-	void setValues(const QList<BencodeValue*>& values);
-	void add(BencodeValue* value);
+	QList<BencodeValue *> toList();
+	void setValues(const QList<BencodeValue *> &values);
+	void add(BencodeValue *value);
 	QByteArray bencode(bool includeMetadata = true) const;
-	void print(QTextStream& out) const;
+	void print(QTextStream &out) const;
 	bool equalTo(BencodeValue *other) const;
 };
 
-class BencodeDictionary : public BencodeValue {
+class BencodeDictionary : public BencodeValue
+{
 protected:
-	QMap<QByteArray, BencodeValue*> m_values;
+	QMap<QByteArray, BencodeValue *> m_values;
 
-	void loadFromByteArray(const QByteArray& data, int& position);
+	void loadFromByteArray(const QByteArray &data, int &position);
 
 public:
 	BencodeDictionary();
 	~BencodeDictionary();
 
-	void print(QTextStream& out) const;
+	void print(QTextStream &out) const;
 	bool equalTo(BencodeValue *other) const;
 
 	QList<QByteArray> keys() const;
-	QList<BencodeValue*> values() const;
-	bool keyExists(const QByteArray& key) const;
-	BencodeValue* value(const QByteArray& key) const;
-	void add(const QByteArray& key, BencodeValue* value);
+	QList<BencodeValue *> values() const;
+	bool keyExists(const QByteArray &key) const;
+	BencodeValue *value(const QByteArray &key) const;
+	void add(const QByteArray &key, BencodeValue *value);
 	QByteArray bencode(bool includeMetadata = true) const;
 };
 

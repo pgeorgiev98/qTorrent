@@ -36,7 +36,8 @@ class QTcpSocket;
  * Is receives and processes messages from the peer.
  * And sends messages/requests to that peer.
  */
-class Peer : public QObject {
+class Peer : public QObject
+{
 	Q_OBJECT
 
 public:
@@ -51,22 +52,23 @@ public:
 	};
 
 	/* The type of this peer */
-	enum class ConnectionInitiator {
+	enum class ConnectionInitiator
+	{
 		Client, /* We connected to the peer */
 		Peer    /* The peeer connected to us */
 	};
 
 	/* Getter functions */
-	Torrent* torrent();
+	Torrent *torrent();
 
-	QByteArray& address();
+	QByteArray &address();
 	int port();
 	int piecesDownloaded();
-	bool* bitfield();
-	QByteArray& protocol();
-	QByteArray& reserved();
-	QByteArray& infoHash();
-	QByteArray& peerId();
+	bool *bitfield();
+	QByteArray &protocol();
+	QByteArray &reserved();
+	QByteArray &infoHash();
+	QByteArray &peerId();
 
 	State state();
 	ConnectionInitiator connectionInitiator();
@@ -75,25 +77,25 @@ public:
 	bool peerChoking();
 	bool peerInterested();
 
-	QTcpSocket* socket();
+	QTcpSocket *socket();
 	bool hasTimedOut();
-	QList<Block*>& blocksQueue();
+	QList<Block *> &blocksQueue();
 	bool isPaused() const;
 
 	QString addressPort();
 	bool isDownloaded();
-	bool hasPiece(Piece* piece);
+	bool hasPiece(Piece *piece);
 	bool isConnected();
 	bool isInteresting();
 
 private:
-	Torrent* m_torrent;
+	Torrent *m_torrent;
 
 	/* Peer-specific information */
 	QByteArray m_address;
 	int m_port;
 	int m_piecesDownloaded;
-	bool* m_bitfield;
+	bool *m_bitfield;
 	QByteArray m_protocol;
 	QByteArray m_reserved;
 	QByteArray m_infoHash;
@@ -108,7 +110,7 @@ private:
 	bool m_peerInterested;
 
 	/* Networking */
-	QTcpSocket* m_socket;
+	QTcpSocket *m_socket;
 	QByteArray m_receivedDataBuffer;
 	QTimer m_replyTimeoutTimer;
 	QTimer m_handshakeTimeoutTimer;
@@ -119,7 +121,7 @@ private:
 	bool m_hasTimedOut;
 
 	/* The blocks that we have requested */
-	QList<Block*> m_blocksQueue;
+	QList<Block *> m_blocksQueue;
 
 	/* Is downloading/uploading paused */
 	bool m_isPaused;
@@ -128,13 +130,13 @@ private:
 	 * Returns true on successful message parse, false on
 	 * error or incomplete message.
 	 * On error, ok is set to false, otherwise - to true */
-	bool readHandshakeReply(bool* ok);
+	bool readHandshakeReply(bool *ok);
 
 	/* Reads all peer messages in the buffer
 	 * Returns true on successful message parse, false on
 	 * error or incomplete message.
 	 * On error, ok is set to false, otherwise - to true */
-	bool readPeerMessage(bool* ok);
+	bool readPeerMessage(bool *ok);
 
 	/* Connects all needed SIGNALs (from m_socket and for the timeouts) to the public slots */
 	void connectAll();
@@ -146,11 +148,11 @@ private:
 	void initClient();
 
 	/* Initializes variables for server peer (ConnectionInitiator::Client) */
-	void initServer(Torrent* torrent, const QByteArray& address, int port);
+	void initServer(Torrent *torrent, const QByteArray &address, int port);
 
 public:
 	/* Constructor and destructor */
-	Peer(ConnectionInitiator connectionInitiator, QTcpSocket* socket);
+	Peer(ConnectionInitiator connectionInitiator, QTcpSocket *socket);
 	~Peer();
 
 	/* Attempt to connect to the peer */
@@ -169,16 +171,16 @@ public:
 	void sendNotInterested();
 	void sendHave(int index);
 	void sendBitfield();
-	void sendRequest(Block* block);
-	void sendPiece(int index, int begin, const QByteArray& blockData);
-	void sendCancel(Block* block);
+	void sendRequest(Block *block);
+	void sendPiece(int index, int begin, const QByteArray &blockData);
+	void sendCancel(Block *block);
 
 	/* Attempt to request a block from the Torrent object
 	 * and send that request to the peer */
 	bool requestBlock();
 
 	/* Does the opposite of requesting a block */
-	void releaseBlock(Block* block);
+	void releaseBlock(Block *block);
 	void releaseAllBlocks();
 
 	/* Drops the connection */
@@ -188,10 +190,10 @@ public:
 	void fatalError();
 
 	/* Returns a newly-created peer object with peerType = Client (He downloads from us) */
-	static Peer* createClient(QTcpSocket* socket);
+	static Peer *createClient(QTcpSocket *socket);
 
 	/* Returns a newly-created peer object with peerType = Server (We download from him) */
-	static Peer* createServer(Torrent* torrent, const QByteArray& address, int port);
+	static Peer* createServer(Torrent *torrent, const QByteArray &address, int port);
 
 	/* Attempts to send messages to the peer */
 	void sendMessages();

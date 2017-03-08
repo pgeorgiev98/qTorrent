@@ -51,7 +51,7 @@ Panel::Panel(QWidget *parent)
 
 	resetButtons();
 
-	for(auto button : m_toolButtons) {
+	for (auto button : m_toolButtons) {
 		button->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
 		button->setCheckable(true);
 		button->setAutoExclusive(true);
@@ -74,56 +74,63 @@ Panel::Panel(QWidget *parent)
 	connect(m_uploading, SIGNAL(clicked()), this, SLOT(openUploading()));
 }
 
-Panel::~Panel() {
-	for(auto button : m_toolButtons) {
+Panel::~Panel()
+{
+	for (auto button : m_toolButtons) {
 		delete button;
 	}
 }
 
 
-Panel::Section Panel::getCurrentSection() {
-	if(m_all->isChecked()) {
+Panel::Section Panel::getCurrentSection()
+{
+	if (m_all->isChecked()) {
 		return Section::All;
-	} else if(m_completed->isChecked()) {
+	} else if (m_completed->isChecked()) {
 		return Section::Completed;
-	} else if(m_downloading->isChecked()) {
+	} else if (m_downloading->isChecked()) {
 		return Section::Downloading;
-	} else if(m_uploading->isChecked()) {
+	} else if (m_uploading->isChecked()) {
 		return Section::Uploading;
 	}
 	Q_ASSERT(false);
 	return Section::All;
 }
 
-void Panel::resetButtons() {
+void Panel::resetButtons()
+{
 	m_all->setIcon(m_allIcon);
 	m_completed->setIcon(m_completedIcon);
 	m_downloading->setIcon(m_downloadingIcon);
 	m_uploading->setIcon(m_uploadingIcon);
 }
 
-void Panel::openAll() {
+void Panel::openAll()
+{
 	resetButtons();
 	m_all->setIcon(m_allIconActive);
 	m_all->setChecked(true);
 	emit showAll();
 }
 
-void Panel::openCompleted() {
+void Panel::openCompleted()
+{
 	resetButtons();
 	m_completed->setIcon(m_completedIconActive);
 	m_completed->setChecked(true);
 	emit showCompleted();
 }
 
-void Panel::openDownloading() {
+void Panel::openDownloading()
+{
 	resetButtons();
 	m_downloading->setIcon(m_downloadingIconActive);
 	m_downloading->setChecked(true);
 	emit showDownloading();
 }
 
-void Panel::openUploading() {
+void Panel::openUploading()
+{
 	resetButtons();
 	m_uploading->setIcon(m_uploadingIconActive);
 	m_uploading->setChecked(true);

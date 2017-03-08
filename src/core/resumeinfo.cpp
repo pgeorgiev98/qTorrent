@@ -31,7 +31,8 @@ ResumeInfo::ResumeInfo(TorrentInfo *torrentInfo)
 }
 
 
-bool ResumeInfo::loadFromBencode(BencodeDictionary *dict) {
+bool ResumeInfo::loadFromBencode(BencodeDictionary *dict)
+{
 	try {
 		m_downloadLocation = dict->value("downloadLocation")->toByteArray();
 		m_totalBytesDownloaded = dict->value("totalBytesDownloaded")->toInt();
@@ -39,15 +40,16 @@ bool ResumeInfo::loadFromBencode(BencodeDictionary *dict) {
 		m_paused = dict->value("paused")->toInt() ? true : false;
 		m_aquiredPieces = toBitArray(dict->value("aquiredPieces")->toByteArray());
 
-	} catch(BencodeException& ex) {
+	} catch (BencodeException &ex) {
 		qDebug() << "Failed to load resume info:" << ex.what();
 		return false;
 	}
 	return true;
 }
 
-void ResumeInfo::addToBencode(BencodeDictionary *mainResumeDictionary) const {
-	BencodeDictionary* dict = new BencodeDictionary;
+void ResumeInfo::addToBencode(BencodeDictionary *mainResumeDictionary) const
+{
+	BencodeDictionary *dict = new BencodeDictionary;
 	dict->add("downloadLocation", new BencodeString(m_downloadLocation.toUtf8()));
 	dict->add("totalBytesDownloaded", new BencodeInteger(m_totalBytesDownloaded));
 	dict->add("totalBytesUploaded", new BencodeInteger(m_totalBytesUploaded));
@@ -58,24 +60,25 @@ void ResumeInfo::addToBencode(BencodeDictionary *mainResumeDictionary) const {
 }
 
 
-QByteArray ResumeInfo::aquiredPiecesArray() const {
+QByteArray ResumeInfo::aquiredPiecesArray() const
+{
 	QByteArray ret;
-	for(int i = 0; i < m_aquiredPieces.size()/8; i++) {
+	for (int i = 0; i < m_aquiredPieces.size()/8; i++) {
 		unsigned char byte = 0;
-		for(int j = 0; j < 8; j++) {
-			if(m_aquiredPieces[i*8+j]) {
+		for (int j = 0; j < 8; j++) {
+			if (m_aquiredPieces[i * 8 + j]) {
 				byte |= (1 << (7-j));
 			}
 		}
 		ret.push_back(byte);
 	}
-	if((m_aquiredPieces.size() % 8) != 0) {
+	if ((m_aquiredPieces.size() % 8) != 0) {
 		unsigned char byte = 0;
 		int bits = m_aquiredPieces.size() % 8;
 		int i = m_aquiredPieces.size() - bits;
-		for(int j = 0; j < bits; j++) {
-			if(m_aquiredPieces[i+j]) {
-				byte |= (1 << (7-j));
+		for (int j = 0; j < bits; j++) {
+			if (m_aquiredPieces[i+j]) {
+				byte |= (1 << (7 - j));
 			}
 		}
 		ret.push_back(byte);
@@ -83,15 +86,16 @@ QByteArray ResumeInfo::aquiredPiecesArray() const {
 	return ret;
 }
 
-QVector<bool> ResumeInfo::toBitArray(const QByteArray& data) {
+QVector<bool> ResumeInfo::toBitArray(const QByteArray &data)
+{
 	QVector<bool> ret;
-	for(unsigned char byte : data) {
-		for(int i = 7; i >= 0; i--) {
+	for (unsigned char byte : data) {
+		for (int i = 7; i >= 0; i--) {
 			ret.push_back((byte & (1 << i)) ? true : false);
 		}
 	}
 	int trailingBits = 8 - (m_torrentInfo->numberOfPieces() % 8);
-	if(trailingBits > 0 && trailingBits < 8) {
+	if (trailingBits > 0 && trailingBits < 8) {
 		ret.remove(ret.size() - trailingBits, trailingBits);
 	}
 	return ret;
@@ -99,48 +103,59 @@ QVector<bool> ResumeInfo::toBitArray(const QByteArray& data) {
 
 /* Getters */
 
-TorrentInfo* ResumeInfo::torrentInfo() const {
+TorrentInfo *ResumeInfo::torrentInfo() const
+{
 	return m_torrentInfo;
 }
 
-const QString& ResumeInfo::downloadLocation() const {
+const QString &ResumeInfo::downloadLocation() const
+{
 	return m_downloadLocation;
 }
 
-qint64 ResumeInfo::totalBytesDownloaded() const {
+qint64 ResumeInfo::totalBytesDownloaded() const
+{
 	return m_totalBytesDownloaded;
 }
 
-qint64 ResumeInfo::totalBytesUploaded() const {
+qint64 ResumeInfo::totalBytesUploaded() const
+{
 	return m_totalBytesUploaded;
 }
 
-bool ResumeInfo::paused() const {
+bool ResumeInfo::paused() const
+{
 	return m_paused;
 }
 
-const QVector<bool>& ResumeInfo::aquiredPieces() const {
+const QVector<bool> &ResumeInfo::aquiredPieces() const
+{
 	return m_aquiredPieces;
 }
 
 /* Setters */
 
-void ResumeInfo::setDownloadLocation(const QString& downloadLocation) {
+void ResumeInfo::setDownloadLocation(const QString &downloadLocation)
+{
 	m_downloadLocation = downloadLocation;
 }
 
-void ResumeInfo::setTotalBytesDownloaded(qint64 totalBytesDownloaded) {
+void ResumeInfo::setTotalBytesDownloaded(qint64 totalBytesDownloaded)
+{
 	m_totalBytesDownloaded = totalBytesDownloaded;
 }
 
-void ResumeInfo::setTotalBytesUploaded(qint64 totalBytesUploaded) {
+void ResumeInfo::setTotalBytesUploaded(qint64 totalBytesUploaded)
+{
 	m_totalBytesUploaded = totalBytesUploaded;
 }
 
-void ResumeInfo::setPaused(bool paused) {
+void ResumeInfo::setPaused(bool paused)
+{
 	m_paused = paused;
 }
 
-void ResumeInfo::setAquiredPieces(const QVector<bool>& aquiredPieces) {
+void ResumeInfo::setAquiredPieces(const QVector<bool> &aquiredPieces)
+{
 	m_aquiredPieces = aquiredPieces;
 }

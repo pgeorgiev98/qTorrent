@@ -31,7 +31,7 @@
 #include <QUrl>
 #include <QDebug>
 
-TrackerClient::TrackerClient(Torrent* torrent)
+TrackerClient::TrackerClient(Torrent *torrent)
 	: m_torrent(torrent)
 	, m_reply(nullptr)
 	, m_reannounceInterval(-1)
@@ -43,15 +43,18 @@ TrackerClient::TrackerClient(Torrent* torrent)
 	connect(&m_reannounceTimer, SIGNAL(timeout()), this, SLOT(reannounce()));
 }
 
-TrackerClient::~TrackerClient() {
+TrackerClient::~TrackerClient()
+{
 }
 
 
-void TrackerClient::reannounce() {
+void TrackerClient::reannounce()
+{
 	announce(Event::None);
 }
 
-void TrackerClient::announce(Event event) {
+void TrackerClient::announce(Event event)
+{
 	m_lastEvent = event;
 	QUrl url;
 	url.setUrl(currentAnnounceUrl());
@@ -75,18 +78,18 @@ void TrackerClient::announce(Event event) {
 	query.addQueryItem("downloaded", bytesDownloadedString);
 	query.addQueryItem("left", bytesLeftString);
 	query.addQueryItem("compact", "1");
-	if(event == Event::Started) {
+	if (event == Event::Started) {
 		query.addQueryItem("event", "started");
-	} else if(event == Event::Stopped) {
+	} else if (event == Event::Stopped) {
 		query.addQueryItem("event", "stopped");
 		query.addQueryItem("numwant", "0");
-	} else if(event == Event::Completed) {
+	} else if (event == Event::Completed) {
 		query.addQueryItem("event", "completed");
 	}
 
 	url.setQuery(query);
 	qDebug() << "Announce" << url.toString();
-	if(event == Stopped) {
+	if (event == Stopped) {
 		m_hasAnnouncedStarted = false;
 	}
 
@@ -95,12 +98,13 @@ void TrackerClient::announce(Event event) {
 	connect(m_reply, &QNetworkReply::finished, this, &TrackerClient::httpFinished);
 }
 
-void TrackerClient::httpFinished() {
+void TrackerClient::httpFinished()
+{
 	m_reply->disconnect();
 	m_reply->deleteLater();
 
 	// Check for errors
-	if(m_reply->error()) {
+	if (m_reply->error()) {
 		qDebug() << "Error in httpFinished():" << m_reply->errorString();
 		announceFailed();
 		return;
@@ -108,13 +112,13 @@ void TrackerClient::httpFinished() {
 
 	// Get HTTP status code
 	QVariant statusCodeVariant = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-	if(statusCodeVariant.isValid()) {
+	if (statusCodeVariant.isValid()) {
 		int statusCode = statusCodeVariant.toInt();
-		if(statusCode != 200) {
-			if(statusCode >= 300 && statusCode < 400) {
+		if (statusCode != 200) {
+			if (statusCode >= 300 && statusCode < 400) {
 				// Redirect
 				QUrl redirectUrl = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-				if(redirectUrl.isEmpty()) {
+				if (redirectUrl.isEmpty()) {
 					qDebug() << "Redirect URL is empty";
 				} else {
 					qDebug() << "Redirecting to" << redirectUrl;
@@ -139,22 +143,22 @@ void TrackerClient::httpFinished() {
 		BencodeException ex("TrackerClient::httpFinished(): ");
 
 		// Try to parse
-		if(!bencodeParser.parse(announceReply)) {
+		if (!bencodeParser.parse(announceReply)) {
 			throw ex << "Parse failed" << endl << bencodeParser.errorString();
 		}
 
 		// Main list of the response
-		QList<BencodeValue*> responseMainList = bencodeParser.list();
-		if(responseMainList.isEmpty()) {
+		QList<BencodeValue *> responseMainList = bencodeParser.list();
+		if (responseMainList.isEmpty()) {
 			throw ex << "Tracker sent an empty response";
-		} else if(responseMainList.size() > 1) {
+		} else if (responseMainList.size() > 1) {
 			throw ex << "Tracker response main list has a size of " << responseMainList.size() << ". Expected 1";
 		}
 
 		BencodeDictionary* mainDict = responseMainList.first()->toBencodeDictionary();
 
 		// Check if any errors have occured
-		if(mainDict->keyExists("failure reason")) {
+		if (mainDict->keyExists("failure reason")) {
 			qDebug() << "Error: Failure reason: " << mainDict->value("failure reason")->toByteArray();
 			announceFailed();
 			return;
@@ -166,15 +170,15 @@ void TrackerClient::httpFinished() {
 		m_reannounceTimer.start();
 
 		// Peer list
-		BencodeValue* peers = mainDict->value("peers");
-		if(peers->isString()) {
+		BencodeValue *peers = mainDict->value("peers");
+		if (peers->isString()) {
 			// Compact format
 			QByteArray peersData = peers->toByteArray();
-			if(peersData.size() % 6 != 0) {
+			if (peersData.size() % 6 != 0) {
 				throw ex << "Peers string length is " << peersData.size() << ". Expected a multiple of 6";
 			}
 			int numberOfPeers = peersData.size() / 6;
-			for(int i = 0, counter = 0; i < numberOfPeers; i++)  {
+			for (int i = 0, counter = 0; i < numberOfPeers; i++)  {
 				// Address
 				QByteArray peerIp;
 				peerIp += QString::number((unsigned char)peersData[counter++]);
@@ -195,14 +199,14 @@ void TrackerClient::httpFinished() {
 		} else {
 			// Non-compact format
 			QList<BencodeValue*> peersDictList = peers->toList();
-			for(BencodeValue* peerDictValue : peersDictList) {
+			for (BencodeValue* peerDictValue : peersDictList) {
 				BencodeDictionary* peerDict = peerDictValue->toBencodeDictionary();
 				QByteArray ip = peerDict->value("ip")->toByteArray();
 				int port = peerDict->value("port")->toInt();
 				m_torrent->addPeer(ip, port);
 			}
 		}
-	} catch(BencodeException& ex) {
+	} catch (BencodeException &ex) {
 		qDebug() << "Failed to parse tracker response:" << ex.what() << endl
 				 << ">>>>>>>>>>>>>>>>>>>>" << endl
 				 << announceReply << endl
@@ -213,27 +217,31 @@ void TrackerClient::httpFinished() {
 	announceSucceeded();
 }
 
-bool TrackerClient::nextAnnounceUrl() {
-	const QList<QByteArray>& list = m_torrent->torrentInfo()->announceUrlsList();
+bool TrackerClient::nextAnnounceUrl()
+{
+	const QList<QByteArray> &list = m_torrent->torrentInfo()->announceUrlsList();
 	m_currentAnnounceListIndex++;
-	if(m_currentAnnounceListIndex == list.size()) {
+	if (m_currentAnnounceListIndex == list.size()) {
 		m_currentAnnounceListIndex = 0;
 		return false;
 	}
 	return true;
 }
 
-const QByteArray& TrackerClient::currentAnnounceUrl() const {
-	auto& list = m_torrent->torrentInfo()->announceUrlsList();
+const QByteArray &TrackerClient::currentAnnounceUrl() const
+{
+	auto &list = m_torrent->torrentInfo()->announceUrlsList();
 	return list[m_currentAnnounceListIndex];
 }
 
-void TrackerClient::resetCurrentAnnounceUrl() {
+void TrackerClient::resetCurrentAnnounceUrl()
+{
 	m_currentAnnounceListIndex = 0;
 }
 
-void TrackerClient::announceFailed() {
-	if(nextAnnounceUrl()) {
+void TrackerClient::announceFailed()
+{
+	if (nextAnnounceUrl()) {
 		announce(m_lastEvent);
 	} else {
 		resetCurrentAnnounceUrl();
@@ -241,19 +249,22 @@ void TrackerClient::announceFailed() {
 	}
 }
 
-void TrackerClient::announceSucceeded() {
+void TrackerClient::announceSucceeded()
+{
 	resetCurrentAnnounceUrl();
 	m_numberOfAnnounces++;
-	if(m_lastEvent == Started) {
+	if (m_lastEvent == Started) {
 		m_hasAnnouncedStarted = true;
 	}
 	m_torrent->successfullyAnnounced(m_lastEvent);
 }
 
-int TrackerClient::numberOfAnnounces() const {
+int TrackerClient::numberOfAnnounces() const
+{
 	return m_numberOfAnnounces;
 }
 
-bool TrackerClient::hasAnnouncedStarted() const {
+bool TrackerClient::hasAnnouncedStarted() const
+{
 	return m_hasAnnouncedStarted;
 }

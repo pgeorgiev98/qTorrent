@@ -22,50 +22,57 @@
 #include "peer.h"
 #include <QDebug>
 
-Block::Block(Piece* piece, int begin, int size) :
-	m_piece(piece),
-	m_begin(begin),
-	m_size(size),
-	m_isDownloaded(false)
+Block::Block(Piece *piece, int begin, int size)
+	: m_piece(piece)
+	, m_begin(begin)
+	, m_size(size)
+	, m_isDownloaded(false)
 {
 }
 
-Block::~Block() {
+Block::~Block()
+{
 }
 
-Piece* Block::piece() {
+Piece *Block::piece()
+{
 	return m_piece;
 }
 
-int Block::begin() const {
+int Block::begin() const
+{
 	return m_begin;
 }
 
-int Block::size() const {
+int Block::size() const
+{
 	return m_size;
 }
 
-bool Block::isDownloaded() {
+bool Block::isDownloaded()
+{
 	return m_isDownloaded;
 }
 
-void Block::setDownloaded(bool downloaded) {
+void Block::setDownloaded(bool downloaded)
+{
 	m_isDownloaded = downloaded;
 }
 
-void Block::setData(const Peer* peer, const char* data) {
-	if(isDownloaded()) {
+void Block::setData(const Peer *peer, const char *data)
+{
+	if (isDownloaded()) {
 		return;
 	}
 
-	char* p = m_piece->data() + m_begin;
-	for(int i = 0; i < m_size; i++) {
+	char *p = m_piece->data() + m_begin;
+	for (int i = 0; i < m_size; i++) {
 		p[i] = data[i];
 	}
 	setDownloaded(true);
-	QList<Peer*> assignees = m_assignees;
-	for(auto p : assignees) {
-		if(p != peer) {
+	QList<Peer *> assignees = m_assignees;
+	for (auto p : assignees) {
+		if (p != peer) {
 			p->sendCancel(this);
 		}
 		p->releaseBlock(this);
@@ -76,26 +83,31 @@ void Block::setData(const Peer* peer, const char* data) {
 
 /* Assignee operations */
 
-void Block::addAssignee(Peer *peer) {
+void Block::addAssignee(Peer *peer)
+{
 	m_assignees.push_back(peer);
 }
 
-void Block::removeAssignee(Peer *peer) {
-	for(int i = m_assignees.size() - 1; i >= 0; i--) {
-		if(m_assignees[i] == peer) {
+void Block::removeAssignee(Peer *peer)
+{
+	for (int i = m_assignees.size() - 1; i >= 0; i--) {
+		if (m_assignees[i] == peer) {
 			m_assignees.removeAt(i);
 		}
 	}
 }
 
-void Block::clearAssignees() {
+void Block::clearAssignees()
+{
 	m_assignees.clear();
 }
 
-QList<Peer*>& Block::assignees() {
+QList<Peer *> &Block::assignees()
+{
 	return m_assignees;
 }
 
-bool Block::hasAssignees() const {
+bool Block::hasAssignees() const
+{
 	return !m_assignees.isEmpty();
 }

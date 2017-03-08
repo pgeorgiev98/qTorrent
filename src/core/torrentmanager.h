@@ -33,28 +33,28 @@ public:
 	TorrentManager();
 	~TorrentManager();
 
-	Torrent* addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings);
-	Torrent* addTorrentFromInfo(TorrentInfo* torrentInfo, const TorrentSettings& settings);
+	Torrent *addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings);
+	Torrent *addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings);
 
 	// Loads all saved for resuming torrents
 	bool resumeTorrents();
 
 	// Not usable
-	Torrent* addTorrentFromMagnetLink(QUrl url);
+	Torrent *addTorrentFromMagnetLink(QUrl url);
 
 	// Saves resume info for all torrents
 	bool saveTorrentsResumeInfo();
 	// Permanently saves the torrent file to the app data directory
-	bool saveTorrentFile(const QString& filename, TorrentInfo* torrentInfo);
+	bool saveTorrentFile(const QString &filename, TorrentInfo *torrentInfo);
 
-	bool removeTorrent(Torrent* torrent, bool deleteData);
+	bool removeTorrent(Torrent *torrent, bool deleteData);
 
 	/* Getters */
-	const QList<Torrent*>& torrents() const;
-	const QString& errorString() const;
+	const QList<Torrent *> &torrents() const;
+	const QString &errorString() const;
 
 private:
-	QList<Torrent*> m_torrents;
+	QList<Torrent *> m_torrents;
 	QString m_errorString;
 };
 

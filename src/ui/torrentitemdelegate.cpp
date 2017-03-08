@@ -26,15 +26,18 @@ TorrentItemDelegate::TorrentItemDelegate(QWidget *parent)
 {
 }
 
-void TorrentItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const {
-	if(index.column() != TorrentsListItem::Progress) {
+void TorrentItemDelegate::paint(QPainter *painter,
+								const QStyleOptionViewItem &option,
+								const QModelIndex &index) const
+{
+	if (index.column() != TorrentsListItem::Progress) {
 		QItemDelegate::paint(painter, option, index);
 		return;
 	}
 
 	float progress = 0.0f;
 	QString display = index.data(Qt::DisplayRole).toString();
-	if(!display.isEmpty()) {
+	if (!display.isEmpty()) {
 		display.remove(display.size() - 1, 1);
 		progress = display.toFloat();
 	}

@@ -70,7 +70,7 @@ TorrentsList::TorrentsList()
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_SECTION_WIDTH(Peers, fm.width(" 123/456 "));
 	SET_SECTION_WIDTH(State, fm.width(" Downloading "));
-	SET_SECTION_WIDTH(Progress, SECTION_HEADER_WIDTH(Progress)*2);
+	SET_SECTION_WIDTH(Progress, SECTION_HEADER_WIDTH(Progress) * 2);
 
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_BYTES_SECTION_WIDTH(Left);
@@ -82,7 +82,7 @@ TorrentsList::TorrentsList()
 
 	// Don't criticize me
 
-	for(Torrent* torrent : QTorrent::instance()->torrents()) {
+	for (Torrent *torrent : QTorrent::instance()->torrents()) {
 		addTorrent(torrent);
 	}
 
@@ -90,58 +90,62 @@ TorrentsList::TorrentsList()
 	connect(headerView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(openHeaderContextMenu(QPoint)));
 }
 
-TorrentsList::~TorrentsList() {
-
+TorrentsList::~TorrentsList()
+{
 }
 
-void TorrentsList::addTorrent(Torrent *torrent) {
-	TorrentsListItem* item = new TorrentsListItem(this, torrent);
+void TorrentsList::addTorrent(Torrent *torrent)
+{
+	TorrentsListItem *item = new TorrentsListItem(this, torrent);
 	m_items.append(item);
 	item->refresh();
 }
 
-void TorrentsList::removeTorrent(Torrent *torrent) {
-	TorrentsListItem* item = torrentItem(torrent);
-	if(item) {
+void TorrentsList::removeTorrent(Torrent *torrent)
+{
+	TorrentsListItem *item = torrentItem(torrent);
+	if (item) {
 		m_items.removeAll(item);
 		removeItemWidget(item, 0);
 		delete item;
 	}
 }
 
-void TorrentsList::refresh() {
-	for(TorrentsListItem* item : m_items) {
+void TorrentsList::refresh()
+{
+	for (TorrentsListItem *item : m_items) {
 		item->refresh();
 	}
 }
 
-void TorrentsList::openContextMenu(const QPoint &pos) {
-	TorrentsListItem* item = dynamic_cast<TorrentsListItem*>(itemAt(pos));
+void TorrentsList::openContextMenu(const QPoint &pos)
+{
+	TorrentsListItem *item = dynamic_cast<TorrentsListItem *>(itemAt(pos));
 
-	if(item == nullptr) {
+	if (item == nullptr) {
 		// This shouldn't happen at all
 		return;
 	}
 
-	QAction* openAct = new QAction(tr("Open"), this);
-	QAction* openLocationAct = new QAction(tr("Open containing folder"), this);
-	QAction* pauseAct = new QAction(tr("Pause"), this);
-	QAction* startAct = new QAction(tr("Start"), this);
-	QAction* stopAct = new QAction(tr("Stop"), this);
-	QAction* recheckAct = new QAction(tr("Recheck"), this);
-	QAction* removeAct = new QAction(tr("Remove"), this);
+	QAction *openAct = new QAction(tr("Open"), this);
+	QAction *openLocationAct = new QAction(tr("Open containing folder"), this);
+	QAction *pauseAct = new QAction(tr("Pause"), this);
+	QAction *startAct = new QAction(tr("Start"), this);
+	QAction *stopAct = new QAction(tr("Stop"), this);
+	QAction *recheckAct = new QAction(tr("Recheck"), this);
+	QAction *removeAct = new QAction(tr("Remove"), this);
 
-	Torrent* torrent = item->torrent();
-	if(!torrent->torrentInfo()->isSingleFile() || !torrent->isDownloaded()) {
+	Torrent *torrent = item->torrent();
+	if (!torrent->torrentInfo()->isSingleFile() || !torrent->isDownloaded()) {
 		openAct->setEnabled(false);
 	}
-	if(torrent->isPaused()) {
+	if (torrent->isPaused()) {
 		pauseAct->setEnabled(false);
 	}
-	if(!torrent->isPaused() && torrent->state() == Torrent::Started) {
+	if (!torrent->isPaused() && torrent->state() == Torrent::Started) {
 		startAct->setEnabled(false);
 	}
-	if(torrent->state() == Torrent::Stopped) {
+	if (torrent->state() == Torrent::Stopped) {
 		pauseAct->setEnabled(false);
 		stopAct->setEnabled(false);
 	}
@@ -168,89 +172,100 @@ void TorrentsList::openContextMenu(const QPoint &pos) {
 	menu.exec(mapToGlobal(pos));
 }
 
-void TorrentsList::openHeaderContextMenu(const QPoint &pos) {
-	QList<QAction*> actions;
+void TorrentsList::openHeaderContextMenu(const QPoint &pos)
+{
+	QList<QAction *> actions;
 	QMenu menu(header());
-	for(int i = 0; i < header()->count(); i++) {
+	for (int i = 0; i < header()->count(); i++) {
 		QString label = header()->model()->headerData(i, Qt::Horizontal).toString();
-		QAction* action = new QAction(label, &menu);
+		QAction *action = new QAction(label, &menu);
 		action->setCheckable(true);
 		action->setChecked(!header()->isSectionHidden(i));
 		menu.addAction(action);
 		actions.append(action);
 	}
 	menu.exec(mapToGlobal(pos));
-	for(int i = 0; i < header()->count(); i++) {
+	for (int i = 0; i < header()->count(); i++) {
 		header()->setSectionHidden(i, !actions[i]->isChecked());
 	}
 }
 
-void TorrentsList::showAll() {
-	for(TorrentsListItem* item : m_items) {
+void TorrentsList::showAll()
+{
+	for (TorrentsListItem *item : m_items) {
 		item->setHidden(false);
 	}
 }
 
-void TorrentsList::showCompleted() {
-	for(TorrentsListItem* item : m_items) {
+void TorrentsList::showCompleted()
+{
+	for (TorrentsListItem *item : m_items) {
 		bool downloaded = item->torrent()->isDownloaded();
 		item->setHidden(!downloaded);
 	}
 }
 
-void TorrentsList::showDownloading() {
-	for(TorrentsListItem* item : m_items) {
+void TorrentsList::showDownloading()
+{
+	for (TorrentsListItem *item : m_items) {
 		bool downloaded = item->torrent()->isDownloaded();
 		item->setHidden(downloaded);
 	}
 }
 
-void TorrentsList::showUploading() {
-	for(TorrentsListItem* item : m_items) {
+void TorrentsList::showUploading()
+{
+	for (TorrentsListItem *item : m_items) {
 		item->setHidden(false);
 	}
 }
 
 
-TorrentsListItem* TorrentsList::torrentItem(Torrent *torrent) {
-	for(TorrentsListItem* item : m_items) {
-		if(item->torrent() == torrent) {
+TorrentsListItem *TorrentsList::torrentItem(Torrent *torrent)
+{
+	for (TorrentsListItem *item : m_items) {
+		if (item->torrent() == torrent) {
 			return item;
 		}
 	}
 	return nullptr;
 }
 
-TorrentsListItem* TorrentsList::torrentItem(const QString &name) {
-	for(TorrentsListItem* item : m_items) {
-		if(item->text(TorrentsListItem::Name) == name) {
+TorrentsListItem *TorrentsList::torrentItem(const QString &name)
+{
+	for (TorrentsListItem *item : m_items) {
+		if (item->text(TorrentsListItem::Name) == name) {
 			return item;
 		}
 	}
 	return nullptr;
 }
 
-Torrent* TorrentsList::currentTorrent() {
-	TorrentsListItem* item = static_cast<TorrentsListItem*>(currentItem());
-	if(!item) {
+Torrent *TorrentsList::currentTorrent()
+{
+	TorrentsListItem *item = static_cast<TorrentsListItem *>(currentItem());
+	if (!item) {
 		return nullptr;
 	}
 	return item->torrent();
 }
 
-void TorrentsList::dragEnterEvent(QDragEnterEvent *event) {
+void TorrentsList::dragEnterEvent(QDragEnterEvent *event)
+{
 	event->acceptProposedAction();
 }
 
-void TorrentsList::dragMoveEvent(QDragMoveEvent *event) {
+void TorrentsList::dragMoveEvent(QDragMoveEvent *event)
+{
 	event->acceptProposedAction();
 }
 
-void TorrentsList::dropEvent(QDropEvent *event) {
-	const QMimeData* mimeData = event->mimeData();
-	if(mimeData->hasUrls()) {
+void TorrentsList::dropEvent(QDropEvent *event)
+{
+	const QMimeData *mimeData = event->mimeData();
+	if (mimeData->hasUrls()) {
 		QList<QUrl> urlList = mimeData->urls();
-		for(QUrl url : urlList) {
+		for (QUrl url : urlList) {
 			QTorrent::instance()->addTorrentFromUrl(url);
 		}
 	}

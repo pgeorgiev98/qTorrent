@@ -29,101 +29,115 @@ BencodeValue::BencodeValue(Type type)
 {
 }
 
-BencodeValue::~BencodeValue() {
+BencodeValue::~BencodeValue()
+{
 }
 
 
-BencodeValue::Type BencodeValue::type() const {
+BencodeValue::Type BencodeValue::type() const
+{
 	return m_type;
 }
 
 
-bool BencodeValue::isInteger() const {
+bool BencodeValue::isInteger() const
+{
 	return m_type == Type::Integer;
 }
 
-bool BencodeValue::isString() const {
+bool BencodeValue::isString() const
+{
 	return m_type == Type::String;
 }
 
-bool BencodeValue::isList() const {
+bool BencodeValue::isList() const
+{
 	return m_type == Type::List;
 }
 
-bool BencodeValue::isDictionary() const {
+bool BencodeValue::isDictionary() const
+{
 	return m_type == Type::Dictionary;
 }
 
 
-BencodeInteger* BencodeValue::toBencodeInteger() {
-	if(!isInteger()) {
+BencodeInteger *BencodeValue::toBencodeInteger()
+{
+	if (!isInteger()) {
 		QString errorString;
 		QTextStream err(&errorString);
 		err << "BencodeValue::toBencodeInteger(): Value is not an integer: ";
 		print(err);
 		throw BencodeException(errorString);
 	}
-	return static_cast<BencodeInteger*>(this);
+	return static_cast<BencodeInteger *>(this);
 }
 
-BencodeString* BencodeValue::toBencodeString() {
-	if(!isString()) {
+BencodeString *BencodeValue::toBencodeString()
+{
+	if (!isString()) {
 		QString errorString;
 		QTextStream err(&errorString);
 		err << "bencodeValue::toBencodeString(): Value is not an string: ";
 		print(err);
 		throw BencodeException(errorString);
 	}
-	return static_cast<BencodeString*>(this);
+	return static_cast<BencodeString *>(this);
 }
 
-BencodeList* BencodeValue::toBencodeList() {
-	if(!isList()) {
+BencodeList* BencodeValue::toBencodeList()
+{
+	if (!isList()) {
 		QString errorString;
 		QTextStream err(&errorString);
 		err << "BencodeValue::toBencodeList(): Value is not an list: ";
 		print(err);
 		throw BencodeException(errorString);
 	}
-	return static_cast<BencodeList*>(this);
+	return static_cast<BencodeList *>(this);
 }
 
-BencodeDictionary* BencodeValue::toBencodeDictionary() {
-	if(!isDictionary()) {
+BencodeDictionary *BencodeValue::toBencodeDictionary()
+{
+	if (!isDictionary()) {
 		QString errorString;
 		QTextStream err(&errorString);
 		err << "BencodeValue::toBencodeDictionary(): Value is not an dictionary";
 		print(err);
 		throw BencodeException(errorString);
 	}
-	return static_cast<BencodeDictionary*>(this);
+	return static_cast<BencodeDictionary *>(this);
 }
 
 
-qint64 BencodeValue::toInt() {
+qint64 BencodeValue::toInt()
+{
 	return toBencodeInteger()->toInt();
 }
 
-QByteArray BencodeValue::toByteArray() {
+QByteArray BencodeValue::toByteArray()
+{
 	return toBencodeString()->toByteArray();
 }
 
-QList<BencodeValue*> BencodeValue::toList() {
+QList<BencodeValue *> BencodeValue::toList()
+{
 	return toBencodeList()->toList();
 }
 
 
-QByteArray BencodeValue::getRawBencodeData(bool includeMetadata) {
+QByteArray BencodeValue::getRawBencodeData(bool includeMetadata)
+{
 	QByteArray returnData;
 	int begin = m_dataPosBegin;
 	int end = m_dataPosEnd;
 
-	if(!includeMetadata) {
+	if (!includeMetadata) {
 		begin++;
 		end--;
 	}
 
-	for(int i = begin; i < end; i++) {
+	for (int i = begin; i < end; i++) {
 		returnData.push_back(m_bencodeData->at(i));
 	}
 
@@ -131,22 +145,23 @@ QByteArray BencodeValue::getRawBencodeData(bool includeMetadata) {
 }
 
 
-BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &position) {
+BencodeValue *BencodeValue::createFromByteArray(const QByteArray &data, int &position)
+{
 	BencodeException ex("BencodeValue::createFromByteArray(): ");
 
-	if(position >= data.size()) {
+	if (position >= data.size()) {
 		throw ex << "Unexpectedly reached end of the data stream";
 	}
 
 	BencodeValue *value;
 	char firstByte = data[position];
-	if(firstByte == 'i') {
+	if (firstByte == 'i') {
 		value = new BencodeInteger;
-	} else if(firstByte >= '0' && firstByte <= '9') {
+	} else if (firstByte >= '0' && firstByte <= '9') {
 		value = new BencodeString;
-	} else if(firstByte == 'l') {
+	} else if (firstByte == 'l') {
 		value = new BencodeList;
-	} else if(firstByte == 'd') {
+	} else if (firstByte == 'd') {
 		value = new BencodeDictionary;
 	} else {
 		throw ex << "Invalid begining character for bencode value: "
@@ -155,7 +170,7 @@ BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &pos
 	}
 	try {
 		value->loadFromByteArray(data, position);
-	} catch(BencodeException& ex2) {
+	} catch (BencodeException &ex2) {
 		delete value;
 		throw ex << "Failed to load value" << endl
 				 << ex2.what();
@@ -165,7 +180,8 @@ BencodeValue* BencodeValue::createFromByteArray(const QByteArray &data, int &pos
 
 
 
-BencodeInteger::BencodeInteger() : BencodeValue(Type::Integer) {
+BencodeInteger::BencodeInteger() : BencodeValue(Type::Integer)
+{
 }
 
 BencodeInteger::BencodeInteger(qint64 value)
@@ -174,14 +190,17 @@ BencodeInteger::BencodeInteger(qint64 value)
 {
 }
 
-BencodeInteger::~BencodeInteger() {
+BencodeInteger::~BencodeInteger()
+{
 }
 
-qint64 BencodeInteger::toInt() {
+qint64 BencodeInteger::toInt()
+{
 	return m_value;
 }
 
-void BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
+void BencodeInteger::loadFromByteArray(const QByteArray &data, int &position)
+{
 	BencodeException ex("BencodeInteger::loadFromByteArray(): ");
 
 	m_bencodeData = &data;
@@ -220,7 +239,8 @@ void BencodeInteger::loadFromByteArray(const QByteArray &data, int &position) {
 
 
 
-BencodeString::BencodeString() : BencodeValue(Type::String) {
+BencodeString::BencodeString() : BencodeValue(Type::String)
+{
 }
 
 BencodeString::BencodeString(const QByteArray& value)
@@ -229,14 +249,17 @@ BencodeString::BencodeString(const QByteArray& value)
 {
 }
 
-BencodeString::~BencodeString() {
+BencodeString::~BencodeString()
+{
 }
 
-QByteArray BencodeString::toByteArray() {
+QByteArray BencodeString::toByteArray()
+{
 	return m_value;
 }
 
-void BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
+void BencodeString::loadFromByteArray(const QByteArray &data, int &position)
+{
 	BencodeException ex("BencodeString::loadFromByteArray(): ");
 
 	m_bencodeData = &data;
@@ -283,20 +306,24 @@ void BencodeString::loadFromByteArray(const QByteArray &data, int &position) {
 
 
 
-BencodeList::BencodeList() : BencodeValue(Type::List) {
+BencodeList::BencodeList() : BencodeValue(Type::List)
+{
 }
 
-BencodeList::~BencodeList() {
+BencodeList::~BencodeList()
+{
 	for(auto value : m_values) {
 		delete value;
 	}
 }
 
-QList<BencodeValue*> BencodeList::toList() {
+QList<BencodeValue*> BencodeList::toList()
+{
 	return m_values;
 }
 
-void BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
+void BencodeList::loadFromByteArray(const QByteArray &data, int &position)
+{
 	BencodeException ex("BencodeList::loadFromByteArray(): ");
 
 	m_bencodeData = &data;
@@ -334,35 +361,42 @@ void BencodeList::loadFromByteArray(const QByteArray &data, int &position) {
 
 
 
-BencodeDictionary::BencodeDictionary() : BencodeValue(Type::Dictionary) {
+BencodeDictionary::BencodeDictionary() : BencodeValue(Type::Dictionary)
+{
 }
 
-BencodeDictionary::~BencodeDictionary() {
+BencodeDictionary::~BencodeDictionary()
+{
 	for(BencodeValue* value : m_values.values()) {
 		delete value;
 	}
 }
 
-QList<QByteArray> BencodeDictionary::keys() const {
+QList<QByteArray> BencodeDictionary::keys() const
+{
 	return m_values.keys();
 }
 
-QList<BencodeValue*> BencodeDictionary::values() const {
+QList<BencodeValue*> BencodeDictionary::values() const
+{
 	return m_values.values();
 }
 
-bool BencodeDictionary::keyExists(const QByteArray& key) const {
+bool BencodeDictionary::keyExists(const QByteArray& key) const
+{
 	return m_values.keys().contains(key);
 }
 
-BencodeValue* BencodeDictionary::value(const QByteArray& key) const {
+BencodeValue* BencodeDictionary::value(const QByteArray& key) const
+{
 	if(keyExists(key)) {
 		return m_values.value(key);
 	}
 	throw BencodeException("BencodeDictionary::value(): No such key: '" + key + "'");
 }
 
-void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position) {
+void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
+{
 	BencodeException ex("BencodeDictionary::loadFromByteArray(): ");
 
 	m_bencodeData = &data;
@@ -410,28 +444,34 @@ void BencodeDictionary::loadFromByteArray(const QByteArray &data, int &position)
 }
 
 
-void BencodeInteger::setValue(qint64 value) {
+void BencodeInteger::setValue(qint64 value)
+{
 	m_value = value;
 }
 
-void BencodeString::setValue(const QByteArray &value) {
+void BencodeString::setValue(const QByteArray &value)
+{
 	m_value = value;
 }
 
-void BencodeList::setValues(const QList<BencodeValue *> &values) {
+void BencodeList::setValues(const QList<BencodeValue *> &values)
+{
 	m_values = values;
 }
 
-void BencodeList::add(BencodeValue *value) {
+void BencodeList::add(BencodeValue *value)
+{
 	m_values.push_back(value);
 }
 
-void BencodeDictionary::add(const QByteArray& key, BencodeValue* value) {
+void BencodeDictionary::add(const QByteArray& key, BencodeValue* value)
+{
 	m_values[key] = value;
 }
 
 
-QByteArray BencodeInteger::bencode(bool includeMetadata) const {
+QByteArray BencodeInteger::bencode(bool includeMetadata) const
+{
 	QByteArray data;
 	if(includeMetadata) {
 		data.append('i').append(QString::number(m_value)).append('e');
@@ -441,7 +481,8 @@ QByteArray BencodeInteger::bencode(bool includeMetadata) const {
 	return data;
 }
 
-QByteArray BencodeString::bencode(bool includeMetadata) const {
+QByteArray BencodeString::bencode(bool includeMetadata) const
+{
 	QByteArray data;
 	if(includeMetadata) {
 		data.append(QString::number(m_value.size())).append(':').append(m_value);
@@ -451,7 +492,8 @@ QByteArray BencodeString::bencode(bool includeMetadata) const {
 	return data;
 }
 
-QByteArray BencodeList::bencode(bool includeMetadata) const {
+QByteArray BencodeList::bencode(bool includeMetadata) const
+{
 	QByteArray data;
 	if(includeMetadata) {
 		data.append('l');
@@ -465,7 +507,8 @@ QByteArray BencodeList::bencode(bool includeMetadata) const {
 	return data;
 }
 
-QByteArray BencodeDictionary::bencode(bool includeMetadata) const {
+QByteArray BencodeDictionary::bencode(bool includeMetadata) const
+{
 	QByteArray data;
 	if(includeMetadata) {
 		data.append('d');
@@ -481,15 +524,18 @@ QByteArray BencodeDictionary::bencode(bool includeMetadata) const {
 }
 
 
-void BencodeInteger::print(QTextStream& out) const {
+void BencodeInteger::print(QTextStream& out) const
+{
 	out << m_value;
 }
 
-void BencodeString::print(QTextStream& out) const {
+void BencodeString::print(QTextStream& out) const
+{
 	out << m_value;
 }
 
-void BencodeList::print(QTextStream& out) const {
+void BencodeList::print(QTextStream& out) const
+{
 	out << "List {" << endl;
 	for(auto v : m_values) {
 		QString s;
@@ -503,7 +549,8 @@ void BencodeList::print(QTextStream& out) const {
 	out << "}";
 }
 
-void BencodeDictionary::print(QTextStream& out) const {
+void BencodeDictionary::print(QTextStream& out) const
+{
 	out << "Dictionary {" << endl;
 	for(const QByteArray& key : m_values.keys()) {
 		out << key;
@@ -520,7 +567,8 @@ void BencodeDictionary::print(QTextStream& out) const {
 }
 
 
-bool BencodeInteger::equalTo(BencodeValue *other) const {
+bool BencodeInteger::equalTo(BencodeValue *other) const
+{
 	try {
 		return other->toInt() == m_value;
 	} catch(BencodeException& ex) {
@@ -528,7 +576,8 @@ bool BencodeInteger::equalTo(BencodeValue *other) const {
 	}
 }
 
-bool BencodeString::equalTo(BencodeValue *other) const {
+bool BencodeString::equalTo(BencodeValue *other) const
+{
 	try {
 		return other->toByteArray() == m_value;
 	} catch(BencodeException& ex) {
@@ -536,7 +585,8 @@ bool BencodeString::equalTo(BencodeValue *other) const {
 	}
 }
 
-bool BencodeList::equalTo(BencodeValue *other) const {
+bool BencodeList::equalTo(BencodeValue *other) const
+{
 	try {
 		auto list = other->toList();
 		if(list.size() != m_values.size()) {
@@ -553,7 +603,8 @@ bool BencodeList::equalTo(BencodeValue *other) const {
 	}
 }
 
-bool BencodeDictionary::equalTo(BencodeValue *other) const {
+bool BencodeDictionary::equalTo(BencodeValue *other) const
+{
 	try {
 		BencodeDictionary* otherDict = other->toBencodeDictionary();
 		if(keys() != otherDict->keys()) {

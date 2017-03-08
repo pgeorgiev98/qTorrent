@@ -29,7 +29,8 @@ struct FileInfo {
 	qint64 length;
 };
 
-class TorrentInfo {
+class TorrentInfo
+{
 	QString m_errorString;
 	void clearError();
 	void setError(QString errorString);
@@ -41,10 +42,10 @@ class TorrentInfo {
 	qint64 m_pieceLength;
 	QList<QByteArray> m_pieces;
 
-	QDateTime* m_creationDate;
-	QString* m_comment;
-	QString* m_createdBy;
-	QString* m_encoding;
+	QDateTime *m_creationDate;
+	QString *m_comment;
+	QString *m_createdBy;
+	QString *m_encoding;
 
 	QList<FileInfo> m_fileInfos;
 
@@ -57,25 +58,25 @@ public:
 	QString errorString() const;
 	bool loadFromTorrentFile(QString filename);
 
-	const QList<QByteArray>& announceUrlsList() const;
+	const QList<QByteArray> &announceUrlsList() const;
 
 	qint64 length() const;
-	const QByteArray& torrentName() const;
+	const QByteArray &torrentName() const;
 	qint64 pieceLength() const;
-	const QList<QByteArray>& pieces() const;
-	const QByteArray& piece(int pieceIndex) const;
+	const QList<QByteArray> &pieces() const;
+	const QByteArray &piece(int pieceIndex) const;
 
-	const QDateTime* creationDate() const;
-	const QString* comment() const;
-	const QString* createdBy() const;
-	const QString* encoding() const;
+	const QDateTime *creationDate() const;
+	const QString *comment() const;
+	const QString *createdBy() const;
+	const QString *encoding() const;
 
 	const QList<FileInfo>& fileInfos() const;
 	bool isSingleFile() const;
 
-	const QByteArray& infoHash() const;
+	const QByteArray &infoHash() const;
 
-	const QString& creationFileName() const;
+	const QString &creationFileName() const;
 
 	int numberOfPieces() const;
 	int bitfieldSize() const;

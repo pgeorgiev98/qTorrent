@@ -22,16 +22,17 @@
 
 #include <QString>
 
-class TorrentSettings {
+class TorrentSettings
+{
 public:
 	TorrentSettings();
 
 	/* Setters */
-	void setDownloadLocation(const QString& downloadLocation);
+	void setDownloadLocation(const QString &downloadLocation);
 	void setStartImmediately(bool startImmediately);
 
 	/* Getters */
-	const QString& downloadLocation() const;
+	const QString &downloadLocation() const;
 	bool startImmediately() const;
 
 private:

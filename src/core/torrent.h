@@ -40,7 +40,8 @@ class QFile;
  * links to the files, peers, tracker client, pieces, etc.
  * Can be used to control the uploading/downloading of this torrent
  */
-class Torrent : public QObject {
+class Torrent : public QObject
+{
 	Q_OBJECT
 
 public:
@@ -62,8 +63,8 @@ public:
 
 	/* Operations */
 
-	bool createNew(TorrentInfo* torrentInfo, const QString& downloadLocation);
-	bool createFromResumeInfo(TorrentInfo* torrentInfo, ResumeInfo* resumeInfo);
+	bool createNew(TorrentInfo *torrentInfo, const QString &downloadLocation);
+	bool createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeInfo);
 	bool createFromMagnetLink(QUrl url);
 	void loadFileDescriptors();
 
@@ -79,27 +80,27 @@ public:
 	void check();
 
 	/* Creates a peer and connects to him */
-	Peer* addPeer(const QByteArray& address, int port);
+	Peer *addPeer(const QByteArray &address, int port);
 	/* Add a peer that has connected to us to the list */
-	void addPeer(Peer* peer);
+	void addPeer(Peer *peer);
 
-	Block* requestBlock(Peer* client, int size);
+	Block *requestBlock(Peer *client, int size);
 
-	bool savePiece(Piece* piece);
+	bool savePiece(Piece *piece);
 
 	/* Sets a piece's downloaded/available state.
 	 * if state is Started, it will increment m_bytesDownloaded */
-	void setPieceAvailable(Piece* piece, bool available = true);
+	void setPieceAvailable(Piece *piece, bool available = true);
 
 	void successfullyAnnounced(TrackerClient::Event event);
 
 	/* Getters */
 
-	QList<Peer*>& peers();
-	QList<Piece*>& pieces();
-	TorrentInfo* torrentInfo();
-	TrackerClient* trackerClient();
-	QList<QFile*>& files();
+	QList<Peer *> &peers();
+	QList<Piece *> &pieces();
+	QList<QFile *> &files();
+	TorrentInfo *torrentInfo();
+	TrackerClient *trackerClient();
 
 	// The number of bytes since startup
 	qint64 bytesDownloaded() const;
@@ -124,7 +125,7 @@ public:
 	QString stateString() const;
 
 
-	const QString& downloadLocation() const;
+	const QString &downloadLocation() const;
 
 	/* Calculates the current percentage of the downloaded pieces */
 	float percentDownloaded();
@@ -136,7 +137,7 @@ public:
 
 
 	/* Called when a piece is successfully downloaded */
-	void downloadedPiece(Piece* piece);
+	void downloadedPiece(Piece *piece);
 
 	/* Called when a piece is successfully uploaded */
 	void uploadedBlock(int bytes);
@@ -153,11 +154,11 @@ public slots:
 
 private:
 	State m_state;
-	QList<Peer*> m_peers;
-	QList<Piece*> m_pieces;
-	TorrentInfo* m_torrentInfo;
-	TrackerClient* m_trackerClient;
-	QList<QFile*> m_files;
+	QList<Peer *> m_peers;
+	QList<Piece *> m_pieces;
+	TorrentInfo *m_torrentInfo;
+	TrackerClient *m_trackerClient;
+	QList<QFile *> m_files;
 	FileController *m_fileController;
 
 	// The number of bytes on startup
@@ -185,7 +186,7 @@ private:
 	/* Contains last error */
 	QString m_errorString;
 	void clearError();
-	void setError(const QString& errorString);
+	void setError(const QString &errorString);
 };
 
 #endif // TORRENT_H

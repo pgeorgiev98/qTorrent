@@ -32,7 +32,8 @@ class Torrent;
  * Can announce and automatically reannounce to the tracker
  * and fetch a list of peers
  */
-class TrackerClient : public QObject {
+class TrackerClient : public QObject
+{
 public:
 	/* The 'announce' event types */
 	enum Event {
@@ -43,7 +44,7 @@ public:
 	};
 
 	/* Constructor and destructor */
-	TrackerClient(Torrent* torrent);
+	TrackerClient(Torrent *torrent);
 	~TrackerClient();
 
 	/* Used to send 'announce' to the tracker */
@@ -60,10 +61,11 @@ public slots:
 
 	/* Called by a timer every m_interval seconds to reannounce */
 	void reannounce();
+
 private:
 	Q_OBJECT
 
-	Torrent* m_torrent;
+	Torrent *m_torrent;
 	QNetworkAccessManager m_accessManager;
 	QNetworkReply *m_reply;
 
@@ -83,7 +85,7 @@ private:
 	bool m_hasAnnouncedStarted;
 
 	// Returns the current announce url
-	const QByteArray& currentAnnounceUrl() const;
+	const QByteArray &currentAnnounceUrl() const;
 
 	// Resets the current announce url
 	void resetCurrentAnnounceUrl();

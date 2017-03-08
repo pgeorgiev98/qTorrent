@@ -38,7 +38,7 @@ public:
 	~AddTorrentDialog();
 
 	bool setTorrentUrl(QUrl url);
-	bool browseFilePath(QWidget* parent);
+	bool browseFilePath(QWidget *parent);
 
 	void updateInfo();
 
@@ -48,23 +48,23 @@ public slots:
 	void cancel();
 
 private:
-	QLineEdit* m_downloadLocation;
-	QPushButton* m_browseDownloadLocation;
-	QCheckBox* m_startImmediately;
-	QPushButton* m_ok;
-	QPushButton* m_cancel;
+	QLineEdit *m_downloadLocation;
+	QPushButton *m_browseDownloadLocation;
+	QCheckBox *m_startImmediately;
+	QPushButton *m_ok;
+	QPushButton *m_cancel;
 
-	QLabel* m_name;
-	QLabel* m_size;
-	QLabel* m_infoHash;
-	QLabel* m_creationDate;
-	QLabel* m_createdBy;
-	QLabel* m_comment;
+	QLabel *m_name;
+	QLabel *m_size;
+	QLabel *m_infoHash;
+	QLabel *m_creationDate;
+	QLabel *m_createdBy;
+	QLabel *m_comment;
 
-	TorrentInfo* m_torrentInfo;
+	TorrentInfo *m_torrentInfo;
 
 	void connectAll();
-	bool loadTorrent(const QString& filePath);
+	bool loadTorrent(const QString &filePath);
 };
 
 #endif // ADDTORRENTDIALOG_H

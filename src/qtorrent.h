@@ -30,49 +30,50 @@ class TorrentManager;
 class TorrentServer;
 class MainWindow;
 
-class QTorrent {
+class QTorrent
+{
 public:
 	QTorrent();
 	~QTorrent();
 
 	bool startServer();
 	bool resumeTorrents();
-	bool addTorrentFromLocalFile(const QString& filename, const TorrentSettings& settings);
+	bool addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings);
 	bool addTorrentFromMagnetLink(QUrl url);
 	bool addTorrentFromUrl(QUrl url);
 
-	bool removeTorrent(Torrent* torrent, bool deleteData);
+	bool removeTorrent(Torrent *torrent, bool deleteData);
 
 	void shutDown();
 
 	void showMainWindow();
 
 	/* Opens a critical MessageBox */
-	void critical(const QString& text);
+	void critical(const QString &text);
 	/* Opens an information MessageBox */
-	void information(const QString& text);
+	void information(const QString &text);
 	/* Opens question MessageBox. Returns true on 'yes' */
-	bool question(const QString& text);
+	bool question(const QString &text);
 	/* Opens a warning MessageBox */
-	void warning(const QString& text);
+	void warning(const QString &text);
 
-	const QByteArray& peerId() const;
-	const QList<Torrent*>& torrents() const;
-	TorrentManager* torrentManager();
-	TorrentServer* server();
-	MainWindow* mainWindow();
+	const QByteArray &peerId() const;
+	const QList<Torrent *> &torrents() const;
+	TorrentManager *torrentManager();
+	TorrentServer *server();
+	MainWindow *mainWindow();
 
-	static QTorrent* instance();
+	static QTorrent *instance();
 
 private:
 	QByteArray m_peerId;
 
-	TorrentManager* m_torrentManager;
-	TorrentServer* m_server;
+	TorrentManager *m_torrentManager;
+	TorrentServer *m_server;
 
-	MainWindow* m_mainWindow;
+	MainWindow *m_mainWindow;
 
-	static QTorrent* m_instance;
+	static QTorrent *m_instance;
 };
 
 #endif // QTORRENT_H

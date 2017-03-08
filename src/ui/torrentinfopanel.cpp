@@ -49,10 +49,11 @@ TorrentInfoPanel::TorrentInfoPanel(QWidget *parent)
 	addTab(infoTab, "Info");
 }
 
-void TorrentInfoPanel::refreshInfoTab() {
-	Torrent* torrent = QTorrent::instance()->mainWindow()->
-			torrentsList()->currentTorrent();
-	if(!torrent) {
+void TorrentInfoPanel::refreshInfoTab()
+{
+	Torrent *torrent = QTorrent::instance()->mainWindow()->
+					   torrentsList()->currentTorrent();
+	if (!torrent) {
 		m_torrentName->clear();
 		m_torrentSize->clear();
 		m_pieceSize->clear();
@@ -62,7 +63,7 @@ void TorrentInfoPanel::refreshInfoTab() {
 		m_comment->clear();
 		return;
 	}
-	TorrentInfo* info = torrent->torrentInfo();
+	TorrentInfo *info = torrent->torrentInfo();
 
 	m_torrentName->setText(tr("Name: %1").arg(
 							   QString::fromUtf8(info->torrentName())));
@@ -88,19 +89,22 @@ void TorrentInfoPanel::refreshInfoTab() {
 							: tr("Not available")));
 }
 
-void TorrentInfoPanel::refresh() {
+void TorrentInfoPanel::refresh()
+{
 	refreshInfoTab();
 }
 
-void TorrentInfoPanel::contextMenuEvent(QContextMenuEvent *event) {
+void TorrentInfoPanel::contextMenuEvent(QContextMenuEvent *event)
+{
 	QMenu menu(this);
-	QAction* hide = new QAction(tr("Hide Info Panel"), &menu);
+	QAction *hide = new QAction(tr("Hide Info Panel"), &menu);
 	menu.addAction(hide);
 	connect(hide, &QAction::triggered, this, &TorrentInfoPanel::hide);
 	menu.exec(event->globalPos());
 }
 
-void TorrentInfoPanel::hide() {
+void TorrentInfoPanel::hide()
+{
 	QWidget::hide();
 	emit visibilityChanged(false);
 }

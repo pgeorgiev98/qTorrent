@@ -51,9 +51,9 @@ MainWindow::MainWindow()
 
 	addToolBar(Qt::LeftToolBarArea, m_panel);
 
-	QStackedWidget* stackedWidget = new QStackedWidget;
-	QWidget* torrentsListWidget = new QWidget;
-	QVBoxLayout* torrentsListLayout = new QVBoxLayout;
+	QStackedWidget *stackedWidget = new QStackedWidget;
+	QWidget *torrentsListWidget = new QWidget;
+	QVBoxLayout *torrentsListLayout = new QVBoxLayout;
 	torrentsListLayout->addWidget(m_torrentsList);
 	torrentsListLayout->addWidget(m_infoPanel);
 	torrentsListWidget->setLayout(torrentsListLayout);
@@ -76,11 +76,11 @@ MainWindow::MainWindow()
 
 	m_trayIconMenu = new QMenu(this);
 
-	QAction* hideClientAction = new QAction(tr("Hide/Show qTorrent"), this);
+	QAction *hideClientAction = new QAction(tr("Hide/Show qTorrent"), this);
 	connect(hideClientAction, &QAction::triggered, this, &MainWindow::toggleHideShow);
 	m_trayIconMenu->addAction(hideClientAction);
 
-	QAction* exitAction = new QAction(tr("Exit"), this);
+	QAction *exitAction = new QAction(tr("Exit"), this);
 	connect(exitAction, &QAction::triggered, this, &MainWindow::exitAction);
 	m_trayIconMenu->addAction(exitAction);
 
@@ -94,43 +94,48 @@ MainWindow::MainWindow()
 			this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 }
 
-MainWindow::~MainWindow() {
-
+MainWindow::~MainWindow()
+{
 }
 
-Panel* MainWindow::panel() {
+Panel *MainWindow::panel()
+{
 	return m_panel;
 }
 
-TorrentsList* MainWindow::torrentsList() {
+TorrentsList *MainWindow::torrentsList()
+{
 	return m_torrentsList;
 }
 
 
-void MainWindow::addTorrent(Torrent *torrent) {
+void MainWindow::addTorrent(Torrent *torrent)
+{
 	m_torrentsList->addTorrent(torrent);
 }
 
-void MainWindow::removeTorrent(Torrent *torrent) {
+void MainWindow::removeTorrent(Torrent *torrent)
+{
 	m_torrentsList->removeTorrent(torrent);
 }
 
 
-void MainWindow::createMenus() {
+void MainWindow::createMenus()
+{
 	menuBar()->show();
 
 	// Menus
-	QMenu* fileMenu = menuBar()->addMenu(tr("&File"));
-	QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
-	QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
+	QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+	QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+	QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
 
 	// Actions
-	QAction* addTorrentAction = new QAction(tr("&Add torrent"), this);
-	QAction* exitAction = new QAction(tr("&Exit"), this);
-	QAction* hideClientAction = new QAction(tr("Hide qTorrent"), this);
+	QAction *addTorrentAction = new QAction(tr("&Add torrent"), this);
+	QAction *exitAction = new QAction(tr("&Exit"), this);
+	QAction *hideClientAction = new QAction(tr("Hide qTorrent"), this);
 	m_viewTorrentsFilterPanel = new QAction(tr("Torrents filter panel"), this);
 	m_viewTorrentInfoPanel = new QAction(tr("Torrents info panel"), this);
-	QAction* aboutAction = new QAction(tr("&About"), this);
+	QAction *aboutAction = new QAction(tr("&About"), this);
 
 	// Connect actions
 	connect(addTorrentAction, &QAction::triggered, this, &MainWindow::addTorrentAction);
@@ -165,7 +170,8 @@ void MainWindow::createMenus() {
 }
 
 
-QString MainWindow::getDownloadLocation() {
+QString MainWindow::getDownloadLocation()
+{
 	// Open a dialog box to select the download directory
 	QString downloadPath;
 	downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
@@ -174,56 +180,65 @@ QString MainWindow::getDownloadLocation() {
 	return downloadPath;
 }
 
-void MainWindow::addTorrentAction() {
+void MainWindow::addTorrentAction()
+{
 	AddTorrentDialog dialog(this);
-	if(dialog.browseFilePath(this)) {
+	if (dialog.browseFilePath(this)) {
 		dialog.exec();
 	}
 }
 
-void MainWindow::exitAction() {
-	if(QTorrent::instance()->question("Are you sure you want to exit " + QGuiApplication::applicationDisplayName() + "?")) {
+void MainWindow::exitAction()
+{
+	if (QTorrent::instance()->question("Are you sure you want to exit "
+									   + QGuiApplication::applicationDisplayName() + "?")) {
 		QApplication::quit();
 	}
 }
 
-void MainWindow::addTorrentFromUrl(QUrl url) {
+void MainWindow::addTorrentFromUrl(QUrl url)
+{
 	AddTorrentDialog dialog(this);
-	if(dialog.setTorrentUrl(url)) {
+	if (dialog.setTorrentUrl(url)) {
 		dialog.exec();
 	}
 }
 
-void MainWindow::closeEvent(QCloseEvent *event) {
+void MainWindow::closeEvent(QCloseEvent *event)
+{
 	event->ignore();
 	hide();
 }
 
-void MainWindow::toggleHideShowTorrentsFilterPanel() {
-	if(m_panel->isHidden()) {
+void MainWindow::toggleHideShowTorrentsFilterPanel()
+{
+	if (m_panel->isHidden()) {
 		m_panel->show();
 	} else {
 		m_panel->hide();
 	}
 }
 
-void MainWindow::toggleHideShowTorrentInfoPanel() {
-	if(m_infoPanel->isHidden()) {
+void MainWindow::toggleHideShowTorrentInfoPanel()
+{
+	if (m_infoPanel->isHidden()) {
 		m_infoPanel->show();
 	} else {
 		m_infoPanel->hide();
 	}
 }
 
-void MainWindow::toggleHideShow() {
-	if(isHidden()) {
+void MainWindow::toggleHideShow()
+{
+	if (isHidden()) {
 		show();
 	} else {
 		hide();
 	}
 }
 
-void MainWindow::aboutAction() {
+void MainWindow::aboutAction()
+{
 	QMessageBox::about(this, tr("About qTorrent"),
 					   tr("<p><b>qTorrent</b> is a simple BitTorrent client, written from "
 						  "scratch in C++ with Qt5. qTorrent aims to be a good, lightweight "
@@ -232,13 +247,15 @@ void MainWindow::aboutAction() {
 						  "<p>It is licensed under the GNU General Public License v3.0</p>"));
 }
 
-void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason) {
-	if(reason == QSystemTrayIcon::DoubleClick) {
+void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+	if (reason == QSystemTrayIcon::DoubleClick) {
 		show();
 	}
 }
 
-void MainWindow::torrentFullyDownloaded(Torrent *torrent) {
+void MainWindow::torrentFullyDownloaded(Torrent *torrent)
+{
 	m_trayIcon->showMessage(tr("Torrent downloaded successfully"),
 							tr("The torrent %1 was successfully downloaded")
 							.arg(QString::fromUtf8(torrent->torrentInfo()->torrentName())));

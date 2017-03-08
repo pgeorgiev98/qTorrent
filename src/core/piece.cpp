@@ -33,7 +33,7 @@
 // TODO: implement this in a less complex way
 static QMutex pieceDownloadedMutex;
 
-Piece::Piece(Torrent* torrent, int pieceNumber, int size)
+Piece::Piece(Torrent *torrent, int pieceNumber, int size)
 	: m_torrent(torrent)
 	, m_pieceNumber(pieceNumber)
 	, m_size(size)
@@ -42,38 +42,44 @@ Piece::Piece(Torrent* torrent, int pieceNumber, int size)
 {
 }
 
-Piece::~Piece() {
-	for(auto b : m_blocks) {
+Piece::~Piece()
+{
+	for (auto b : m_blocks) {
 		delete b;
 	}
-	if(m_pieceData != nullptr) {
+	if (m_pieceData != nullptr) {
 		delete[] m_pieceData;
 	}
 }
 
-bool Piece::isDownloaded() const {
+bool Piece::isDownloaded() const
+{
 	pieceDownloadedMutex.lock();
 	bool ret = m_isDownloaded;
 	pieceDownloadedMutex.unlock();
 	return ret;;
 }
 
-int Piece::pieceNumber() const {
+int Piece::pieceNumber() const
+{
 	return m_pieceNumber;
 }
 
-char* Piece::data() const {
+char *Piece::data() const
+{
 	return m_pieceData;
 }
 
-int Piece::size() const {
+int Piece::size() const
+{
 	return m_size;
 }
 
-void Piece::addBlock(Block *block) {
+void Piece::addBlock(Block *block)
+{
 	int insertPos = 0;
-	for(int i = 0; i < m_blocks.size(); i++) {
-		if(block->begin() < m_blocks[i]->begin()) {
+	for (int i = 0; i < m_blocks.size(); i++) {
+		if (block->begin() < m_blocks[i]->begin()) {
 			break;
 		}
 		insertPos++;
@@ -81,28 +87,30 @@ void Piece::addBlock(Block *block) {
 	m_blocks.insert(insertPos, block);
 }
 
-void Piece::deleteBlock(Block* block) {
+void Piece::deleteBlock(Block *block)
+{
 	int blockNumber = -1;
-	for(int i = 0; i < m_blocks.size(); i++) {
-		if(m_blocks[i] == block) {
+	for (int i = 0; i < m_blocks.size(); i++) {
+		if (m_blocks[i] == block) {
 			blockNumber = i;
 			break;
 		}
 	}
-	if(blockNumber != -1) {
+	if (blockNumber != -1) {
 		delete m_blocks[blockNumber];
 		m_blocks.removeAt(blockNumber);
 	}
 }
 
-bool Piece::checkIfFullyDownloaded() {
-	if(m_isDownloaded) { // If already marked as downloaded, don't do anything
+bool Piece::checkIfFullyDownloaded()
+{
+	if (m_isDownloaded) { // If already marked as downloaded, don't do anything
 		return true;
 	}
 	Q_ASSERT_X(m_pieceData != nullptr, "Piece::checkIfFullyDownloaded()", "Piece not loaded");
 	int pos = 0;
-	for(auto b : m_blocks) {
-		if(b->begin() == pos && b->isDownloaded()) {
+	for (auto b : m_blocks) {
+		if (b->begin() == pos && b->isDownloaded()) {
 			pos += b->size();
 		} else {
 			m_isDownloaded = false;
@@ -113,14 +121,15 @@ bool Piece::checkIfFullyDownloaded() {
 	return m_isDownloaded;
 }
 
-void Piece::updateState() {
-	if(checkIfFullyDownloaded()) {
+void Piece::updateState()
+{
+	if (checkIfFullyDownloaded()) {
 		Q_ASSERT_X(m_pieceData != nullptr, "Piece::updateState()", "Piece not loaded");
 		QCryptographicHash hash(QCryptographicHash::Sha1);
 		hash.addData(m_pieceData, m_size);
 		QByteArray actualHash = hash.result();
-		if(actualHash != m_torrent->torrentInfo()->piece(m_pieceNumber)) {
-			for(auto b : m_blocks) {
+		if (actualHash != m_torrent->torrentInfo()->piece(m_pieceNumber)) {
+			for (auto b : m_blocks) {
 				delete b;
 			}
 			m_blocks.clear();
@@ -135,25 +144,26 @@ void Piece::updateState() {
 	}
 }
 
-Block* Piece::requestBlock(int size) {
+Block *Piece::requestBlock(int size)
+{
 	int tmp = 0;
 	int s = size;
-	if(m_isDownloaded) {
+	if (m_isDownloaded) {
 		// WTF?!
 		return nullptr;
 	}
-	if(m_pieceData == nullptr) {
+	if (m_pieceData == nullptr) {
 		m_pieceData = new char[m_size];
 	}
-	Block* block = nullptr;
+	Block *block = nullptr;
 
-	for(auto b : m_blocks) {
-		if(!b->isDownloaded() && !b->hasAssignees()) {
+	for (auto b : m_blocks) {
+		if (!b->isDownloaded() && !b->hasAssignees()) {
 			return b;
 		}
-		if(tmp < b->begin()) {
+		if (tmp < b->begin()) {
 			s = b->begin() - tmp;
-			if(s > size) {
+			if (s > size) {
 				s = size;
 			}
 			block = new Block(this, tmp, s);
@@ -162,49 +172,52 @@ Block* Piece::requestBlock(int size) {
 			tmp = b->begin() + b->size();
 		}
 	}
-	if(block == nullptr) {
+	if (block == nullptr) {
 		int pieceSize = m_size;
-		if(pieceSize - tmp > size) {
+		if (pieceSize - tmp > size) {
 			block = new Block(this, tmp, size);
-		} else if(pieceSize - tmp > 0) {
+		} else if (pieceSize - tmp > 0) {
 			block = new Block(this, tmp, pieceSize - tmp);
 		}
 	}
-	if(block != nullptr) {
+	if (block != nullptr) {
 		addBlock(block);
 	}
 
 	return block;
 }
 
-void Piece::unloadFromMemory() {
+void Piece::unloadFromMemory()
+{
 	Q_ASSERT_X(m_pieceData != nullptr, "Piece::unloadFromMemory()", "Piece is not loaded");
 	Q_ASSERT_X(checkIfFullyDownloaded(), "Piece::unloadFromMemory()", "Piece is not fully downloaded");
 	delete[] m_pieceData;
 	m_pieceData = nullptr;
 }
 
-void Piece::setDownloaded(bool downloaded) {
+void Piece::setDownloaded(bool downloaded)
+{
 	pieceDownloadedMutex.lock();
 	m_isDownloaded = downloaded;
-	for(Block* block : m_blocks) {
+	for (Block* block : m_blocks) {
 		delete block;
 	}
 	m_blocks.clear();
 	pieceDownloadedMutex.unlock();
 }
 
-bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
+bool Piece::getBlockData(int begin, int size, QByteArray &blockData)
+{
 	blockData.clear();
 
 	// Check if piece is loaded in memory (unlikely)
-	if(m_pieceData && m_isDownloaded) {
+	if (m_pieceData && m_isDownloaded) {
 		blockData.append(m_pieceData + begin, size);
 		return true;
 	}
 
-	const QList<FileInfo>& fileInfos = m_torrent->torrentInfo()->fileInfos();
-	QList<QFile*>& files = m_torrent->files();
+	const QList<FileInfo> &fileInfos = m_torrent->torrentInfo()->fileInfos();
+	QList<QFile *> &files = m_torrent->files();
 
 	// Find this block's absolute indexes
 	qint64 blockBegin = m_torrent->torrentInfo()->pieceLength();
@@ -214,16 +227,16 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 
 	// For each file
 	qint64 fileBegin = 0;
-	for(int i = 0; i < fileInfos.size(); i++) {
-		const FileInfo& fileInfo = fileInfos[i];
-		QFile* file = files[i];
+	for (int i = 0; i < fileInfos.size(); i++) {
+		const FileInfo &fileInfo = fileInfos[i];
+		QFile *file = files[i];
 
 		qint64 fileEnd = fileBegin + fileInfo.length;
 
 		// Does this file have any of the needed data?
-		if(fileEnd > blockBegin && fileBegin < blockEnd) {
+		if (fileEnd > blockBegin && fileBegin < blockEnd) {
 			qint64 seek = 0;
-			if(blockBegin - fileBegin > 0) {
+			if (blockBegin - fileBegin > 0) {
 				seek = blockBegin - fileBegin;
 			}
 
@@ -231,14 +244,14 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 			qint64 bytesToRead = qMin(blockEnd, fileEnd) - qMax(blockBegin, fileBegin);
 
 			// Open file
-			if(!file->open(QFile::ReadOnly)) {
+			if (!file->open(QFile::ReadOnly)) {
 				qDebug() << "Failed to open file" << file->fileName() << ":" << file->errorString();
 				return false;
 			}
 
 			// Seek in the file if needed
-			if(seek) {
-				if(!file->seek(seek)) {
+			if (seek) {
+				if (!file->seek(seek)) {
 					qDebug() << "Failed to seek" << seek << "bytes in file" << file->fileName() << ":" << file->errorString();
 					file->close();
 					return false;
@@ -252,7 +265,7 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 			file->close();
 
 			// Return if this is the last file
-			if(fileEnd >= blockEnd) {
+			if (fileEnd >= blockEnd) {
 				return true;
 			}
 		}
@@ -262,13 +275,15 @@ bool Piece::getBlockData(int begin, int size, QByteArray& blockData) {
 	return true;
 }
 
-bool Piece::getPieceData(QByteArray &pieceData) {
+bool Piece::getPieceData(QByteArray &pieceData)
+{
 	return getBlockData(0, m_size, pieceData);
 }
 
-Block* Piece::getBlock(int begin, int size) const {
-	for(Block* block : m_blocks) {
-		if(block->begin() == begin && block->size() == size) {
+Block *Piece::getBlock(int begin, int size) const
+{
+	for (Block *block : m_blocks) {
+		if (block->begin() == begin && block->size() == size) {
 			return block;
 		}
 	}
