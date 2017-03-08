@@ -62,3 +62,10 @@ Currently, qTorrent:
 * Has a very basic GUI
 * Can pause and resume torrents
 * Does not support DHT, PEX, Magnet Links, UDP trackers or encription
+
+## Code style
+
+qTorrent is written with the Linux Kernel code style with tab indentation.
+The style is verified with 'astyle' with the following command:
+
+	find -name '*.cpp' -or -name '*.h' | xargs astyle --style=linux --indent=force-tab=4
