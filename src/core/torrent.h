@@ -116,6 +116,7 @@ public:
 	int downloadedPieces();
 	bool isDownloaded();
 	bool isPaused() const;
+	bool isStarted() const;
 	int connectedPeersCount() const;
 	int allPeersCount() const;
 

@@ -790,7 +790,9 @@ void Peer::reconnect()
 {
 	qDebug() << "Reconnecting to" << addressPort();
 	m_reconnectTimer.stop();
-	startConnection();
+	if (m_torrent->isStarted()) {
+		startConnection();
+	}
 }
 
 /* Getter functions */

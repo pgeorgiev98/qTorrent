@@ -319,12 +319,14 @@ Peer *Torrent::addPeer(const QByteArray &address, int port)
 	Peer *peer = Peer::createServer(this, address, port);
 	m_peers.push_back(peer);
 
-	// Always start connecting
-	peer->startConnection();
+	if(isStarted()) {
+		// Always start connecting
+		peer->startConnection();
 
-	// Pause the peer if needed
-	if (m_isPaused) {
-		peer->pause();
+		// Pause the peer if needed
+		if (m_isPaused) {
+			peer->pause();
+		}
 	}
 
 	qDebug() << "Added peer" << peer->addressPort();
@@ -581,6 +583,11 @@ bool Torrent::isDownloaded()
 bool Torrent::isPaused() const
 {
 	return m_isPaused;
+}
+
+bool Torrent::isStarted() const
+{
+	return !m_isPaused && m_state == Started;
 }
 
 int Torrent::connectedPeersCount() const
