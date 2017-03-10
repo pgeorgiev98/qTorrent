@@ -310,7 +310,7 @@ Peer *Torrent::addPeer(const QByteArray &address, int port)
 {
 	// Don't add the peer if he's already added
 	for (auto p : m_peers) {
-		if (p->port() == port || p->address() == address) {
+		if (p->port() == port && p->address() == address) {
 			return nullptr;
 		}
 	}
