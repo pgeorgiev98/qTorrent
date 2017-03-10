@@ -67,6 +67,10 @@ Torrent::~Torrent()
 	for (QFile *file : m_files) {
 		delete file;
 	}
+
+	if (m_fileController) {
+		delete m_fileController;
+	}
 }
 
 bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocation)
