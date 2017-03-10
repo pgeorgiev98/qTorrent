@@ -219,22 +219,18 @@ void Torrent::loadFileDescriptors()
 	const QList<FileInfo> &fileInfos = m_torrentInfo->fileInfos();
 	for (int i = 0; i < fileInfos.size(); i++) {
 		FileInfo info = fileInfos[i];
-		if (info.path.size() > 1) {
-			QString path = m_downloadLocation;
-			if (path[path.size()-1] == '/') {
-				path.remove(path.size()-1, 1);
-			}
-			for (int j = 0; j < info.path.size() - 1; j++) {
-				path += '/';
-				path += info.path[j];
-			}
-			qDebug() << "mkpath" << path;
-			QDir dir;
-			dir.mkpath(path);
-			path += '/';
-			path += info.path.last();
-			m_files.append(new QFile(path));
+		QString path = m_downloadLocation;
+		if (path[path.size() - 1] != '/') {
+			path.append('/');
 		}
+		for (int j = 0; j < info.path.size() - 1; j++) {
+			path.append(info.path[j]);
+			path.append('/');
+		}
+		QDir dir;
+		dir.mkpath(path);
+		path += info.path.last();
+		m_files.append(new QFile(path));
 	}
 }
 
