@@ -194,7 +194,7 @@ void TrackerClient::httpFinished()
 				peerPort += (unsigned char)peersData[counter++];
 				peerPort *= 256;
 				peerPort += (unsigned char)peersData[counter++];
-				m_torrent->addPeer(peerIp, peerPort);
+				m_torrent->connectToPeer(peerIp, peerPort);
 			}
 		} else {
 			// Non-compact format
@@ -203,7 +203,7 @@ void TrackerClient::httpFinished()
 				BencodeDictionary* peerDict = peerDictValue->toBencodeDictionary();
 				QByteArray ip = peerDict->value("ip")->toByteArray();
 				int port = peerDict->value("port")->toInt();
-				m_torrent->addPeer(ip, port);
+				m_torrent->connectToPeer(ip, port);
 			}
 		}
 	} catch (BencodeException &ex) {
@@ -256,7 +256,7 @@ void TrackerClient::announceSucceeded()
 	if (m_lastEvent == Started) {
 		m_hasAnnouncedStarted = true;
 	}
-	m_torrent->successfullyAnnounced(m_lastEvent);
+	m_torrent->onSuccessfullyAnnounced(m_lastEvent);
 }
 
 int TrackerClient::numberOfAnnounces() const

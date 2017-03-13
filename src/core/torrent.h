@@ -68,31 +68,13 @@ public:
 	bool createFromMagnetLink(QUrl url);
 	void loadFileDescriptors();
 
-	ResumeInfo getResumeInfo() const;
-
-	// Start downloading/uploading
-	void start();
-	// Pause the torrent
-	void pause();
-	// Stop the torrent
-	void stop();
-	// Check the torrent
-	void check();
-
-	/* Creates a peer and connects to him */
-	Peer *addPeer(const QByteArray &address, int port);
-	/* Add a peer that has connected to us to the list */
-	void addPeer(Peer *peer);
-
 	Block *requestBlock(Peer *client, int size);
 
 	bool savePiece(Piece *piece);
 
-	/* Sets a piece's downloaded/available state.
-	 * if state is Started, it will increment m_bytesDownloaded */
+	// Sets a piece's downloaded/available state.
+	// if state is Started, it will increment m_bytesDownloaded
 	void setPieceAvailable(Piece *piece, bool available = true);
-
-	void successfullyAnnounced(TrackerClient::Event event);
 
 	/* Getters */
 
@@ -125,33 +107,54 @@ public:
 	// Returns the torrent's state as a formatted string
 	QString stateString() const;
 
-
 	const QString &downloadLocation() const;
 
-	/* Calculates the current percentage of the downloaded pieces */
+	// Calculates the current percentage of the downloaded pieces
 	float percentDownloaded();
-	/* Returns this torrent's current bitfield */
+	// Returns this torrent's current bitfield
 	QVector<bool> bitfield() const;
+
+	ResumeInfo getResumeInfo() const;
 
 	// Returns m_torrentInfo->errorString();
 	QString errorString() const;
 
-
-	/* Called when a piece is successfully downloaded */
-	void downloadedPiece(Piece *piece);
-
-	/* Called when a piece is successfully uploaded */
-	void uploadedBlock(int bytes);
-
-	/* Called when torrent is fully downloaded. If state is 'Started',
-	 * then it will send a 'completed' announce to the tracker */
+signals:
+	void checkingStarted();
+	void checked();
 	void fullyDownloaded();
 
-signals:
-	void checkSignal();
-
 public slots:
-	void checked();
+	// Called when torrent is checked
+	void onChecked();
+
+	// Called when a piece is successfully downloaded
+	void onPieceDownloaded(Piece *piece);
+
+	// Called when a block is successfully uploaded
+	void onBlockUploaded(int bytes);
+
+	// Called when torrent is fully downloaded. If state is 'Started',
+	// then it will send a 'completed' announce to the tracker
+	void onFullyDownloaded();
+
+	// Called when announce is successful
+	void onSuccessfullyAnnounced(TrackerClient::Event event);
+
+
+	// Creates a peer and connects to him
+	Peer *connectToPeer(const QByteArray &address, int port);
+	// Add a peer that has connected to us to the list
+	void addPeer(Peer *peer);
+
+	// Start downloading/uploading
+	void start();
+	// Pause the torrent
+	void pause();
+	// Stop the torrent
+	void stop();
+	// Check the torrent
+	void check();
 
 private:
 	State m_state;

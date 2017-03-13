@@ -139,7 +139,7 @@ void Piece::updateState()
 			m_torrent->savePiece(this);
 			m_isDownloaded = true;
 			unloadFromMemory();
-			m_torrent->downloadedPiece(this);
+			m_torrent->onPieceDownloaded(this);
 		}
 	}
 }

@@ -99,8 +99,8 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 
 	// Create the file controller
 	m_fileController = new FileController(this);
-	connect(this, &Torrent::checkSignal, m_fileController, &FileController::checkTorrent);
-	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::checked);
+	connect(this, &Torrent::checkingStarted, m_fileController, &FileController::checkTorrent);
+	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::onChecked);
 
 	m_state = Stopped;
 
@@ -138,8 +138,8 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 
 	// Create the file controller
 	m_fileController = new FileController(this);
-	connect(this, &Torrent::checkSignal, m_fileController, &FileController::checkTorrent);
-	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::checked);
+	connect(this, &Torrent::checkingStarted, m_fileController, &FileController::checkTorrent);
+	connect(m_fileController, &FileController::torrentChecked, this, &Torrent::onChecked);
 
 	if (m_pieces.size() != resumeInfo->aquiredPieces().size()) {
 		setError("The number of pieces in the TorrentInfo does not match the one in the ResumeInfo");
@@ -303,10 +303,10 @@ void Torrent::check()
 		return;
 	}
 	m_state = Checking;
-	emit checkSignal();
+	emit checkingStarted();
 }
 
-Peer *Torrent::addPeer(const QByteArray &address, int port)
+Peer *Torrent::connectToPeer(const QByteArray &address, int port)
 {
 	// Don't add the peer if he's already added
 	for (auto p : m_peers) {
@@ -480,7 +480,7 @@ void Torrent::setPieceAvailable(Piece *piece, bool available)
 
 		// Check if all pieces are downloaded
 		if (m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
-			fullyDownloaded();
+			onFullyDownloaded();
 		}
 	} else {
 		m_downloadedPieces--;
@@ -490,7 +490,7 @@ void Torrent::setPieceAvailable(Piece *piece, bool available)
 	piece->setDownloaded(available);
 }
 
-void Torrent::successfullyAnnounced(TrackerClient::Event event)
+void Torrent::onSuccessfullyAnnounced(TrackerClient::Event event)
 {
 	if (event == TrackerClient::Started) {
 		m_bytesDownloadedOnStartup = m_totalBytesDownloaded;
@@ -665,7 +665,7 @@ QString Torrent::errorString() const
 
 /* signals */
 
-void Torrent::downloadedPiece(Piece *piece)
+void Torrent::onPieceDownloaded(Piece *piece)
 {
 	// Increment some counters
 	m_downloadedPieces++;
@@ -682,16 +682,16 @@ void Torrent::downloadedPiece(Piece *piece)
 
 	// Check if all pieces are downloaded
 	if (m_downloadedPieces == m_torrentInfo->numberOfPieces()) {
-		fullyDownloaded();
+		onFullyDownloaded();
 	}
 }
 
-void Torrent::uploadedBlock(int bytes)
+void Torrent::onBlockUploaded(int bytes)
 {
 	m_totalBytesUploaded += bytes;
 }
 
-void Torrent::fullyDownloaded()
+void Torrent::onFullyDownloaded()
 {
 	if (m_state == Started) {
 		QTorrent::instance()->mainWindow()->torrentFullyDownloaded(this);
@@ -706,6 +706,7 @@ void Torrent::fullyDownloaded()
 			peer->disconnect();
 		}
 	}
+	emit fullyDownloaded();
 }
 
 void Torrent::clearError()
@@ -719,10 +720,11 @@ void Torrent::setError(const QString &errorString)
 }
 
 
-void Torrent::checked()
+void Torrent::onChecked()
 {
 	m_state = Stopped;
 	if (m_startAfterChecking) {
 		start();
 	}
+	emit checked();
 }
