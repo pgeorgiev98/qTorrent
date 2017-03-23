@@ -80,6 +80,10 @@ Torrent *TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const Torr
 	m_torrents.push_back(torrent);
 	QTorrent::instance()->mainWindow()->addTorrent(torrent);
 
+	if (!settings.skipHashCheck()) {
+		torrent->check();
+	}
+
 	if (settings.startImmediately()) {
 		torrent->start();
 	} else {

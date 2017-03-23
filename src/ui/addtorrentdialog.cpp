@@ -51,8 +51,10 @@ AddTorrentDialog::AddTorrentDialog(QWidget *parent)
 
 	QGroupBox *settingsBox = new QGroupBox("Torrent settings");
 	QGridLayout *settingsLayout = new QGridLayout;
-	settingsLayout->addWidget(m_startImmediately = new QCheckBox("Start Immediately"));
+	settingsLayout->addWidget(m_startImmediately = new QCheckBox("Start Immediately"), 0, 0);
+	settingsLayout->addWidget(m_skipHashCheck = new QCheckBox("Skip hash check"), 1, 0);
 	m_startImmediately->setChecked(true);
+	m_skipHashCheck->setChecked(false);
 	settingsBox->setLayout(settingsLayout);
 	layout->addWidget(settingsBox);
 
@@ -225,6 +227,7 @@ void AddTorrentDialog::ok()
 	TorrentSettings settings;
 	settings.setDownloadLocation(downloadLocation);
 	settings.setStartImmediately(m_startImmediately->isChecked());
+	settings.setSkipHashCheck(m_skipHashCheck->isChecked());
 
 	TorrentManager *manager = QTorrent::instance()->torrentManager();
 	Torrent *torrent = manager->addTorrentFromInfo(m_torrentInfo, settings);

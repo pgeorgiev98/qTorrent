@@ -51,6 +51,7 @@ private:
 	QLineEdit *m_downloadLocation;
 	QPushButton *m_browseDownloadLocation;
 	QCheckBox *m_startImmediately;
+	QCheckBox *m_skipHashCheck;
 	QPushButton *m_ok;
 	QPushButton *m_cancel;
 

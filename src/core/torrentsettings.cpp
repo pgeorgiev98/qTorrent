@@ -34,6 +34,11 @@ void TorrentSettings::setStartImmediately(bool startImmediately)
 	m_startImmediately = startImmediately;
 }
 
+void TorrentSettings::setSkipHashCheck(bool skipHashCheck)
+{
+	m_skipHashCheck = skipHashCheck;
+}
+
 
 const QString &TorrentSettings::downloadLocation() const
 {
@@ -43,4 +48,9 @@ const QString &TorrentSettings::downloadLocation() const
 bool TorrentSettings::startImmediately() const
 {
 	return m_startImmediately;
+}
+
+bool TorrentSettings::skipHashCheck() const
+{
+	return m_skipHashCheck;
 }

@@ -107,9 +107,6 @@ bool Torrent::createNew(TorrentInfo *torrentInfo, const QString &downloadLocatio
 	// Creates QFile objects
 	loadFileDescriptors();
 
-	// Check the torrent;
-	check();
-
 	return true;
 }
 
