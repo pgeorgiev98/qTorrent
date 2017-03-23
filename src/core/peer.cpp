@@ -95,6 +95,10 @@ void Peer::startConnection()
 
 void Peer::start()
 {
+	if(m_connectionInitiator == ConnectionInitiator::Peer) {
+		return;
+	}
+
 	m_isPaused = false;
 	if (m_state == ConnectionEstablished) {
 		sendMessages();
@@ -703,6 +707,11 @@ void Peer::readyRead()
 		bool ok;
 		if (readHandshakeReply(&ok)) {
 			if (m_connectionInitiator == ConnectionInitiator::Peer) {
+				if(m_torrent->state() != Torrent::Started) {
+					disconnect();
+					break;
+				}
+
 				// Initialize peer's bitfield array.
 				// Must be done after receiving handshake
 				initBitfield();
