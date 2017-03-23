@@ -20,14 +20,18 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include <QObject>
 #include <QList>
 #include <QByteArray>
 
 class Torrent;
 class Block;
 
-class Piece
+class Piece : public QObject
 {
+	Q_OBJECT
+
+private:
 	Torrent *m_torrent;
 	int m_pieceNumber;
 	int m_size;
@@ -49,19 +53,23 @@ public:
 	char *data() const;
 	int size() const;
 
-	/* Commands */
-
-	Block *requestBlock(int size);
-	// Update the block state: check if it's fully downloaded
-	void updateState();
-	void deleteBlock(Block *block);
-	void unloadFromMemory();
-	void setDownloaded(bool isDownloaded);
 	// Gets data for a block. Reads from files if needed
 	bool getBlockData(int begin, int size, QByteArray &blockData);
 	bool getPieceData(QByteArray &pieceData);
 	// Returns a pointer to an existing block or nullptr if no such block exists
 	Block *getBlock(int begin, int size) const;
+	// Returns a block from this piece that hasn't been downloaded or requested
+	Block *requestBlock(int size);
+
+signals:
+	void availabilityChanged(Piece *piece, bool isDownloaded);
+
+public slots:
+	// Update the block state: check if it's fully downloaded
+	void updateState();
+	void deleteBlock(Block *block);
+	void unloadFromMemory();
+	void setDownloaded(bool isDownloaded);
 };
 
 #endif // PIECE_H

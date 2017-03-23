@@ -24,6 +24,7 @@
 
 class QThread;
 class Torrent;
+class Piece;
 
 class FileControllerWorker : public QObject
 {
@@ -37,6 +38,7 @@ public slots:
 
 signals:
 	void torrentChecked();
+	void pieceAvailable(Piece* piece, bool available);
 
 private:
 	Torrent *m_torrent;

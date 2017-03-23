@@ -20,7 +20,6 @@
 #include "block.h"
 #include "piece.h"
 #include "peer.h"
-#include <QDebug>
 
 Block::Block(Piece *piece, int begin, int size)
 	: m_piece(piece)
@@ -28,6 +27,7 @@ Block::Block(Piece *piece, int begin, int size)
 	, m_size(size)
 	, m_isDownloaded(false)
 {
+	connect(this, &Block::downloaded, m_piece, &Piece::updateState);
 }
 
 Block::~Block()
@@ -54,9 +54,22 @@ bool Block::isDownloaded()
 	return m_isDownloaded;
 }
 
-void Block::setDownloaded(bool downloaded)
+QList<Peer *> &Block::assignees()
 {
-	m_isDownloaded = downloaded;
+	return m_assignees;
+}
+
+bool Block::hasAssignees() const
+{
+	return !m_assignees.isEmpty();
+}
+
+void Block::setDownloaded(bool isDownloaded)
+{
+	m_isDownloaded = isDownloaded;
+	if (isDownloaded) {
+		emit downloaded(this);
+	}
 }
 
 void Block::setData(const Peer *peer, const char *data)
@@ -77,7 +90,6 @@ void Block::setData(const Peer *peer, const char *data)
 		}
 		p->releaseBlock(this);
 	}
-	m_piece->updateState();
 }
 
 
@@ -100,14 +112,4 @@ void Block::removeAssignee(Peer *peer)
 void Block::clearAssignees()
 {
 	m_assignees.clear();
-}
-
-QList<Peer *> &Block::assignees()
-{
-	return m_assignees;
-}
-
-bool Block::hasAssignees() const
-{
-	return !m_assignees.isEmpty();
 }

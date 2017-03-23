@@ -20,14 +20,18 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
+#include <QObject>
 #include <QByteArray>
 #include <QList>
 
 class Piece;
 class Peer;
 
-class Block
+class Block : public QObject
 {
+	Q_OBJECT
+
+private:
 	Piece *m_piece;
 	int m_begin;
 	int m_size;
@@ -44,15 +48,18 @@ public:
 	int begin() const;
 	int size() const;
 	bool isDownloaded();
+	QList<Peer *> &assignees();
+	bool hasAssignees() const;
+
+signals:
+	void downloaded(Block *block);
+
+public slots:
 	void setDownloaded(bool isDownloaded);
 	void setData(const Peer *peer, const char *data);
-
-	/* Assignee operations */
 	void addAssignee(Peer *peer);
 	void removeAssignee(Peer *peer);
 	void clearAssignees();
-	QList<Peer *> &assignees();
-	bool hasAssignees() const;
 };
 
 #endif // BLOCK_H

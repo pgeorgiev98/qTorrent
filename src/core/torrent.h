@@ -72,10 +72,6 @@ public:
 
 	bool savePiece(Piece *piece);
 
-	// Sets a piece's downloaded/available state.
-	// if state is Started, it will increment m_bytesDownloaded
-	void setPieceAvailable(Piece *piece, bool available = true);
-
 	/* Getters */
 
 	QList<Peer *> &peers();
@@ -146,6 +142,9 @@ public slots:
 	Peer *connectToPeer(const QByteArray &address, int port);
 	// Add a peer that has connected to us to the list
 	void addPeer(Peer *peer);
+	// Sets a piece's downloaded/available state.
+	// if state is Started, it will increment m_bytesDownloaded
+	void setPieceAvailable(Piece *piece, bool available);
 
 	// Start downloading/uploading
 	void start();

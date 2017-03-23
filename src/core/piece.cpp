@@ -27,11 +27,6 @@
 #include <QTcpSocket>
 #include <QFile>
 #include <QDebug>
-#include <QMutex>
-
-// Synchronization for setDownloaded and isDownloaded
-// TODO: implement this in a less complex way
-static QMutex pieceDownloadedMutex;
 
 Piece::Piece(Torrent *torrent, int pieceNumber, int size)
 	: m_torrent(torrent)
@@ -54,10 +49,7 @@ Piece::~Piece()
 
 bool Piece::isDownloaded() const
 {
-	pieceDownloadedMutex.lock();
-	bool ret = m_isDownloaded;
-	pieceDownloadedMutex.unlock();
-	return ret;;
+	return m_isDownloaded;
 }
 
 int Piece::pieceNumber() const
@@ -97,7 +89,7 @@ void Piece::deleteBlock(Block *block)
 		}
 	}
 	if (blockNumber != -1) {
-		delete m_blocks[blockNumber];
+		m_blocks[blockNumber]->deleteLater();
 		m_blocks.removeAt(blockNumber);
 	}
 }
@@ -113,12 +105,10 @@ bool Piece::checkIfFullyDownloaded()
 		if (b->begin() == pos && b->isDownloaded()) {
 			pos += b->size();
 		} else {
-			m_isDownloaded = false;
 			return false;
 		}
 	}
-	m_isDownloaded = (m_size == pos);
-	return m_isDownloaded;
+	return (m_size == pos);
 }
 
 void Piece::updateState()
@@ -130,14 +120,14 @@ void Piece::updateState()
 		QByteArray actualHash = hash.result();
 		if (actualHash != m_torrent->torrentInfo()->piece(m_pieceNumber)) {
 			for (auto b : m_blocks) {
-				delete b;
+				b->deleteLater();
 			}
 			m_blocks.clear();
-			m_isDownloaded = false;
+			setDownloaded(false);
 			qDebug() << "Piece" << m_pieceNumber << "failed SHA1 validation";
 		} else {
 			m_torrent->savePiece(this);
-			m_isDownloaded = true;
+			setDownloaded(true);
 			unloadFromMemory();
 			m_torrent->onPieceDownloaded(this);
 		}
@@ -195,15 +185,14 @@ void Piece::unloadFromMemory()
 	m_pieceData = nullptr;
 }
 
-void Piece::setDownloaded(bool downloaded)
+void Piece::setDownloaded(bool isDownloaded)
 {
-	pieceDownloadedMutex.lock();
-	m_isDownloaded = downloaded;
+	m_isDownloaded = isDownloaded;
 	for (Block* block : m_blocks) {
-		delete block;
+		block->deleteLater();
 	}
 	m_blocks.clear();
-	pieceDownloadedMutex.unlock();
+	emit availabilityChanged(this, m_isDownloaded);
 }
 
 bool Piece::getBlockData(int begin, int size, QByteArray &blockData)

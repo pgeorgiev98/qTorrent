@@ -149,7 +149,7 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	// Set all aquired pieces
 	for (Piece *piece : m_pieces) {
 		if (resumeInfo->aquiredPieces().at(piece->pieceNumber())) {
-			setPieceAvailable(piece);
+			setPieceAvailable(piece, true);
 		}
 	}
 
