@@ -90,6 +90,7 @@ Torrent *TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const Torr
 		torrent->pause();
 	}
 
+	emit torrentAdded(torrent);
 	return torrent;
 }
 
@@ -173,6 +174,7 @@ bool TorrentManager::resumeTorrents()
 
 			m_torrents.push_back(torrent);
 			QTorrent::instance()->mainWindow()->addTorrent(torrent);
+			emit torrentAdded(torrent);
 
 		}
 

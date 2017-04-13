@@ -76,6 +76,7 @@ bool QTorrent::resumeTorrents()
 void QTorrent::startLSDClient()
 {
 	m_LSDClient->announce();
+	connect(m_torrentManager, &TorrentManager::torrentAdded, m_LSDClient, &LocalServiceDiscoveryClient::announce);
 }
 
 bool QTorrent::addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings)

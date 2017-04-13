@@ -21,14 +21,17 @@
 #define TORRENTMANAGER_H
 
 #include "torrentsettings.h"
+#include <QObject>
 #include <QList>
 #include <QUrl>
 
 class Torrent;
 class TorrentInfo;
 
-class TorrentManager
+class TorrentManager : public QObject
 {
+	Q_OBJECT
+
 public:
 	TorrentManager();
 	~TorrentManager();
@@ -52,6 +55,9 @@ public:
 	/* Getters */
 	const QList<Torrent *> &torrents() const;
 	const QString &errorString() const;
+
+signals:
+	void torrentAdded(Torrent *torrent);
 
 private:
 	QList<Torrent *> m_torrents;
