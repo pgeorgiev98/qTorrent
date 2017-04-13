@@ -112,8 +112,13 @@ bool TorrentInfo::loadFromTorrentFile(QString filename)
 			m_announceUrlsList = announceUrlsList;
 		} catch (BencodeException &ex) {
 			m_announceUrlsList.clear();
-			QByteArray url = mainDict->value("announce")->toByteArray();
-			m_announceUrlsList.push_back(url);
+			// Try to find 'announce' key
+			try {
+				QByteArray url = mainDict->value("announce")->toByteArray();
+				m_announceUrlsList.push_back(url);
+			} catch(BencodeException &ex) {
+				m_announceUrlsList.clear();
+			}
 		}
 
 		// Torrent name

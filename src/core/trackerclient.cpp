@@ -55,6 +55,10 @@ void TrackerClient::reannounce()
 
 void TrackerClient::announce(Event event)
 {
+	if(m_torrent->torrentInfo()->announceUrlsList().isEmpty()) {
+		// Can't announce without a tracker
+		return;
+	}
 	m_lastEvent = event;
 	QUrl url;
 	url.setUrl(currentAnnounceUrl());
@@ -180,21 +184,18 @@ void TrackerClient::httpFinished()
 			int numberOfPeers = peersData.size() / 6;
 			for (int i = 0, counter = 0; i < numberOfPeers; i++)  {
 				// Address
-				QByteArray peerIp;
-				peerIp += QString::number((unsigned char)peersData[counter++]);
-				peerIp += '.';
-				peerIp += QString::number((unsigned char)peersData[counter++]);
-				peerIp += '.';
-				peerIp += QString::number((unsigned char)peersData[counter++]);
-				peerIp += '.';
-				peerIp += QString::number((unsigned char)peersData[counter++]);
+				quint32 peerAddr = 0;
+				peerAddr |= (quint8)peersData[counter++] << 24;
+				peerAddr |= (quint8)peersData[counter++] << 16;
+				peerAddr |= (quint8)peersData[counter++] << 8;
+				peerAddr |= (quint8)peersData[counter++];
 
 				// Port
 				int peerPort = 0;
 				peerPort += (unsigned char)peersData[counter++];
 				peerPort *= 256;
 				peerPort += (unsigned char)peersData[counter++];
-				m_torrent->connectToPeer(peerIp, peerPort);
+				m_torrent->connectToPeer(QHostAddress(peerAddr), peerPort);
 			}
 		} else {
 			// Non-compact format
@@ -203,7 +204,7 @@ void TrackerClient::httpFinished()
 				BencodeDictionary* peerDict = peerDictValue->toBencodeDictionary();
 				QByteArray ip = peerDict->value("ip")->toByteArray();
 				int port = peerDict->value("port")->toInt();
-				m_torrent->connectToPeer(ip, port);
+				m_torrent->connectToPeer(QHostAddress(QString(ip)), port);
 			}
 		}
 	} catch (BencodeException &ex) {
