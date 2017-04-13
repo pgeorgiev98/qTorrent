@@ -26,25 +26,26 @@ You can build qTorrent with:
 	cd qTorrent-build
 
 	# To create a release build
-	qmake /path/to/qTorrent/src/qTorrent.pro -config release
+	qmake /path/to/qTorrent/qTorrent.pro -config release
 
 	# ... or debug build
-	qmake /path/to/qTorrent/src/qTorrent.pro -config debug
+	qmake /path/to/qTorrent/qTorrent.pro -config debug
 
 	make -j4
 	# The '-j4' means "Use up to 4 threads to build"
 	# which speeds up things quite a bit
-	# You can set this according to your computer
+	# Ignore the argument or set it according to your CPU
 
-	# To install the application
+	# To install the application (Works only on Linux)
 	sudo make install
 
-	# ... and to uninstall it
+	# ... and to uninstall it (Works only on Linux)
 	sudo make uninstall
 
 	# Make sure you're using the propper (Qt5) version of qmake
-	# On some systems that have both Qt4 and Qt5 installed, you
-	# may need to add the '-qt=5' argument to the qmake command.
+	# On some systems that have both Qt4 and Qt5 installed you
+	# may need to add the '-qt=5' argument to the qmake command
+	# or you may need to call qmake-qt5 instead of just qmake.
 
 ## Usage
 
@@ -61,7 +62,8 @@ Currently, qTorrent:
 * Can seed torrents
 * Has a very basic GUI
 * Can pause and resume torrents
-* Does not support DHT, PEX, Magnet Links, UDP trackers or encription
+* Supports Local Service Discovery (LSD)
+* Does not support DHT, PEX, Magnet Links, UDP trackers or encryption
 
 ## Code style
 
