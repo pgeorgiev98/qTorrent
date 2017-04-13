@@ -80,6 +80,7 @@ void LocalServiceDiscoveryClient::processPendingDatagrams()
 
 		int port = 0;
 		QList<QByteArray> receivedInfoHashes;
+		QByteArray cookie;
 
 		QTextStream stream(datagram);
 		QString line;
@@ -97,20 +98,18 @@ void LocalServiceDiscoveryClient::processPendingDatagrams()
 					bool ok;
 					port = splitLine.last().toInt(&ok);
 					if(!ok) {
-						continue;
+						port = 0;
 					}
 				} else if (header == "Infohash") {
 					receivedInfoHashes.append(splitLine.last().toLatin1().toLower());
 				} else if (header == "cookie") {
-					if (splitLine.last() == m_cookie) {
-						continue;
-					}
+					cookie = splitLine.last().toLatin1();
 				}
 			}
 		}
 
-		if (port == 0) {
-			return;
+		if (port == 0 || cookie == m_cookie) {
+			continue;
 		}
 
 		for (QByteArray& hash : receivedInfoHashes) {
