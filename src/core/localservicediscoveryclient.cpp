@@ -35,7 +35,9 @@ LocalServiceDiscoveryClient::LocalServiceDiscoveryClient(QObject *parent)
 void LocalServiceDiscoveryClient::announce()
 {
 	// Don't announce more than once every LSD_MIN_INTERVAL milliseconds
-	if (m_elapsedTimer.elapsed() < LSD_MIN_INTERVAL && m_announceTimer->isActive()) {
+	int elapsed = m_elapsedTimer.elapsed();
+	if (elapsed < LSD_MIN_INTERVAL && m_announceTimer->isActive()) {
+		m_announceTimer->start(LSD_MIN_INTERVAL - elapsed);
 		return;
 	}
 	QString datagramString;
