@@ -40,6 +40,12 @@ void LocalServiceDiscoveryClient::announce()
 		m_announceTimer->start(LSD_MIN_INTERVAL - elapsed);
 		return;
 	}
+
+	// Don't send empty announces
+	if (QTorrent::instance()->torrents().isEmpty()) {
+		return;
+	}
+
 	QString datagramString;
 	QTextStream datagramStream(&datagramString);
 	datagramStream << "BT-SEARCH * HTTP/1.1\r\n"
