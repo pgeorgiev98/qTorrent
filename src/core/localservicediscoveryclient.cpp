@@ -9,8 +9,6 @@
 #include "torrent.h"
 #include "torrentinfo.h"
 
-#include <QDebug>
-
 LocalServiceDiscoveryClient::LocalServiceDiscoveryClient(QObject *parent)
 	: QObject(parent)
 {
@@ -32,29 +30,31 @@ LocalServiceDiscoveryClient::LocalServiceDiscoveryClient(QObject *parent)
 
 	connect(m_announceTimer, &QTimer::timeout, this, &LocalServiceDiscoveryClient::announce);
 	connect(m_socket, &QUdpSocket::readyRead, this, &LocalServiceDiscoveryClient::processPendingDatagrams);
-	qDebug() << "LSD: Server started";
 }
 
 void LocalServiceDiscoveryClient::announce()
 {
-	QByteArray datagram = QString(
-			"BT-SEARCH * HTTP/1.1\r\n"
-			"Host: %1:%2\r\n"
-			"Port: %3\r\n")
-			.arg(LSD_ADDRESS)
-			.arg(LSD_PORT)
-			.arg(QTorrent::instance()->server()->port()).toLatin1();
+	// Don't announce more than once every LSD_MIN_INTERVAL milliseconds
+	if (m_elapsedTimer.elapsed() < LSD_MIN_INTERVAL && m_announceTimer->isActive()) {
+		return;
+	}
+	QString datagramString;
+	QTextStream datagramStream(&datagramString);
+	datagramStream << "BT-SEARCH * HTTP/1.1\r\n"
+				   << "Host: " << LSD_ADDRESS << ":" << LSD_PORT << "\r\n"
+				   << "Port: " << QTorrent::instance()->server()->port() << "\r\n";
 
 	for (Torrent *torrent : QTorrent::instance()->torrents()) {
 		QByteArray hash = torrent->torrentInfo()->infoHash().toHex().toLower();
-		datagram.append("Infohash: " + hash + "\r\n");
+		datagramStream << "Infohash: " << hash << "\r\n";
 	}
 
-	datagram.append("cookie: " + m_cookie + "\r\n");
-	datagram.append("\r\n\r\n");
+	datagramStream << "cookie: " << m_cookie << "\r\n";
+	datagramStream << "\r\n\r\n";
 
-	m_socket->writeDatagram(datagram, QHostAddress(LSD_ADDRESS), LSD_PORT);
-	qDebug() << "LSD: Sent datagram" << endl << datagram;
+	m_socket->writeDatagram(datagramString.toLatin1(), QHostAddress(LSD_ADDRESS), LSD_PORT);
+	m_announceTimer->start(LSD_INTERVAL);
+	m_elapsedTimer.start();
 }
 
 void LocalServiceDiscoveryClient::processPendingDatagrams()

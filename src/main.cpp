@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
 
 	qTorrent.resumeTorrents();
 
+	qTorrent.startLSDClient();
+
 	qTorrent.showMainWindow();
 	app.exec();
 	qTorrent.shutDown();

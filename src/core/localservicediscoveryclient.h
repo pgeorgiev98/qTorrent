@@ -3,10 +3,13 @@
 
 #define LSD_ADDRESS "239.192.152.143"
 #define LSD_PORT 6771
+#define LSD_INTERVAL 5*60*1000 // milliseconds
+#define LSD_MIN_INTERVAL 60*1000 // milliseconds
 
 #include <QObject>
-#include <QByteArray>
+#include <QElapsedTimer>
 #include <QHostAddress>
+#include <QByteArray>
 
 class Torrent;
 class QTimer;
@@ -28,6 +31,7 @@ signals:
 
 private:
 	QTimer *m_announceTimer;
+	QElapsedTimer m_elapsedTimer;
 	QUdpSocket *m_socket;
 	QByteArray m_cookie;
 };

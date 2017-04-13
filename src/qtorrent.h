@@ -43,6 +43,7 @@ public:
 
 	bool startServer();
 	bool resumeTorrents();
+	void startLSDClient();
 	bool addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings);
 	bool addTorrentFromMagnetLink(QUrl url);
 	bool addTorrentFromUrl(QUrl url);
