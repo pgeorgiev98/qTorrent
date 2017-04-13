@@ -21,6 +21,8 @@
 #define QTORRENT_H
 
 #include "core/torrentsettings.h"
+#include <QObject>
+#include <QHostAddress>
 #include <QList>
 #include <QString>
 #include <QUrl>
@@ -29,9 +31,12 @@ class Torrent;
 class TorrentManager;
 class TorrentServer;
 class MainWindow;
+class LocalServiceDiscoveryClient;
 
-class QTorrent
+class QTorrent : public QObject
 {
+	Q_OBJECT
+
 public:
 	QTorrent();
 	~QTorrent();
@@ -65,11 +70,15 @@ public:
 
 	static QTorrent *instance();
 
+public slots:
+	void LSDPeerFound(QHostAddress address, int port, Torrent *torrent);
+
 private:
 	QByteArray m_peerId;
 
 	TorrentManager *m_torrentManager;
 	TorrentServer *m_server;
+	LocalServiceDiscoveryClient *m_LSDClient;
 
 	MainWindow *m_mainWindow;
 

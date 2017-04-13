@@ -26,6 +26,7 @@ SOURCES += main.cpp \
     core/torrentsettings.cpp \
     core/remote.cpp \
     core/filecontroller.cpp \
+    core/localservicediscoveryclient.cpp \
     ui/mainwindow.cpp \
     ui/panel.cpp \
     ui/torrentslist.cpp \
@@ -52,6 +53,7 @@ HEADERS += \
     core/torrentsettings.h \
     core/remote.h \
     core/filecontroller.h \
+    core/localservicediscoveryclient.h \
     ui/mainwindow.h \
     ui/panel.h \
     ui/torrentslist.h \

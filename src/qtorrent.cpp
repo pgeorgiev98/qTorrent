@@ -22,6 +22,7 @@
 #include "core/torrentinfo.h"
 #include "core/torrentmanager.h"
 #include "core/torrentserver.h"
+#include "core/localservicediscoveryclient.h"
 #include "core/trackerclient.h"
 #include "ui/mainwindow.h"
 #include <QGuiApplication>
@@ -36,6 +37,7 @@ QTorrent::QTorrent()
 
 	m_torrentManager = new TorrentManager;
 	m_server = new TorrentServer;
+	m_LSDClient = new LocalServiceDiscoveryClient;
 	m_mainWindow = new MainWindow;
 
 	// Generate random peer id that starts with 'qT'
@@ -44,12 +46,15 @@ QTorrent::QTorrent()
 	while (m_peerId.size() < 20) {
 		m_peerId.push_back(char(qrand() % 256));
 	}
+
+	connect(m_LSDClient, &LocalServiceDiscoveryClient::foundPeer, this, &QTorrent::LSDPeerFound);
 }
 
 QTorrent::~QTorrent()
 {
 	delete m_torrentManager;
 	delete m_server;
+	delete m_LSDClient;
 	delete m_mainWindow;
 }
 
@@ -176,4 +181,10 @@ MainWindow *QTorrent::mainWindow()
 QTorrent *QTorrent::instance()
 {
 	return m_instance;
+}
+
+
+void QTorrent::LSDPeerFound(QHostAddress address, int port, Torrent *torrent)
+{
+	torrent->connectToPeer(address, port);
 }
