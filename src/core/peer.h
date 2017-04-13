@@ -21,6 +21,7 @@
 #define PEER_H
 
 #include <QByteArray>
+#include <QHostAddress>
 #include <QTimer>
 #include <QObject>
 #include <QAbstractSocket>
@@ -61,7 +62,7 @@ public:
 	/* Getter functions */
 	Torrent *torrent();
 
-	QByteArray &address();
+	QHostAddress address();
 	int port();
 	int piecesDownloaded();
 	bool *bitfield();
@@ -92,7 +93,7 @@ private:
 	Torrent *m_torrent;
 
 	/* Peer-specific information */
-	QByteArray m_address;
+	QHostAddress m_address;
 	int m_port;
 	int m_piecesDownloaded;
 	bool *m_bitfield;
@@ -148,7 +149,7 @@ private:
 	void initClient();
 
 	/* Initializes variables for server peer (ConnectionInitiator::Client) */
-	void initServer(Torrent *torrent, const QByteArray &address, int port);
+	void initServer(Torrent *torrent, QHostAddress address, int port);
 
 public:
 	/* Constructor and destructor */
@@ -193,7 +194,7 @@ public:
 	static Peer *createClient(QTcpSocket *socket);
 
 	/* Returns a newly-created peer object with peerType = Server (We download from him) */
-	static Peer* createServer(Torrent *torrent, const QByteArray &address, int port);
+	static Peer* createServer(Torrent *torrent, QHostAddress address, int port);
 
 	/* Attempts to send messages to the peer */
 	void sendMessages();

@@ -258,7 +258,7 @@ Peer *Peer::createClient(QTcpSocket *socket)
 	return peer;
 }
 
-Peer *Peer::createServer(Torrent *torrent, const QByteArray &address, int port)
+Peer *Peer::createServer(Torrent *torrent, QHostAddress address, int port)
 {
 	Peer *peer = new Peer(ConnectionInitiator::Client, new QTcpSocket);
 	peer->initServer(torrent, address, port);
@@ -631,7 +631,7 @@ void Peer::initBitfield()
 void Peer::initClient()
 {
 	m_torrent = nullptr;
-	m_address = QByteArray(m_socket->peerAddress().toString().toUtf8());
+	m_address = m_socket->peerAddress();
 	m_port = m_socket->peerPort();
 	m_piecesDownloaded = 0;
 	m_bitfield = nullptr;
@@ -656,7 +656,7 @@ void Peer::initClient()
 	m_blocksQueue.clear();
 }
 
-void Peer::initServer(Torrent *torrent, const QByteArray &address, int port)
+void Peer::initServer(Torrent *torrent, QHostAddress address, int port)
 {
 	m_torrent = torrent;
 	m_address = address;
@@ -811,7 +811,7 @@ Torrent *Peer::torrent()
 	return m_torrent;
 }
 
-QByteArray &Peer::address()
+QHostAddress Peer::address()
 {
 	return m_address;
 }
@@ -903,7 +903,7 @@ bool Peer::isPaused() const
 
 QString Peer::addressPort()
 {
-	return QString(m_address) + ":" + QString::number(m_port);
+	return m_address.toString() + ":" + QString::number(m_port);
 }
 
 bool Peer::isDownloaded()

@@ -22,6 +22,7 @@
 
 #include "resumeinfo.h"
 #include "trackerclient.h"
+#include <QHostAddress>
 #include <QString>
 #include <QList>
 #include <QUrl>
@@ -139,7 +140,7 @@ public slots:
 
 
 	// Creates a peer and connects to him
-	Peer *connectToPeer(const QByteArray &address, int port);
+	Peer *connectToPeer(QHostAddress address, int port);
 	// Add a peer that has connected to us to the list
 	void addPeer(Peer *peer);
 	// Sets a piece's downloaded/available state.

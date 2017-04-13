@@ -303,7 +303,7 @@ void Torrent::check()
 	emit checkingStarted();
 }
 
-Peer *Torrent::connectToPeer(const QByteArray &address, int port)
+Peer *Torrent::connectToPeer(QHostAddress address, int port)
 {
 	// Don't add the peer if he's already added
 	for (auto p : m_peers) {
