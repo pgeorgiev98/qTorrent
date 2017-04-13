@@ -72,7 +72,7 @@ void LocalServiceDiscoveryClient::processPendingDatagrams()
 		datagram.resize(m_socket->pendingDatagramSize());
 		m_socket->readDatagram(datagram.data(), datagram.size(), &sender);
 
-		int port;
+		int port = 0;
 		QList<QByteArray> receivedInfoHashes;
 
 		QTextStream stream(datagram);
@@ -101,6 +101,10 @@ void LocalServiceDiscoveryClient::processPendingDatagrams()
 					}
 				}
 			}
+		}
+
+		if (port == 0) {
+			return;
 		}
 
 		for (QByteArray& hash : receivedInfoHashes) {
