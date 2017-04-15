@@ -33,6 +33,9 @@ QTorrent *QTorrent::m_instance;
 
 QTorrent::QTorrent()
 {
+	// Seed for the random number generator
+	qsrand(QDateTime::currentMSecsSinceEpoch());
+
 	m_instance = this;
 
 	m_torrentManager = new TorrentManager;
@@ -41,7 +44,6 @@ QTorrent::QTorrent()
 	m_mainWindow = new MainWindow;
 
 	// Generate random peer id that starts with 'qT'
-	qsrand(QDateTime::currentMSecsSinceEpoch());
 	m_peerId.push_back("qT");
 	while (m_peerId.size() < 20) {
 		m_peerId.push_back(char(qrand() % 256));
