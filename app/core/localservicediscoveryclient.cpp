@@ -16,6 +16,7 @@ LocalServiceDiscoveryClient::LocalServiceDiscoveryClient(QObject *parent)
 	m_socket = new QUdpSocket(this);
 	m_socket->bind(QHostAddress::AnyIPv4, LSD_PORT, QUdpSocket::ShareAddress);
 	m_socket->joinMulticastGroup(QHostAddress(LSD_ADDRESS));
+	m_socket->setSocketOption(QAbstractSocket::MulticastTtlOption, 20);
 	// Generate 20-byte cookie uing symbols 0-9, A-Z and a-z
 	for (int i = 0; i < 20; i++) {
 		int q = qrand() % (10+26+26);
