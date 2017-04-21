@@ -32,10 +32,15 @@ LocalServiceDiscoveryClient::LocalServiceDiscoveryClient(QObject *parent)
 	: QObject(parent)
 {
 	m_announceTimer = new QTimer(this);
-	m_socket = new QUdpSocket(this);
-	m_socket->bind(QHostAddress::AnyIPv4, LSD_PORT, QUdpSocket::ShareAddress);
-	m_socket->joinMulticastGroup(QHostAddress(LSD_ADDRESS));
-	m_socket->setSocketOption(QAbstractSocket::MulticastTtlOption, 20);
+	m_socketIPv4 = new QUdpSocket(this);
+	m_socketIPv4->bind(QHostAddress::AnyIPv4, LSD_PORT_IPV4, QUdpSocket::ShareAddress);
+	m_socketIPv4->joinMulticastGroup(QHostAddress(LSD_ADDRESS_IPV4));
+	m_socketIPv4->setSocketOption(QAbstractSocket::MulticastTtlOption, 20);
+
+	m_socketIPv6 = new QUdpSocket(this);
+	m_socketIPv6->bind(QHostAddress::AnyIPv6, LSD_PORT_IPV6, QUdpSocket::ShareAddress);
+	m_socketIPv6->joinMulticastGroup(QHostAddress(LSD_ADDRESS_IPV6));
+	m_socketIPv6->setSocketOption(QAbstractSocket::MulticastTtlOption, 20);
 	// Generate 20-byte cookie uing symbols 0-9, A-Z and a-z
 	for (int i = 0; i < 20; i++) {
 		int q = qrand() % (10+26+26);
@@ -48,11 +53,39 @@ LocalServiceDiscoveryClient::LocalServiceDiscoveryClient(QObject *parent)
 		}
 	}
 
-	connect(m_announceTimer, &QTimer::timeout, this, &LocalServiceDiscoveryClient::announce);
-	connect(m_socket, &QUdpSocket::readyRead, this, &LocalServiceDiscoveryClient::processPendingDatagrams);
+	connect(m_announceTimer, &QTimer::timeout, this, &LocalServiceDiscoveryClient::announceAll);
+	connect(m_socketIPv4, &QUdpSocket::readyRead, this, &LocalServiceDiscoveryClient::processPendingDatagrams);
+	connect(m_socketIPv6, &QUdpSocket::readyRead, this, &LocalServiceDiscoveryClient::processPendingDatagrams);
 }
 
-void LocalServiceDiscoveryClient::announce()
+void LocalServiceDiscoveryClient::announce(QUdpSocket *socket, const char *address, int port)
+{
+	QHostAddress addr(address);
+	QString addressString = address;
+	if (addr.protocol() == QAbstractSocket::IPv6Protocol) {
+		addressString.prepend('[');
+		addressString.append(']');
+	}
+	QString datagramString;
+	QTextStream datagramStream(&datagramString);
+	datagramStream << "BT-SEARCH * HTTP/1.1\r\n"
+				   << "Host: " << addressString << ":" << port << "\r\n"
+				   << "Port: " << QTorrent::instance()->server()->port() << "\r\n";
+
+	for (Torrent *torrent : QTorrent::instance()->torrents()) {
+		QByteArray hash = torrent->torrentInfo()->infoHash().toHex().toLower();
+		datagramStream << "Infohash: " << hash << "\r\n";
+	}
+
+	datagramStream << "cookie: " << m_cookie << "\r\n";
+	datagramStream << "\r\n\r\n";
+	socket->writeDatagram(datagramString.toLatin1(), addr, port);
+
+	m_announceTimer->start(LSD_INTERVAL);
+	m_elapsedTimer.start();
+}
+
+void LocalServiceDiscoveryClient::announceAll()
 {
 	// Don't announce more than once every LSD_MIN_INTERVAL milliseconds
 	int elapsed = m_elapsedTimer.elapsed();
@@ -66,23 +99,18 @@ void LocalServiceDiscoveryClient::announce()
 		return;
 	}
 
-	QString datagramString;
-	QTextStream datagramStream(&datagramString);
-	datagramStream << "BT-SEARCH * HTTP/1.1\r\n"
-				   << "Host: " << LSD_ADDRESS << ":" << LSD_PORT << "\r\n"
-				   << "Port: " << QTorrent::instance()->server()->port() << "\r\n";
+	announceIPv4();
+	announceIPv6();
+}
 
-	for (Torrent *torrent : QTorrent::instance()->torrents()) {
-		QByteArray hash = torrent->torrentInfo()->infoHash().toHex().toLower();
-		datagramStream << "Infohash: " << hash << "\r\n";
-	}
+void LocalServiceDiscoveryClient::announceIPv4()
+{
+	announce(m_socketIPv4, LSD_ADDRESS_IPV4, LSD_PORT_IPV4);
+}
 
-	datagramStream << "cookie: " << m_cookie << "\r\n";
-	datagramStream << "\r\n\r\n";
-
-	m_socket->writeDatagram(datagramString.toLatin1(), QHostAddress(LSD_ADDRESS), LSD_PORT);
-	m_announceTimer->start(LSD_INTERVAL);
-	m_elapsedTimer.start();
+void LocalServiceDiscoveryClient::announceIPv6()
+{
+	announce(m_socketIPv6, LSD_ADDRESS_IPV6, LSD_PORT_IPV6);
 }
 
 void LocalServiceDiscoveryClient::processPendingDatagrams()
@@ -92,11 +120,20 @@ void LocalServiceDiscoveryClient::processPendingDatagrams()
 		infoHashes.append(torrent->torrentInfo()->infoHash().toHex().toLower());
 	}
 
-	while (m_socket->hasPendingDatagrams()) {
+	for (;;) {
+		QUdpSocket *senderSocket = nullptr;
+		if (m_socketIPv4->hasPendingDatagrams()) {
+			senderSocket = m_socketIPv4;
+		} else if (m_socketIPv6->hasPendingDatagrams()) {
+			senderSocket = m_socketIPv6;
+		} else {
+			break;
+		}
+
 		QHostAddress sender;
 		QByteArray datagram;
-		datagram.resize(m_socket->pendingDatagramSize());
-		m_socket->readDatagram(datagram.data(), datagram.size(), &sender);
+		datagram.resize(senderSocket->pendingDatagramSize());
+		senderSocket->readDatagram(datagram.data(), datagram.size(), &sender);
 
 		int port = 0;
 		QList<QByteArray> receivedInfoHashes;
