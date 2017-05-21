@@ -37,12 +37,10 @@ public:
 	MainWindow();
 	~MainWindow();
 
+	static MainWindow* instance();
+
 	Panel *panel();
 	TorrentsList *torrentsList();
-
-	// Add and remove torrent from list
-	void addTorrent(Torrent *torrent);
-	void removeTorrent(Torrent *torrent);
 
 	void closeEvent(QCloseEvent *event);
 
@@ -61,10 +59,14 @@ private:
 
 	QTimer m_refreshTimer;
 
+	static MainWindow *m_mainWindow;
+
 	// Creates all needed menus
 	void createMenus();
 
 public slots:
+	void failedToAddTorrent(QString errorString);
+
 	void addTorrentAction();
 	void exitAction();
 

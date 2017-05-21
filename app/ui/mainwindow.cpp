@@ -25,6 +25,7 @@
 #include "addtorrentdialog.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include "core/torrentmanager.h"
 #include <QGuiApplication>
 #include <QScreen>
 #include <QStackedWidget>
@@ -38,11 +39,27 @@
 
 const int UI_REFRESH_INTERVAL = 300;
 
+MainWindow *MainWindow::m_mainWindow = nullptr;
+
 MainWindow::MainWindow()
-	: m_panel(new Panel)
-	, m_torrentsList(new TorrentsList())
-	, m_infoPanel(new TorrentInfoPanel)
 {
+	Q_ASSERT(m_mainWindow == nullptr);
+	m_mainWindow = this;
+
+	m_panel = new Panel;
+	m_torrentsList = new TorrentsList;
+	m_infoPanel = new TorrentInfoPanel;
+
+	connect(TorrentManager::instance(), &TorrentManager::torrentAdded,
+			m_torrentsList, &TorrentsList::addTorrent);
+	connect(TorrentManager::instance(), &TorrentManager::torrentRemoved,
+			m_torrentsList, &TorrentsList::removeTorrent);
+	connect(TorrentManager::instance(), &TorrentManager::error,
+			this, &MainWindow::failedToAddTorrent);
+
+	connect(m_torrentsList, &TorrentsList::removeTorrentSignal,
+			TorrentManager::instance(), &TorrentManager::removeTorrent);
+
 	// Set the main window size to 3/4 of the screen size
 	int width = QGuiApplication::primaryScreen()->size().width()*3/4;
 	int height = QGuiApplication::primaryScreen()->size().height()*3/4;
@@ -98,6 +115,12 @@ MainWindow::~MainWindow()
 {
 }
 
+MainWindow* MainWindow::instance()
+{
+	Q_ASSERT(m_mainWindow != nullptr);
+	return m_mainWindow;
+}
+
 Panel *MainWindow::panel()
 {
 	return m_panel;
@@ -107,18 +130,6 @@ TorrentsList *MainWindow::torrentsList()
 {
 	return m_torrentsList;
 }
-
-
-void MainWindow::addTorrent(Torrent *torrent)
-{
-	m_torrentsList->addTorrent(torrent);
-}
-
-void MainWindow::removeTorrent(Torrent *torrent)
-{
-	m_torrentsList->removeTorrent(torrent);
-}
-
 
 void MainWindow::createMenus()
 {
@@ -180,9 +191,16 @@ QString MainWindow::getDownloadLocation()
 	return downloadPath;
 }
 
+void MainWindow::failedToAddTorrent(QString errorString)
+{
+	QMessageBox::critical(this, tr("Failed to add torrent"), errorString);
+}
+
 void MainWindow::addTorrentAction()
 {
 	AddTorrentDialog dialog(this);
+	connect(&dialog, &AddTorrentDialog::torrentAdded,
+			TorrentManager::instance(), &TorrentManager::addTorrentFromInfo);
 	if (dialog.browseFilePath(this)) {
 		dialog.exec();
 	}
@@ -198,9 +216,13 @@ void MainWindow::exitAction()
 
 void MainWindow::addTorrentFromUrl(QUrl url)
 {
-	AddTorrentDialog dialog(this);
-	if (dialog.setTorrentUrl(url)) {
-		dialog.exec();
+	if (url.isLocalFile()) {
+		AddTorrentDialog dialog(this);
+		connect(&dialog, &AddTorrentDialog::torrentAdded,
+				TorrentManager::instance(), &TorrentManager::addTorrentFromInfo);
+		if (dialog.setTorrentUrl(url)) {
+			dialog.exec();
+		}
 	}
 }
 

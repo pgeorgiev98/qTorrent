@@ -68,6 +68,9 @@ public slots:
 	void onRecheckAction();
 	void onRemoveAction();
 
+signals:
+	void removeTorrent(Torrent *torrent, bool deleteData);
+
 private:
 	Torrent *m_torrent;
 	QMap<int, QVariant> m_sortData;

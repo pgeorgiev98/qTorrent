@@ -27,8 +27,13 @@
 #include <QDir>
 #include <QStandardPaths>
 
+TorrentManager *TorrentManager::m_torrentManager = nullptr;
+
+
 TorrentManager::TorrentManager()
 {
+	Q_ASSERT(m_torrentManager == nullptr);
+	m_torrentManager = this;
 }
 
 TorrentManager::~TorrentManager()
@@ -38,34 +43,39 @@ TorrentManager::~TorrentManager()
 	}
 }
 
-Torrent *TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings)
+TorrentManager* TorrentManager::instance()
+{
+	Q_ASSERT(m_torrentManager != nullptr);
+	return m_torrentManager;
+}
+
+void TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings)
 {
 	// Check if torrent is already added to the list
 	for (Torrent *t : m_torrents) {
 		if (t->torrentInfo()->infoHash() == torrentInfo->infoHash()) {
-			m_errorString = "The torrent you're trying to add is already in the torrents list";
+			emit failedToAddTorrent("The torrent you're trying to add is already in the torrents list");
 			delete torrentInfo;
-			return nullptr;
+			return;
 		}
 	}
 
 	// Create the torrent
 	Torrent *torrent = new Torrent();
 	if (!torrent->createNew(torrentInfo, settings.downloadLocation())) {
-		m_errorString = torrent->errorString();
-		delete torrent;
-		return nullptr;
+		emit failedToAddTorrent(torrent->errorString()); // TODO
+		torrent->deleteLater();
+		return;
 	}
 
 	// Save the torrent
 	if (!saveTorrentFile(torrentInfo->creationFileName(), torrentInfo)) {
-		m_errorString = "Failed to save the torrent";
-		delete torrent;
-		return nullptr;
+		emit failedToAddTorrent("Failed to save the torrent");
+		torrent->deleteLater();
+		return;
 	}
 
 	m_torrents.push_back(torrent);
-	QTorrent::instance()->mainWindow()->addTorrent(torrent);
 
 	if (!settings.skipHashCheck()) {
 		torrent->check();
@@ -78,7 +88,8 @@ Torrent *TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const Torr
 	}
 
 	emit torrentAdded(torrent);
-	return torrent;
+
+	saveTorrentsResumeInfo();
 }
 
 bool TorrentManager::resumeTorrents()
@@ -155,12 +166,11 @@ bool TorrentManager::resumeTorrents()
 			Torrent *torrent = new Torrent();
 			if (!torrent->createFromResumeInfo(torrentInfo, &resumeInfo)) {
 				m_errorString = "Failed to load torrent from resume data: " + torrent->errorString();
-				delete torrent;
+				torrent->deleteLater();
 				continue;
 			}
 
 			m_torrents.push_back(torrent);
-			QTorrent::instance()->mainWindow()->addTorrent(torrent);
 			emit torrentAdded(torrent);
 
 		}
@@ -173,25 +183,28 @@ bool TorrentManager::resumeTorrents()
 	return true;
 }
 
-bool TorrentManager::saveTorrentsResumeInfo()
+void TorrentManager::saveTorrentsResumeInfo()
 {
 	QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	QDir dir(dataPath);
 	if (!dir.exists()) {
 		if (!dir.mkpath(dataPath)) {
-			return false;
+			emit error("Failed to create directory " + dataPath);
+			return;
 		}
 	}
 	if (!dir.exists("resume")) {
 		if (!dir.mkdir("resume")) {
-			return false;
+			emit error("Failed to create directory " + dataPath + "/resume");
+			return;
 		}
 	}
 	dir.cd("resume");
 	QFile resumeFile(dir.path() + "/resume.dat");
 	if (!resumeFile.open(QIODevice::WriteOnly)) {
-		m_errorString = "Failed to open resume.dat file: " + resumeFile.errorString();
-		return false;
+		QFileInfo info(resumeFile);
+		emit error("Failed to open " + info.absoluteFilePath() + ": " + resumeFile.errorString());
+		return;
 	}
 	BencodeDictionary *mainDict = new BencodeDictionary;
 	for (Torrent *torrent : m_torrents) {
@@ -201,7 +214,6 @@ bool TorrentManager::saveTorrentsResumeInfo()
 	resumeFile.write(bencodedData);
 	resumeFile.close();
 	delete mainDict;
-	return true;
 }
 
 bool TorrentManager::saveTorrentFile(const QString &filename, TorrentInfo *torrentInfo)
@@ -250,8 +262,8 @@ bool TorrentManager::removeTorrent(Torrent *torrent, bool deleteData)
 		}
 	}
 	torrent->stop();
-	QTorrent::instance()->mainWindow()->removeTorrent(torrent);
-	delete torrent;
+	emit torrentRemoved(torrent);
+	torrent->deleteLater();
 	return true;
 }
 

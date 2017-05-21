@@ -81,29 +81,12 @@ void QTorrent::startLSDClient()
 	connect(m_torrentManager, &TorrentManager::torrentAdded, m_LSDClient, &LocalServiceDiscoveryClient::announceAll);
 }
 
-bool QTorrent::addTorrentFromUrl(QUrl url)
-{
-	if (url.isLocalFile()) {
-		m_mainWindow->addTorrentFromUrl(url);
-	} else if (url.scheme() == "magnet") {
-
-	}
-	return false;
-}
-
-bool QTorrent::removeTorrent(Torrent *torrent, bool deleteData)
-{
-	return m_torrentManager->removeTorrent(torrent, deleteData);
-}
-
 void QTorrent::shutDown()
 {
 	for (Torrent *torrent : torrents()) {
 		torrent->stop();
 	}
-	if (!m_torrentManager->saveTorrentsResumeInfo()) {
-		critical("Failed to save torrents resume info: " + m_torrentManager->errorString());
-	}
+	m_torrentManager->saveTorrentsResumeInfo();
 }
 
 void QTorrent::showMainWindow()

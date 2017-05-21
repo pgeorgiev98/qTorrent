@@ -51,6 +51,9 @@ public slots:
 	void showDownloading();
 	void showUploading();
 
+signals:
+	void removeTorrentSignal(Torrent *torrent, bool deleteData);
+
 protected:
 	// For the drag and drop functionality
 	void dragEnterEvent(QDragEnterEvent *event);

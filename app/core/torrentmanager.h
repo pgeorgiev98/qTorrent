@@ -36,21 +36,27 @@ public:
 	TorrentManager();
 	~TorrentManager();
 
+	static TorrentManager* instance();
+
 	/* Getters */
 	const QList<Torrent *> &torrents() const;
 	const QString &errorString() const;
 
 signals:
 	void torrentAdded(Torrent *torrent);
+	void torrentRemoved(Torrent *torrent);
+	// errors
+	void failedToAddTorrent(QString errorString);
+	void error(QString errorString);
 
 public slots:
 	// Loads all saved for resuming torrents
 	bool resumeTorrents();
 
-	Torrent *addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings);
+	void addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings);
 
 	// Saves resume info for all torrents
-	bool saveTorrentsResumeInfo();
+	void saveTorrentsResumeInfo();
 	// Permanently saves the torrent file to the app data directory
 	bool saveTorrentFile(const QString &filename, TorrentInfo *torrentInfo);
 
@@ -60,6 +66,8 @@ public slots:
 private:
 	QList<Torrent *> m_torrents;
 	QString m_errorString;
+
+	static TorrentManager *m_torrentManager;
 };
 
 #endif // TORRENTMANAGER_H

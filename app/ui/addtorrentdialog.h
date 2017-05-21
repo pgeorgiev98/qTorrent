@@ -22,6 +22,7 @@
 
 #include <QDialog>
 #include <QUrl>
+#include "core/torrentsettings.h"
 
 class QLineEdit;
 class QPushButton;
@@ -46,6 +47,9 @@ public slots:
 	void browseDownloadLocation();
 	void ok();
 	void cancel();
+
+signals:
+	void torrentAdded(TorrentInfo* torrentInfo, TorrentSettings settings);
 
 private:
 	QLineEdit *m_downloadLocation;

@@ -229,17 +229,9 @@ void AddTorrentDialog::ok()
 	settings.setStartImmediately(m_startImmediately->isChecked());
 	settings.setSkipHashCheck(m_skipHashCheck->isChecked());
 
-	TorrentManager *manager = QTorrent::instance()->torrentManager();
-	Torrent *torrent = manager->addTorrentFromInfo(m_torrentInfo, settings);
-	if (torrent == nullptr) {
-		QMessageBox::warning(this, tr("Add torrent"),
-							 tr("Failed to add torrent: %1").arg(manager->errorString()));
-		return;
-	}
-	if (!manager->saveTorrentsResumeInfo()) {
-		QMessageBox::critical(this, tr("Add torrent"),
-							  tr("Failed to save torrents resume info: %1").arg(manager->errorString()));
-	}
+	emit torrentAdded(m_torrentInfo, settings);
+
+	// Don't destroy the TorrentInfo object in the destructor
 	m_torrentInfo = nullptr;
 	close();
 }

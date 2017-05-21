@@ -224,6 +224,6 @@ void TorrentsListItem::onRemoveAction()
 	layout->addLayout(bottomLayout);
 	dialog.setLayout(layout);
 	if (dialog.exec()) {
-		QTorrent::instance()->removeTorrent(m_torrent, deleteData->isChecked());
+		emit removeTorrent(m_torrent, deleteData->isChecked());
 	}
 }

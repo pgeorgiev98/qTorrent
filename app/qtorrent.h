@@ -44,9 +44,6 @@ public:
 	bool startServer();
 	bool resumeTorrents();
 	void startLSDClient();
-	bool addTorrentFromUrl(QUrl url);
-
-	bool removeTorrent(Torrent *torrent, bool deleteData);
 
 	void shutDown();
 

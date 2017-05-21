@@ -20,6 +20,7 @@
 #include "qtorrent.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include "mainwindow.h"
 #include "torrentslist.h"
 #include "torrentslistitem.h"
 #include "torrentitemdelegate.h"
@@ -97,6 +98,7 @@ TorrentsList::~TorrentsList()
 void TorrentsList::addTorrent(Torrent *torrent)
 {
 	TorrentsListItem *item = new TorrentsListItem(this, torrent);
+	connect(item, &TorrentsListItem::removeTorrent, this, &TorrentsList::removeTorrentSignal);
 	m_items.append(item);
 	item->refresh();
 }
@@ -266,7 +268,7 @@ void TorrentsList::dropEvent(QDropEvent *event)
 	if (mimeData->hasUrls()) {
 		QList<QUrl> urlList = mimeData->urls();
 		for (QUrl url : urlList) {
-			QTorrent::instance()->addTorrentFromUrl(url);
+			MainWindow::instance()->addTorrentFromUrl(url);
 		}
 	}
 }
