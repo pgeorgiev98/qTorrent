@@ -81,28 +81,6 @@ void QTorrent::startLSDClient()
 	connect(m_torrentManager, &TorrentManager::torrentAdded, m_LSDClient, &LocalServiceDiscoveryClient::announceAll);
 }
 
-bool QTorrent::addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings)
-{
-	Torrent *torrent = m_torrentManager->addTorrentFromLocalFile(filename, settings);
-	if (torrent == nullptr) {
-		warning("Failed to add torrent: " + m_torrentManager->errorString());
-		return false;
-	}
-	if (!m_torrentManager->saveTorrentsResumeInfo()) {
-		critical("Failed to save torrent resume info: " + m_torrentManager->errorString());
-	}
-	return true;
-}
-
-bool QTorrent::addTorrentFromMagnetLink(QUrl url)
-{
-	Torrent *torrent = torrentManager()->addTorrentFromMagnetLink(url);
-	if (torrent == nullptr) {
-		return false;
-	}
-	return true;
-}
-
 bool QTorrent::addTorrentFromUrl(QUrl url)
 {
 	if (url.isLocalFile()) {

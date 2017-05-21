@@ -36,14 +36,18 @@ public:
 	TorrentManager();
 	~TorrentManager();
 
-	Torrent *addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings);
-	Torrent *addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings);
+	/* Getters */
+	const QList<Torrent *> &torrents() const;
+	const QString &errorString() const;
 
+signals:
+	void torrentAdded(Torrent *torrent);
+
+public slots:
 	// Loads all saved for resuming torrents
 	bool resumeTorrents();
 
-	// Not usable
-	Torrent *addTorrentFromMagnetLink(QUrl url);
+	Torrent *addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings);
 
 	// Saves resume info for all torrents
 	bool saveTorrentsResumeInfo();
@@ -52,12 +56,6 @@ public:
 
 	bool removeTorrent(Torrent *torrent, bool deleteData);
 
-	/* Getters */
-	const QList<Torrent *> &torrents() const;
-	const QString &errorString() const;
-
-signals:
-	void torrentAdded(Torrent *torrent);
 
 private:
 	QList<Torrent *> m_torrents;

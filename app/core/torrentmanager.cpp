@@ -38,19 +38,6 @@ TorrentManager::~TorrentManager()
 	}
 }
 
-Torrent *TorrentManager::addTorrentFromLocalFile(const QString &filename, const TorrentSettings &settings)
-{
-	// Load the torrent file
-	TorrentInfo *torrentInfo = new TorrentInfo;
-	if (!torrentInfo->loadFromTorrentFile(filename)) {
-		m_errorString = "Invalid torrent file";
-		delete torrentInfo;
-		return nullptr;
-	}
-
-	return addTorrentFromInfo(torrentInfo, settings);
-}
-
 Torrent *TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings)
 {
 	// Check if torrent is already added to the list
@@ -184,23 +171,6 @@ bool TorrentManager::resumeTorrents()
 	}
 
 	return true;
-}
-
-Torrent *TorrentManager::addTorrentFromMagnetLink(QUrl url)
-{
-	Torrent *torrent = new Torrent();
-	if (!torrent->createFromMagnetLink(url)) {
-		m_errorString = torrent->errorString();
-		delete torrent;
-		return nullptr;
-	}
-
-	m_torrents.push_back(torrent);
-	QTorrent::instance()->mainWindow()->addTorrent(torrent);
-
-	torrent->start();
-
-	return torrent;
 }
 
 bool TorrentManager::saveTorrentsResumeInfo()
