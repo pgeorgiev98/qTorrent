@@ -54,8 +54,10 @@ MainWindow::MainWindow()
 			m_torrentsList, &TorrentsList::addTorrent);
 	connect(TorrentManager::instance(), &TorrentManager::torrentRemoved,
 			m_torrentsList, &TorrentsList::removeTorrent);
-	connect(TorrentManager::instance(), &TorrentManager::error,
+	connect(TorrentManager::instance(), &TorrentManager::failedToAddTorrent,
 			this, &MainWindow::failedToAddTorrent);
+	connect(TorrentManager::instance(), &TorrentManager::error,
+			this, &MainWindow::showError);
 
 	connect(m_torrentsList, &TorrentsList::removeTorrentSignal,
 			TorrentManager::instance(), &TorrentManager::removeTorrent);
@@ -194,6 +196,11 @@ QString MainWindow::getDownloadLocation()
 void MainWindow::failedToAddTorrent(QString errorString)
 {
 	QMessageBox::critical(this, tr("Failed to add torrent"), errorString);
+}
+
+void MainWindow::showError(QString errorString)
+{
+	QMessageBox::critical(this, tr("Error"), errorString);
 }
 
 void MainWindow::addTorrentAction()

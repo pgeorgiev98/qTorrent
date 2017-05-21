@@ -66,6 +66,7 @@ private:
 
 public slots:
 	void failedToAddTorrent(QString errorString);
+	void showError(QString errorString);
 
 	void addTorrentAction();
 	void exitAction();
