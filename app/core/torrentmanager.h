@@ -40,18 +40,18 @@ public:
 
 	/* Getters */
 	const QList<Torrent *> &torrents() const;
-	const QString &errorString() const;
 
 signals:
 	void torrentAdded(Torrent *torrent);
 	void torrentRemoved(Torrent *torrent);
 	// errors
 	void failedToAddTorrent(QString errorString);
+	void failedToResumeTorrents(QString errorString);
 	void error(QString errorString);
 
 public slots:
 	// Loads all saved for resuming torrents
-	bool resumeTorrents();
+	void resumeTorrents();
 
 	void addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentSettings &settings);
 
@@ -65,7 +65,6 @@ public slots:
 
 private:
 	QList<Torrent *> m_torrents;
-	QString m_errorString;
 
 	static TorrentManager *m_torrentManager;
 };

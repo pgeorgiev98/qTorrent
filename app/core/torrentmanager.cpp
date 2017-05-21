@@ -63,7 +63,7 @@ void TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentS
 	// Create the torrent
 	Torrent *torrent = new Torrent();
 	if (!torrent->createNew(torrentInfo, settings.downloadLocation())) {
-		emit failedToAddTorrent(torrent->errorString()); // TODO
+		emit failedToAddTorrent("Failed to add torrent: " + torrent->errorString());
 		torrent->deleteLater();
 		return;
 	}
@@ -92,30 +92,32 @@ void TorrentManager::addTorrentFromInfo(TorrentInfo *torrentInfo, const TorrentS
 	saveTorrentsResumeInfo();
 }
 
-bool TorrentManager::resumeTorrents()
+void TorrentManager::resumeTorrents()
 {
 	QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	QDir dir(dataPath);
 	if (!dir.exists()) {
 		if (!dir.mkpath(dataPath)) {
-			m_errorString = "Failed to create data path " + dataPath;
-			return false;
+			emit failedToResumeTorrents("Failed to create directory " + dataPath);
+			return;
 		}
 	}
 	if (!dir.exists("resume")) {
 		if (!dir.mkdir("resume")) {
-			m_errorString = "Failed to create resume directory";
-			return false;
+			emit failedToResumeTorrents("Failed to create directory " + dataPath + "/resume");
+			return;
 		}
 	}
 	dir.cd("resume");
 	QFile resumeFile(dir.path() + "/resume.dat");
 	if (!resumeFile.exists()) {
-		return true;
+		// No resume file => Nothing to do.
+		return;
 	}
 	if (!resumeFile.open(QIODevice::ReadOnly)) {
-		m_errorString = "Failed to open resume file: " + resumeFile.errorString();
-		return false;
+		QFileInfo info(resumeFile);
+		emit failedToResumeTorrents("Failed to open file " + info.absoluteFilePath() + ": " + resumeFile.errorString());
+		return;
 	}
 	QByteArray resumeData = resumeFile.readAll();
 	BencodeParser parser;
@@ -135,14 +137,15 @@ bool TorrentManager::resumeTorrents()
 		for (QByteArray infoHash : mainDict->keys()) {
 			QFile file(dir.path() + "/" + infoHash.toHex() + ".torrent");
 			if (!file.exists()) {
-				m_errorString = "File " + file.fileName() + " not found";
+				QFileInfo info(file);
+				qDebug() << "TorrentManager::resumeTorrents(): file" << info.absoluteFilePath() << "Not found";
 				continue;
 			}
 
 			TorrentInfo *torrentInfo = new TorrentInfo;
 			if (!torrentInfo->loadFromTorrentFile(file.fileName())) {
-				m_errorString = "Failed to parse resume data for "
-								+ file.fileName() + ": " + torrentInfo->errorString();
+				qDebug() << "TorrentManager::resumeTorrents(): Failed to parse" << file.fileName()
+						 << torrentInfo->errorString();
 				delete torrentInfo;
 				continue;
 			}
@@ -151,21 +154,21 @@ bool TorrentManager::resumeTorrents()
 
 			BencodeValue *value = mainDict->value(infoHash);
 			if (!value->isDictionary()) {
-				m_errorString = "Failed to parse resume data for "
-								+ file.fileName() + ": value for infohash is not a dictionary";
+				qDebug() << "TorrentManager::resumeTorrents(): Failed to parse" << file.fileName()
+						 << ": value for infohash is not a dictionary";
 				delete torrentInfo;
 				continue;
 			}
 			if (!resumeInfo.loadFromBencode(value->toBencodeDictionary())) {
+				qDebug() << "TorrentManager::resumeTorrents(): Failed to load resume info for" << file.fileName();
 				delete torrentInfo;
-				m_errorString = "Failed to load resume data for "
-								+ file.fileName();
 				continue;
 			}
 
 			Torrent *torrent = new Torrent();
 			if (!torrent->createFromResumeInfo(torrentInfo, &resumeInfo)) {
-				m_errorString = "Failed to load torrent from resume data: " + torrent->errorString();
+				qDebug() << "TorrentManager::resumeTorrents(): Failed to create torrent from resume data for"
+						 << file.fileName() << torrent->errorString();
 				torrent->deleteLater();
 				continue;
 			}
@@ -176,11 +179,9 @@ bool TorrentManager::resumeTorrents()
 		}
 
 	} catch (BencodeException &ex) {
-		m_errorString = "Failed to read resume.dat file: " + ex.what();
-		return false;
+		emit failedToResumeTorrents("Failed to read resume file: " + ex.what());
+		return;
 	}
-
-	return true;
 }
 
 void TorrentManager::saveTorrentsResumeInfo()
@@ -270,9 +271,4 @@ bool TorrentManager::removeTorrent(Torrent *torrent, bool deleteData)
 const QList<Torrent *> &TorrentManager::torrents() const
 {
 	return m_torrents;
-}
-
-const QString &TorrentManager::errorString() const
-{
-	return m_errorString;
 }

@@ -50,6 +50,11 @@ QTorrent::QTorrent()
 	}
 
 	connect(m_LSDClient, &LocalServiceDiscoveryClient::foundPeer, this, &QTorrent::LSDPeerFound);
+
+	startServer();
+	m_torrentManager->resumeTorrents();
+	startLSDClient();
+	showMainWindow();
 }
 
 QTorrent::~QTorrent()
@@ -64,15 +69,6 @@ QTorrent::~QTorrent()
 bool QTorrent::startServer()
 {
 	return m_server->startServer();
-}
-
-bool QTorrent::resumeTorrents()
-{
-	if (m_torrentManager->resumeTorrents()) {
-		return true;
-	}
-	critical("Failed to resume torrents: " + m_torrentManager->errorString());
-	return false;
 }
 
 void QTorrent::startLSDClient()

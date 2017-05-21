@@ -42,7 +42,6 @@ public:
 	~QTorrent();
 
 	bool startServer();
-	bool resumeTorrents();
 	void startLSDClient();
 
 	void shutDown();

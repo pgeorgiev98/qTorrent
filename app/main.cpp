@@ -35,16 +35,6 @@ int main(int argc, char *argv[])
 
 	QTorrent qTorrent;
 
-	if (!qTorrent.startServer()) {
-		qDebug() << "Failed to start server";
-		return 1;
-	}
-
-	qTorrent.resumeTorrents();
-
-	qTorrent.startLSDClient();
-
-	qTorrent.showMainWindow();
 	app.exec();
 	qTorrent.shutDown();
 	return 0;
