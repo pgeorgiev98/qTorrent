@@ -35,6 +35,7 @@ const int HANDSHAKE_TIMEOUT_MSEC = 20000;
 const int BLOCKS_TO_REQUEST = 5;
 const int MAX_MESSAGE_LENGTH = 65536;
 const int RECONNECT_INTERVAL_MSEC = 30000;
+const int SEND_MESSAGES_INTERVAL = 1000;
 
 Peer::Peer(ConnectionInitiator connectionInitiator, QTcpSocket *socket)
 	: m_torrent(nullptr)
@@ -85,6 +86,8 @@ void Peer::startConnection()
 	m_replyTimeoutTimer.stop();
 	m_handshakeTimeoutTimer.stop();
 	m_reconnectTimer.stop();
+
+	m_sendMessagesTimer.stop();
 
 	m_hasTimedOut = false;
 	m_blocksQueue.clear();
@@ -267,6 +270,8 @@ Peer *Peer::createServer(Torrent *torrent, QHostAddress address, int port)
 
 void Peer::sendMessages()
 {
+	m_sendMessagesTimer.stop();
+
 	// Can't do anything if not connected
 	if (m_state != ConnectionEstablished) {
 		return;
@@ -277,6 +282,8 @@ void Peer::sendMessages()
 		disconnect();
 		return;
 	}
+
+	m_sendMessagesTimer.start(SEND_MESSAGES_INTERVAL);
 
 	if (m_isPaused) {
 		/* Paused */
@@ -612,6 +619,7 @@ void Peer::connectAll()
 	connect(&m_replyTimeoutTimer, SIGNAL(timeout()), this, SLOT(replyTimeout()));
 	connect(&m_handshakeTimeoutTimer, SIGNAL(timeout()), this, SLOT(handshakeTimeout()));
 	connect(&m_reconnectTimer, SIGNAL(timeout()), this, SLOT(reconnect()));
+	connect(&m_sendMessagesTimer, SIGNAL(timeout()), this, SLOT(sendMessages()));
 
 	// Timeout intervals
 	m_replyTimeoutTimer.setInterval(REPLY_TIMEOUT_MSEC);
@@ -651,6 +659,8 @@ void Peer::initClient()
 	m_replyTimeoutTimer.stop();
 	m_handshakeTimeoutTimer.stop();
 	m_reconnectTimer.stop();
+
+	m_sendMessagesTimer.stop();
 
 	m_hasTimedOut = false;
 	m_blocksQueue.clear();
@@ -731,6 +741,7 @@ void Peer::readyRead()
 		m_handshakeTimeoutTimer.stop();
 		qDebug() << "Handshaking completed with peer" << addressPort();
 		m_state = ConnectionEstablished;
+		m_sendMessagesTimer.start(SEND_MESSAGES_INTERVAL);
 		sendBitfield();
 	// Fall down
 	case ConnectionEstablished: {
@@ -761,6 +772,7 @@ void Peer::finished()
 {
 	m_handshakeTimeoutTimer.stop();
 	m_replyTimeoutTimer.stop();
+	m_sendMessagesTimer.stop();
 	releaseAllBlocks();
 	if (m_state != Error) {
 		m_state = Disconnected;

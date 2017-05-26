@@ -117,6 +117,10 @@ private:
 	QTimer m_handshakeTimeoutTimer;
 	QTimer m_reconnectTimer;
 
+	/* Used to make sure that sendMessages() will ce called at
+	 * least every SEND_MESSAGES_INTERVAL milliseconds */
+	QTimer m_sendMessagesTimer;
+
 	/* This flag will be set when the peer hasn't
 	 * responded to a request in a certain amount of time */
 	bool m_hasTimedOut;
@@ -156,6 +160,13 @@ public:
 	Peer(ConnectionInitiator connectionInitiator, QTcpSocket *socket);
 	~Peer();
 
+	/* Returns a newly-created peer object with peerType = Client (He downloads from us) */
+	static Peer *createClient(QTcpSocket *socket);
+
+	/* Returns a newly-created peer object with peerType = Server (We download from him) */
+	static Peer* createServer(Torrent *torrent, QHostAddress address, int port);
+
+public slots:
 	/* Attempt to connect to the peer */
 	void startConnection();
 
@@ -189,17 +200,9 @@ public:
 
 	/* An fatal error has occurred; drops the connection */
 	void fatalError();
-
-	/* Returns a newly-created peer object with peerType = Client (He downloads from us) */
-	static Peer *createClient(QTcpSocket *socket);
-
-	/* Returns a newly-created peer object with peerType = Server (We download from him) */
-	static Peer* createServer(Torrent *torrent, QHostAddress address, int port);
-
 	/* Attempts to send messages to the peer */
 	void sendMessages();
 
-public slots:
 	void connected();
 	void readyRead();
 	void finished();
