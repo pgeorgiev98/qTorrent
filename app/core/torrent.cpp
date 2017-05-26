@@ -171,52 +171,6 @@ bool Torrent::createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeI
 	return true;
 }
 
-bool Torrent::createFromMagnetLink(QUrl url)
-{
-	clearError();
-
-	QUrlQuery query(url);
-
-	QString infoHashString;
-	QByteArray infoHash;
-
-	QByteArray trackerUrl;
-
-	QString displayName;
-
-	// Every magnet link must have an info hash
-	if (!query.hasQueryItem("xt")) {
-		setError("Invalid magnet link");
-		return false;
-	}
-
-	// We can only support magnet links with trackers
-	// Because those without trackers require DHT
-	if (!query.hasQueryItem("tr")) {
-		setError("Magnet link does not have tracker parameter. Magnet links are still not supported.");
-		return false;
-	}
-
-	// Read info hash
-	infoHashString = query.queryItemValue("xt");
-	if (!infoHashString.startsWith("urn:btih:")) {
-		setError("Magnet link has an invalid info hash");
-		return false;
-	}
-	infoHashString.remove(0, strlen("urn:btih:"));
-	infoHash = QByteArray::fromHex(infoHashString.toLatin1());
-
-	// Read the tracker url
-	trackerUrl = QByteArray::fromPercentEncoding(query.queryItemValue("tr").toLatin1());
-
-	// Read display name
-	displayName = query.queryItemValue("dn");
-
-	// TODO
-	setError("The application still does not support magnet links.");
-	return false;
-}
-
 void Torrent::loadFileDescriptors()
 {
 	const QList<FileInfo> &fileInfos = m_torrentInfo->fileInfos();

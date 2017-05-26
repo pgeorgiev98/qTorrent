@@ -67,7 +67,6 @@ public:
 
 	bool createNew(TorrentInfo *torrentInfo, const QString &downloadLocation);
 	bool createFromResumeInfo(TorrentInfo *torrentInfo, ResumeInfo *resumeInfo);
-	bool createFromMagnetLink(QUrl url);
 	void loadFileDescriptors();
 
 	Block *requestBlock(Peer *client, int size);
