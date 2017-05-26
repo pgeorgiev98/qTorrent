@@ -598,8 +598,8 @@ const QString &Torrent::downloadLocation() const
 
 float Torrent::percentDownloaded()
 {
-	float percent = m_downloadedPieces;
-	percent /= m_torrentInfo->numberOfPieces();
+	double percent = m_bytesAvailable;
+	percent /= m_torrentInfo->length();
 	percent *= 100.0f;
 	return percent;
 }
