@@ -37,6 +37,7 @@ TorrentsList::TorrentsList()
 	QStringList headers;
 	headers << tr("Torrent") << tr("Size") << tr("Peers")
 			<< tr("State") << tr("Progress")
+			<< tr("Upload Speed") << tr("Download Speed")
 			<< tr("Available") << tr("Left")
 			<< tr("Total Downloaded") << tr("Total Uploaded") << tr("Ratio")
 			<< tr("Downloaded") << tr("Uploaded");
@@ -72,6 +73,9 @@ TorrentsList::TorrentsList()
 	SET_SECTION_WIDTH(Peers, fm.width(" 123/456 "));
 	SET_SECTION_WIDTH(State, fm.width(" Downloading "));
 	SET_SECTION_WIDTH(Progress, SECTION_HEADER_WIDTH(Progress) * 2);
+
+	SET_SECTION_WIDTH(DownloadSpeed, SECTION_HEADER_WIDTH(DownloadSpeed));
+	SET_SECTION_WIDTH(UploadSpeed, SECTION_HEADER_WIDTH(UploadSpeed));
 
 	SET_BYTES_SECTION_WIDTH(Available);
 	SET_BYTES_SECTION_WIDTH(Left);

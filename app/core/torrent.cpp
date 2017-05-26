@@ -25,6 +25,7 @@
 #include "torrentmessage.h"
 #include "qtorrent.h"
 #include "filecontroller.h"
+#include "trafficmonitor.h"
 #include "ui/mainwindow.h"
 #include <QDir>
 #include <QFile>
@@ -35,6 +36,7 @@ Torrent::Torrent()
 	, m_torrentInfo(nullptr)
 	, m_trackerClient(nullptr)
 	, m_fileController(nullptr)
+	, m_trafficMonitor(new TrafficMonitor(this))
 	, m_bytesDownloadedOnStartup(0)
 	, m_bytesUploadedOnStartup(0)
 	, m_totalBytesDownloaded(0)
@@ -314,6 +316,7 @@ Peer *Torrent::connectToPeer(QHostAddress address, int port)
 
 	// Add the peer
 	Peer *peer = Peer::createServer(this, address, port);
+	m_trafficMonitor->addPeer(peer);
 	m_peers.push_back(peer);
 
 	if(isStarted()) {
@@ -343,6 +346,7 @@ void Torrent::addPeer(Peer *peer)
 
 	// Else - add it to the list
 	m_peers.push_back(peer);
+	m_trafficMonitor->addPeer(peer);
 	qDebug() << "Added peer" << peer->addressPort();
 }
 
@@ -516,6 +520,11 @@ TorrentInfo *Torrent::torrentInfo()
 TrackerClient *Torrent::trackerClient()
 {
 	return m_trackerClient;
+}
+
+TrafficMonitor *Torrent::trafficMonitor()
+{
+	return m_trafficMonitor;
 }
 
 QList<QFile *> &Torrent::files()

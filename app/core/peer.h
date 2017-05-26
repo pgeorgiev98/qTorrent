@@ -166,6 +166,10 @@ public:
 	/* Returns a newly-created peer object with peerType = Server (We download from him) */
 	static Peer* createServer(Torrent *torrent, QHostAddress address, int port);
 
+signals:
+	void uploadedData(qint64 bytes);
+	void downloadedData(qint64 bytes);
+
 public slots:
 	/* Attempt to connect to the peer */
 	void startConnection();

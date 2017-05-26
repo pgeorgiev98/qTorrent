@@ -213,6 +213,7 @@ void Peer::sendPiece(int index, int begin, const QByteArray &blockData)
 	qDebug() << "Sending piece" << index << begin << blockData.size() << "to" << addressPort();
 	TorrentMessage::piece(m_socket, index, begin, blockData);
 	m_torrent->onBlockUploaded(blockData.size());
+	emit uploadedData(blockData.size());
 }
 
 void Peer::sendCancel(Block* block)
@@ -580,6 +581,7 @@ bool Peer::readPeerMessage(bool *ok)
 			if (!block->isDownloaded()) {
 				block->setData(this, blockData);
 				releaseBlock(block);
+				emit downloadedData(blockLength);
 			}
 			if (m_blocksQueue.isEmpty()) {
 				m_replyTimeoutTimer.stop();

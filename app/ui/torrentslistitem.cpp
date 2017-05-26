@@ -23,6 +23,7 @@
 #include "panel.h"
 #include "core/torrent.h"
 #include "core/torrentinfo.h"
+#include "core/trafficmonitor.h"
 #include "global.h"
 #include <QDialog>
 #include <QVBoxLayout>
@@ -66,6 +67,8 @@ void TorrentsListItem::refresh()
 	setPeers(t->connectedPeersCount(), t->allPeersCount());
 	setState(t->stateString());
 	setProgress(t->percentDownloaded());
+	setDownloadSpeed(t->trafficMonitor()->downloadSpeed());
+	setUploadSpeed(t->trafficMonitor()->uploadSpeed());
 	setAvailable(t->bytesAvailable());
 	setLeft(t->bytesLeft());
 	setTotalDownloaded(t->totalBytesDownloaded());
@@ -130,6 +133,18 @@ void TorrentsListItem::setProgress(float value)
 {
 	setText(Progress, QString::number(value, 'f', 2) + "%");
 	setSortData(Progress, value);
+}
+
+void TorrentsListItem::setDownloadSpeed(qint64 bytes)
+{
+	setText(DownloadSpeed, formatSize(bytes) + "/s");
+	setSortData(DownloadSpeed, bytes);
+}
+
+void TorrentsListItem::setUploadSpeed(qint64 bytes)
+{
+	setText(UploadSpeed, formatSize(bytes) + "/s");
+	setSortData(UploadSpeed, bytes);
 }
 
 void TorrentsListItem::setAvailable(qint64 value)

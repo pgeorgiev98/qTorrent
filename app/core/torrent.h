@@ -31,6 +31,7 @@ class Peer;
 class TorrentInfo;
 class TrackerClient;
 class FileController;
+class TrafficMonitor;
 class Piece;
 class Block;
 class QFile;
@@ -80,6 +81,7 @@ public:
 	QList<QFile *> &files();
 	TorrentInfo *torrentInfo();
 	TrackerClient *trackerClient();
+	TrafficMonitor *trafficMonitor();
 
 	// The number of bytes since startup
 	qint64 bytesDownloaded() const;
@@ -164,6 +166,7 @@ private:
 	TrackerClient *m_trackerClient;
 	QList<QFile *> m_files;
 	FileController *m_fileController;
+	TrafficMonitor *m_trafficMonitor;
 
 	// The number of bytes on startup
 	qint64 m_bytesDownloadedOnStartup;
