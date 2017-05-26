@@ -20,14 +20,17 @@
 #include "trafficmonitor.h"
 #include "peer.h"
 
-#define MONITOR_HISTORY_LENGTH 1000
+#define MONITOR_INTERVAL 1000
 
 TrafficMonitor::TrafficMonitor(QObject *parent)
 	: QObject(parent)
 	, m_uploadSpeed(0)
 	, m_downloadSpeed(0)
+	, m_bytesUploaded(0)
+	, m_bytesDownloaded(0)
 {
-
+	m_timer.start(MONITOR_INTERVAL);
+	connect(&m_timer, &QTimer::timeout, this, &TrafficMonitor::update);
 }
 
 qint64 TrafficMonitor::uploadSpeed() const
@@ -42,68 +45,32 @@ qint64 TrafficMonitor::downloadSpeed() const
 
 void TrafficMonitor::addPeer(Peer *peer)
 {
-	m_peers.insert(peer);
 	connect(peer, &Peer::uploadedData, this, &TrafficMonitor::onDataSent);
 	connect(peer, &Peer::downloadedData, this, &TrafficMonitor::onDataReceived);
 }
 
 void TrafficMonitor::removePeer(Peer *peer)
 {
-	m_peers.remove(peer);
 	disconnect(peer, &Peer::uploadedData, this, &TrafficMonitor::onDataSent);
 	disconnect(peer, &Peer::downloadedData, this, &TrafficMonitor::onDataReceived);
 }
 
 void TrafficMonitor::onDataSent(qint64 bytes)
 {
-	QTimer *t = new QTimer(this);
-	m_uploads[t] = bytes;
-	connect(t, &QTimer::timeout, this, &TrafficMonitor::removeUpload);
-	t->start(MONITOR_HISTORY_LENGTH);
-	updateUploadSpeed();
+	m_bytesUploaded += bytes;
 }
 
 void TrafficMonitor::onDataReceived(qint64 bytes)
 {
-	QTimer *t = new QTimer(this);
-	m_downloads[t] = bytes;
-	connect(t, &QTimer::timeout, this, &TrafficMonitor::removeDownload);
-	t->start(MONITOR_HISTORY_LENGTH);
-	updateDownloadSpeed();
+	m_bytesDownloaded += bytes;
 }
 
-void TrafficMonitor::removeUpload()
+void TrafficMonitor::update()
 {
-	QTimer *t = qobject_cast<QTimer *>(sender());
-	if (t == nullptr)
-		return;
-	m_uploads.remove(t);
-	updateUploadSpeed();
-}
-
-void TrafficMonitor::removeDownload()
-{
-	QTimer *t = qobject_cast<QTimer *>(sender());
-	if (t == nullptr)
-		return;
-	m_downloads.remove(t);
-	updateDownloadSpeed();
-}
-
-void TrafficMonitor::updateUploadSpeed()
-{
-	qint64 bytes = 0;
-	for (qint64 b : m_uploads.values())
-		bytes += b;
-	m_uploadSpeed = bytes / (MONITOR_HISTORY_LENGTH / 1000.0);
+	m_uploadSpeed = m_bytesUploaded / (MONITOR_INTERVAL / 1000.0);
+	m_downloadSpeed = m_bytesDownloaded / (MONITOR_INTERVAL / 1000.0);
+	m_bytesUploaded = 0;
+	m_bytesDownloaded = 0;
 	emit uploadSpeedChanged(m_uploadSpeed);
-}
-
-void TrafficMonitor::updateDownloadSpeed()
-{
-	qint64 bytes = 0;
-	for (qint64 b : m_downloads.values())
-		bytes += b;
-	m_downloadSpeed = bytes / (MONITOR_HISTORY_LENGTH / 1000.0);
 	emit downloadSpeedChanged(m_downloadSpeed);
 }

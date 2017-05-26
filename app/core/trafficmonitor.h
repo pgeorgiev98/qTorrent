@@ -44,11 +44,7 @@ public slots:
 	void onDataSent(qint64 bytes);
 	void onDataReceived(qint64 bytes);
 
-	void removeUpload();
-	void removeDownload();
-
-	void updateUploadSpeed();
-	void updateDownloadSpeed();
+	void update();
 
 signals:
 	void uploadSpeedChanged(qint64 bytesPerSecond);
@@ -58,8 +54,9 @@ private:
 	qint64 m_uploadSpeed;
 	qint64 m_downloadSpeed;
 	QSet<Peer *> m_peers;
-	QMap<QTimer*, qint64> m_uploads;
-	QMap<QTimer*, qint64> m_downloads;
+	QTimer m_timer;
+	qint64 m_bytesUploaded;
+	qint64 m_bytesDownloaded;
 };
 
 #endif // TRAFFICMONITOR_H
