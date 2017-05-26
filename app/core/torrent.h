@@ -173,6 +173,8 @@ private:
 	// The number of bytes since the torrent was added
 	qint64 m_totalBytesDownloaded;
 	qint64 m_totalBytesUploaded;
+	// The number of bytes that are available
+	qint64 m_bytesAvailable;
 
 	/* The total number of successfully downloaded pieces */
 	int m_downloadedPieces;

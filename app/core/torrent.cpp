@@ -41,6 +41,7 @@ Torrent::Torrent()
 	, m_bytesUploadedOnStartup(0)
 	, m_totalBytesDownloaded(0)
 	, m_totalBytesUploaded(0)
+	, m_bytesAvailable(0)
 	, m_downloadedPieces(0)
 	, m_isDownloaded(false)
 	, m_isPaused(true)
@@ -423,6 +424,7 @@ void Torrent::setPieceAvailable(Piece *piece, bool available)
 	if (available) {
 		// Increment some counters
 		m_downloadedPieces++;
+		m_bytesAvailable += piece->size();
 
 		if (m_state == Started) {
 			m_totalBytesDownloaded += piece->size();
@@ -439,6 +441,7 @@ void Torrent::setPieceAvailable(Piece *piece, bool available)
 		}
 	} else {
 		m_downloadedPieces--;
+		m_bytesAvailable -= piece->size();
 		m_isDownloaded = false;
 	}
 
@@ -515,13 +518,7 @@ qint64 Torrent::totalBytesUploaded() const
 
 qint64 Torrent::bytesAvailable() const
 {
-	qint64 bytes = 0;
-	for (Piece *piece : m_pieces) {
-		if (piece->isDownloaded()) {
-			bytes += piece->size();
-		}
-	}
-	return bytes;
+	return m_bytesAvailable;
 }
 
 qint64 Torrent::bytesLeft() const
@@ -629,6 +626,7 @@ void Torrent::onPieceDownloaded(Piece *piece)
 {
 	// Increment some counters
 	m_downloadedPieces++;
+	m_bytesAvailable += piece->size();
 	m_totalBytesDownloaded += piece->size();
 
 	qDebug() << "Downloaded pieces"
