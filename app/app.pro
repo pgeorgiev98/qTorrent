@@ -28,6 +28,8 @@ SOURCES += main.cpp \
     core/filecontroller.cpp \
     core/localservicediscoveryclient.cpp \
     core/trafficmonitor.cpp \
+    core/ratecontroller.cpp \
+    core/rctcpsocket.cpp \
     ui/mainwindow.cpp \
     ui/panel.cpp \
     ui/torrentslist.cpp \
@@ -56,6 +58,8 @@ HEADERS += \
     core/filecontroller.h \
     core/localservicediscoveryclient.h \
     core/trafficmonitor.h \
+    core/ratecontroller.h \
+    core/rctcpsocket.h \
     ui/mainwindow.h \
     ui/panel.h \
     ui/torrentslist.h \

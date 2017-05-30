@@ -24,7 +24,8 @@
 #include "torrent.h"
 #include "torrentinfo.h"
 #include "torrentmessage.h"
-#include <QTcpSocket>
+#include "rctcpsocket.h"
+#include "ratecontroller.h"
 #include <QHostAddress>
 #include <QTimer>
 #include <QDebug>
@@ -264,7 +265,9 @@ Peer *Peer::createClient(QTcpSocket *socket)
 
 Peer *Peer::createServer(Torrent *torrent, QHostAddress address, int port)
 {
-	Peer *peer = new Peer(ConnectionInitiator::Client, new QTcpSocket);
+	RcTcpSocket *socket = new RcTcpSocket;
+	RateController::instance()->addSocket(socket);
+	Peer *peer = new Peer(ConnectionInitiator::Client, socket);
 	peer->initServer(torrent, address, port);
 	return peer;
 }

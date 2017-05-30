@@ -24,6 +24,7 @@
 #include "core/torrentserver.h"
 #include "core/localservicediscoveryclient.h"
 #include "core/trackerclient.h"
+#include "core/ratecontroller.h"
 #include "ui/mainwindow.h"
 #include <QGuiApplication>
 #include <QMessageBox>
@@ -42,6 +43,11 @@ QTorrent::QTorrent()
 	m_server = new TorrentServer;
 	m_LSDClient = new LocalServiceDiscoveryClient;
 	m_mainWindow = new MainWindow;
+
+	// Fixed 512KiB/s upload and 2MiB/s download speed
+	// TODO: Make this user-adjustable
+	RateController::instance()->setUploadLimit(512*1024);
+	RateController::instance()->setDownloadLimit(2*1024*1024);
 
 	// Generate random peer id that starts with 'qT'
 	m_peerId.push_back("qT");
