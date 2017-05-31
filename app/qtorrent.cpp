@@ -29,6 +29,7 @@
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QUrlQuery>
+#include <QSettings>
 
 QTorrent *QTorrent::m_instance;
 
@@ -44,10 +45,12 @@ QTorrent::QTorrent()
 	m_LSDClient = new LocalServiceDiscoveryClient;
 	m_mainWindow = new MainWindow;
 
-	// Fixed 512KiB/s upload and 2MiB/s download speed
-	// TODO: Make this user-adjustable
-	RateController::instance()->setUploadLimit(512*1024);
-	RateController::instance()->setDownloadLimit(2*1024*1024);
+	QSettings settings;
+	// TODO: default at disabled limits
+	RateController::instance()->setUploadLimit(settings.value("UploadLimit", 1*1024*1024).toLongLong());
+	RateController::instance()->setDownloadLimit(settings.value("DownloadLimit", 4*1024*1024).toLongLong());
+	settings.setValue("UploadLimit", RateController::instance()->uploadLimit());
+	settings.setValue("DownloadLimit", RateController::instance()->downloadLimit());
 
 	// Generate random peer id that starts with 'qT'
 	m_peerId.push_back("qT");

@@ -20,6 +20,7 @@
 #include "settingswindow.h"
 #include "qtorrent.h"
 #include "core/torrentserver.h"
+#include "core/ratecontroller.h"
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
@@ -51,6 +52,28 @@ SettingsWindow::SettingsWindow(QWidget *parent)
 	serverPortLayout->addStretch();
 
 	mainLayout->addLayout(serverPortLayout);
+
+	m_uploadLimit = new QLineEdit;
+	m_uploadLimit->setMaximumWidth(200);
+	m_uploadLimit->setValidator(new QIntValidator);
+	QHBoxLayout *uploadLimitLayout = new QHBoxLayout;
+	uploadLimitLayout->addWidget(new QLabel(tr("Upload limit: ")));
+	uploadLimitLayout->addWidget(m_uploadLimit);
+	uploadLimitLayout->addWidget(new QLabel(tr("KiB/s")));
+	uploadLimitLayout->addStretch();
+
+	mainLayout->addLayout(uploadLimitLayout);
+
+	m_downloadLimit = new QLineEdit;
+	m_downloadLimit->setMaximumWidth(200);
+	m_downloadLimit->setValidator(new QIntValidator);
+	QHBoxLayout *downloadLimitLayout = new QHBoxLayout;
+	downloadLimitLayout->addWidget(new QLabel(tr("Download limit: ")));
+	downloadLimitLayout->addWidget(m_downloadLimit);
+	downloadLimitLayout->addWidget(new QLabel(tr("KiB/s")));
+	downloadLimitLayout->addStretch();
+
+	mainLayout->addLayout(downloadLimitLayout);
 
 	QPushButton *applyButton = new QPushButton(tr("Apply"));
 	QPushButton *cancelButton = new QPushButton(tr("Cancel"));
@@ -88,12 +111,29 @@ void SettingsWindow::apply()
 		return;
 	}
 
+	qint64 uploadLimit = m_uploadLimit->text().toLongLong(&ok) * 1024;
+	if (!ok) {
+		QMessageBox::warning(this, QGuiApplication::applicationDisplayName(), tr("Please enter a valid upload limit"));
+		return;
+	}
+
+	qint64 downloadLimit = m_downloadLimit->text().toLongLong(&ok) * 1024;
+	if (!ok) {
+		QMessageBox::warning(this, QGuiApplication::applicationDisplayName(), tr("Please enter a valid download limit"));
+		return;
+	}
+
 	QSettings settings;
 	settings.setValue("ServerStartPort", serverStartPort);
 	settings.setValue("ServerEndPort", serverEndPort);
+	settings.setValue("UploadLimit", uploadLimit);
+	settings.setValue("DownloadLimit", downloadLimit);
 
 	// Restart the server
 	QTorrent::instance()->server()->startServer();
+
+	RateController::instance()->setUploadLimit(uploadLimit);
+	RateController::instance()->setDownloadLimit(downloadLimit);
 }
 
 void SettingsWindow::reset()
@@ -101,4 +141,6 @@ void SettingsWindow::reset()
 	QSettings settings;
 	m_serverStartPort->setText(settings.value("ServerStartPort").toString());
 	m_serverEndPort->setText(settings.value("ServerEndPort").toString());
+	m_uploadLimit->setText(QString::number(settings.value("UploadLimit").toLongLong() / 1024));
+	m_downloadLimit->setText(QString::number(settings.value("DownloadLimit").toLongLong() / 1024));
 }

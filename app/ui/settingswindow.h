@@ -38,6 +38,8 @@ private slots:
 private:
 	QLineEdit *m_serverStartPort;
 	QLineEdit *m_serverEndPort;
+	QLineEdit *m_uploadLimit;
+	QLineEdit *m_downloadLimit;
 };
 
 #endif // SETTINGSWINDOW_H
