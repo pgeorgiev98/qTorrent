@@ -34,6 +34,10 @@ TorrentServer::~TorrentServer()
 
 bool TorrentServer::startServer()
 {
+	if (m_server.isListening()) {
+		m_server.close();
+	}
+
 	QSettings settings;
 	quint64 startPort = settings.value("ServerStartPort", 6881).toInt();
 	quint64 endPort = settings.value("ServerEndPort", 6889).toInt();

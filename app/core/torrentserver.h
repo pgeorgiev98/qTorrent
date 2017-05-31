@@ -35,7 +35,7 @@ public:
 	TorrentServer();
 	~TorrentServer();
 
-	/* Start the server using the port range in the settings file */
+	/* Start/restart the server using the port range in the settings file */
 	bool startServer();
 
 	QTcpServer& server();
