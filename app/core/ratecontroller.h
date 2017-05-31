@@ -40,7 +40,7 @@ public:
 
 	inline int uploadLimit() const { return m_upLimit; }
 	inline int downloadLimit() const { return m_downLimit; }
-	void setUploadLimit(int bytesPerSecond);
+	inline void setUploadLimit(int bytesPerSecond) { m_upLimit = bytesPerSecond; }
 	void setDownloadLimit(int bytesPerSecond);
 
 public slots:

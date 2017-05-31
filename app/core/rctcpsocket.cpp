@@ -69,7 +69,7 @@ qint64 RcTcpSocket::writeToNetwork(qint64 maxLen)
 qint64 RcTcpSocket::readFromNetwork(qint64 maxLen)
 {
 	int oldSize = m_incoming.size();
-	m_incoming.resize(m_incoming.size() + maxLen);
+	m_incoming.resize(oldSize + maxLen);
 	qint64 bytesRead = m_socket->read(m_incoming.data() + oldSize, maxLen);
 	m_incoming.resize(bytesRead <= 0 ? oldSize : oldSize + bytesRead);
 	if (bytesRead > 0)
@@ -120,8 +120,10 @@ void RcTcpSocket::socketStateChanged(QAbstractSocket::SocketState state)
 qint64 RcTcpSocket::readData(char *data, qint64 maxLen)
 {
 	int bytesRead = qMin<int>(maxLen, m_incoming.size());
-	memcpy(data, m_incoming.constData(), bytesRead);
-	m_incoming.remove(0, bytesRead);
+	if (bytesRead > 0) {
+		memcpy(data, m_incoming.constData(), bytesRead);
+		m_incoming.remove(0, bytesRead);
+	}
 
 	if (state() != ConnectedState) {
 		QByteArray buffer;
