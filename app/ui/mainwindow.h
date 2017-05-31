@@ -26,7 +26,9 @@
 #include <QUrl>
 
 class Panel;
+class QStackedWidget;
 class TorrentsList;
+class SettingsWindow;
 class TorrentInfoPanel;
 class Torrent;
 
@@ -48,6 +50,8 @@ public:
 
 private:
 	Panel *m_panel;
+	QStackedWidget *m_stackedWidget;
+	SettingsWindow *m_settingsWindow;
 	TorrentsList *m_torrentsList;
 	TorrentInfoPanel *m_infoPanel;
 
@@ -68,6 +72,9 @@ public slots:
 	void failedToAddTorrent(QString errorString);
 	void failedToResumeTorrents(QString errorString);
 	void showError(QString errorString);
+
+	void openSettings();
+	void closeSettings();
 
 	void addTorrentAction();
 	void exitAction();

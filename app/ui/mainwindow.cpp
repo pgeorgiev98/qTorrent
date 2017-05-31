@@ -19,6 +19,7 @@
 
 #include "qtorrent.h"
 #include "mainwindow.h"
+#include "settingswindow.h"
 #include "torrentslist.h"
 #include "panel.h"
 #include "torrentinfopanel.h"
@@ -28,6 +29,7 @@
 #include "core/torrentmanager.h"
 #include <QGuiApplication>
 #include <QScreen>
+#include <QStackedLayout>
 #include <QStackedWidget>
 #include <QMenuBar>
 #include <QFileDialog>
@@ -47,6 +49,7 @@ MainWindow::MainWindow()
 	m_mainWindow = this;
 
 	m_panel = new Panel;
+	m_settingsWindow = new SettingsWindow;
 	m_torrentsList = new TorrentsList;
 	m_infoPanel = new TorrentInfoPanel;
 
@@ -72,19 +75,23 @@ MainWindow::MainWindow()
 
 	addToolBar(Qt::LeftToolBarArea, m_panel);
 
-	QStackedWidget *stackedWidget = new QStackedWidget;
+	m_stackedWidget = new QStackedWidget;
 	QWidget *torrentsListWidget = new QWidget;
 	QVBoxLayout *torrentsListLayout = new QVBoxLayout;
 	torrentsListLayout->addWidget(m_torrentsList);
 	torrentsListLayout->addWidget(m_infoPanel);
 	torrentsListWidget->setLayout(torrentsListLayout);
-	stackedWidget->addWidget(torrentsListWidget);
-	setCentralWidget(stackedWidget);
+	m_stackedWidget->addWidget(torrentsListWidget);
+	m_stackedWidget->addWidget(m_settingsWindow);
+	setCentralWidget(m_stackedWidget);
 
 	connect(m_panel, SIGNAL(showAll()), m_torrentsList, SLOT(showAll()));
 	connect(m_panel, SIGNAL(showCompleted()), m_torrentsList, SLOT(showCompleted()));
 	connect(m_panel, SIGNAL(showDownloading()), m_torrentsList, SLOT(showDownloading()));
 	connect(m_panel, SIGNAL(showUploading()), m_torrentsList, SLOT(showUploading()));
+
+	connect(m_panel, SIGNAL(showSettings()), this, SLOT(openSettings()));
+	connect(m_panel, SIGNAL(hideSettings()), this, SLOT(closeSettings()));
 
 	m_panel->openAll();
 
@@ -133,6 +140,16 @@ Panel *MainWindow::panel()
 TorrentsList *MainWindow::torrentsList()
 {
 	return m_torrentsList;
+}
+
+void MainWindow::openSettings()
+{
+	m_stackedWidget->setCurrentIndex(1);
+}
+
+void MainWindow::closeSettings()
+{
+	m_stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::createMenus()

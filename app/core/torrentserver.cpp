@@ -21,6 +21,7 @@
 #include "peer.h"
 #include "rctcpsocket.h"
 #include "ratecontroller.h"
+#include <QSettings>
 #include <QDebug>
 
 TorrentServer::TorrentServer()
@@ -33,22 +34,28 @@ TorrentServer::~TorrentServer()
 	disconnect(&m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
-bool TorrentServer::startServer(int port)
+bool TorrentServer::startServer()
 {
-	if (port) {
-		if (!m_server.listen(QHostAddress::Any, port)) {
-			qDebug() << "Failed to start server:" << m_server.errorString();
-			return false;
-		}
-		qDebug() << "Server started on port" << QString::number(m_server.serverPort());
-		return true;
+	if (m_server.isListening()) {
+		m_server.close();
 	}
 
-	// Attempt to get a port in the range [6881,6889]
-	for (int port = 6881; port <= 6889; port++) {
-		if (m_server.listen(QHostAddress::Any, port)) {
-			qDebug() << "Server started on port" << QString::number(m_server.serverPort());
-			return true;
+	QSettings settings;
+	quint64 startPort = settings.value("ServerStartPort", 6881).toInt();
+	quint64 endPort = settings.value("ServerEndPort", 6889).toInt();
+	settings.setValue("ServerStartPort", startPort);
+	settings.setValue("ServerEndPort", endPort);
+
+	if (endPort == 0)
+		endPort = startPort;
+
+	// Get a port in the range [startPort, endPort]
+	if (startPort > 0) {
+		for (quint16 port = startPort; port <= endPort; ++port) {
+			if (m_server.listen(QHostAddress::Any, port)) {
+				qDebug() << "Server started on port" << QString::number(port);
+				return true;
+			}
 		}
 	}
 

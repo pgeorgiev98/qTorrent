@@ -1,7 +1,7 @@
 /* qTorrent - An open-source, cross-platform BitTorrent client
  * Copyright (C) 2017 Petko Georgiev
  *
- * torrentserver.h
+ * settingswindow.h
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,38 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TORRENTSERVER_H
-#define TORRENTSERVER_H
+#ifndef SETTINGSWINDOW_H
+#define SETTINGSWINDOW_H
 
-#include <QObject>
-#include <QTcpServer>
-#include <QList>
+#include <QWidget>
 
-class Peer;
+class QLineEdit;
 
-/* This class is used to receive and handle incoming peer connections */
-class TorrentServer : public QObject
+class SettingsWindow : public QWidget
 {
 	Q_OBJECT
 
 public:
-	TorrentServer();
-	~TorrentServer();
+	SettingsWindow(QWidget *parent = nullptr);
 
-	/* Start/restart the server using the port range in the settings file */
-	bool startServer();
-
-	QTcpServer& server();
-	int port();
-	QHostAddress address();
-	QList<Peer *> &peers();
-
-public slots:
-	void newConnection();
+private slots:
+	void apply();
+	void reset();
 
 private:
-	QTcpServer m_server;
-	QList<Peer *> m_peers;
+	QLineEdit *m_serverStartPort;
+	QLineEdit *m_serverEndPort;
 };
 
-#endif // TORRENTSERVER_H
+#endif // SETTINGSWINDOW_H

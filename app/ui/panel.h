@@ -32,7 +32,7 @@ class Panel : public QToolBar
 
 public:
 	enum Section {
-		All, Completed, Downloading, Uploading
+		All, Completed, Downloading, Uploading, Settings
 	};
 
 	Panel(QWidget *parent = nullptr);
@@ -44,12 +44,15 @@ public slots:
 	void openCompleted();
 	void openDownloading();
 	void openUploading();
+	void openSettings();
 
 signals:
 	void showAll();
 	void showCompleted();
 	void showDownloading();
 	void showUploading();
+	void showSettings();
+	void hideSettings();
 
 private:
 	void resetButtons();
@@ -58,11 +61,13 @@ private:
 	QIcon m_completedIcon;
 	QIcon m_downloadingIcon;
 	QIcon m_uploadingIcon;
+	QIcon m_settingsIcon;
 
 	QIcon m_allIconActive;
 	QIcon m_completedIconActive;
 	QIcon m_downloadingIconActive;
 	QIcon m_uploadingIconActive;
+	QIcon m_settingsIconActive;
 
 	QList<QToolButton *> m_toolButtons;
 
@@ -70,6 +75,7 @@ private:
 	QToolButton *m_completed;
 	QToolButton *m_downloading;
 	QToolButton *m_uploading;
+	QToolButton *m_settings;
 
 };
 
