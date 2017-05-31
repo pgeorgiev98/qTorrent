@@ -33,21 +33,25 @@ Panel::Panel(QWidget *parent)
 	, m_completedIcon(QIcon(":/button-completed.png"))
 	, m_downloadingIcon(QIcon(":/button-downloading.png"))
 	, m_uploadingIcon(QIcon(":/button-uploading.png"))
+	, m_settingsIcon(QIcon(":/button-settings.png"))
 
 	, m_allIconActive(QIcon(":/button-all-active.png"))
 	, m_completedIconActive(QIcon(":/button-completed-active.png"))
 	, m_downloadingIconActive(QIcon(":/button-downloading-active.png"))
 	, m_uploadingIconActive(QIcon(":/button-uploading-active.png"))
+	, m_settingsIconActive(QIcon(":/button-settings-active.png"))
 
 	, m_all(new QToolButton)
 	, m_completed(new QToolButton)
 	, m_downloading(new QToolButton)
 	, m_uploading(new QToolButton)
+	, m_settings(new QToolButton)
 {
 	m_toolButtons.append(m_all);
 	m_toolButtons.append(m_completed);
 	m_toolButtons.append(m_downloading);
 	m_toolButtons.append(m_uploading);
+	m_toolButtons.append(m_settings);
 
 	resetButtons();
 
@@ -72,6 +76,7 @@ Panel::Panel(QWidget *parent)
 	connect(m_completed, SIGNAL(clicked()), this, SLOT(openCompleted()));
 	connect(m_downloading, SIGNAL(clicked()), this, SLOT(openDownloading()));
 	connect(m_uploading, SIGNAL(clicked()), this, SLOT(openUploading()));
+	connect(m_settings, SIGNAL(clicked()), this, SLOT(openSettings()));
 }
 
 Panel::~Panel()
@@ -92,6 +97,8 @@ Panel::Section Panel::getCurrentSection()
 		return Section::Downloading;
 	} else if (m_uploading->isChecked()) {
 		return Section::Uploading;
+	} else if (m_settings->isChecked()) {
+		return Section::Settings;
 	}
 	Q_ASSERT(false);
 	return Section::All;
@@ -103,6 +110,7 @@ void Panel::resetButtons()
 	m_completed->setIcon(m_completedIcon);
 	m_downloading->setIcon(m_downloadingIcon);
 	m_uploading->setIcon(m_uploadingIcon);
+	m_settings->setIcon(m_settingsIcon);
 }
 
 void Panel::openAll()
@@ -111,6 +119,7 @@ void Panel::openAll()
 	m_all->setIcon(m_allIconActive);
 	m_all->setChecked(true);
 	emit showAll();
+	emit hideSettings();
 }
 
 void Panel::openCompleted()
@@ -119,6 +128,7 @@ void Panel::openCompleted()
 	m_completed->setIcon(m_completedIconActive);
 	m_completed->setChecked(true);
 	emit showCompleted();
+	emit hideSettings();
 }
 
 void Panel::openDownloading()
@@ -127,6 +137,7 @@ void Panel::openDownloading()
 	m_downloading->setIcon(m_downloadingIconActive);
 	m_downloading->setChecked(true);
 	emit showDownloading();
+	emit hideSettings();
 }
 
 void Panel::openUploading()
@@ -135,4 +146,13 @@ void Panel::openUploading()
 	m_uploading->setIcon(m_uploadingIconActive);
 	m_uploading->setChecked(true);
 	emit showUploading();
+	emit hideSettings();
+}
+
+void Panel::openSettings()
+{
+	resetButtons();
+	m_settings->setIcon(m_settingsIconActive);
+	m_settings->setChecked(true);
+	emit showSettings();
 }

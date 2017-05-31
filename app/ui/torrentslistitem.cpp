@@ -95,6 +95,8 @@ bool TorrentsListItem::belongsToSection()
 		return !torrent()->isDownloaded();
 	case Panel::Uploading:
 		return true; // TODO
+	case Panel::Settings:
+		return false;
 	}
 	Q_ASSERT(false);
 	return true;
