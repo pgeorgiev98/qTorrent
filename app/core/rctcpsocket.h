@@ -29,16 +29,16 @@ class RcTcpSocket : public QTcpSocket
 
 public:
 	RcTcpSocket(QObject *parent = nullptr);
+	RcTcpSocket(QTcpSocket *socket, QObject *parent = nullptr);
 
-	inline bool canReadLine() const override { return m_incoming.contains('\n'); }
-
+	// Rate control
 	qint64 writeToNetwork(qint64 maxLen);
 	qint64 readFromNetwork(qint64 maxLen);
 
 	bool canTransferMore() const;
 	inline qint64 bytesAvailable() const override { return m_incoming.size(); }
-	inline qint64 networkBytesAvailable() const { return m_socket.bytesAvailable(); }
-	inline qint64 networkBytesToWrite() const { return m_socket.bytesToWrite(); }
+	inline qint64 networkBytesAvailable() const { return m_socket->bytesAvailable(); }
+	inline qint64 networkBytesToWrite() const { return m_socket->bytesToWrite(); }
 
 	void setReadBufferSize(qint64 size) override;
 
@@ -46,10 +46,14 @@ public:
 	void connectToHost(const QString &hostName, quint16 port,
 					   OpenMode mode = ReadWrite, NetworkLayerProtocol protocol = AnyIPProtocol) override;
 
+	void disconnectFromHost() override;
+
+	inline bool canReadLine() const override { return m_incoming.contains('\n'); }
+
 signals:
 	void readyToTransfer();
 
-public slots:
+private slots:
 	void socketStateChanged(QAbstractSocket::SocketState state);
 
 protected:
@@ -61,7 +65,9 @@ private:
 	QByteArray m_outgoing;
 	QByteArray m_incoming;
 
-	QTcpSocket m_socket;
+	QTcpSocket *m_socket;
+
+	void connectAll();
 };
 
 

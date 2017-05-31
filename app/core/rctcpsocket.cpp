@@ -23,39 +23,43 @@
 RcTcpSocket::RcTcpSocket(QObject *parent)
 	: QTcpSocket(parent)
 {
+	m_socket = new QTcpSocket(this);
+	connectAll();
+}
+
+RcTcpSocket::RcTcpSocket(QTcpSocket *socket, QObject *parent)
+	: QTcpSocket(parent)
+{
+	setOpenMode(socket->openMode());
+	m_socket = socket;
+	socketStateChanged(m_socket->state());
+	connectAll();
+}
+
+void RcTcpSocket::connectAll()
+{
 	connect(this, SIGNAL(readyRead()), this, SIGNAL(readyToTransfer()));
 	connect(this, SIGNAL(connected()), this, SIGNAL(readyToTransfer()));
 
-	connect(&m_socket, SIGNAL(connected()),
+	connect(m_socket, SIGNAL(connected()),
 			this, SIGNAL(connected()));
-	connect(&m_socket, SIGNAL(readyRead()),
+	connect(m_socket, SIGNAL(readyRead()),
 			this, SIGNAL(readyRead()));
-	connect(&m_socket, SIGNAL(disconnected()),
+	connect(m_socket, SIGNAL(disconnected()),
 			this, SIGNAL(disconnected()));
-	connect(&m_socket, SIGNAL(error(QAbstractSocket::SocketError)),
+	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)),
 			this, SIGNAL(error(QAbstractSocket::SocketError)));
-	connect(&m_socket, SIGNAL(bytesWritten(qint64)),
+	connect(m_socket, SIGNAL(bytesWritten(qint64)),
 			this, SIGNAL(bytesWritten(qint64)));
-	connect(&m_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+	connect(m_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
 			this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
 }
 
-void RcTcpSocket::connectToHost(const QHostAddress &address, quint16 port, OpenMode mode)
-{
-	m_socket.connectToHost(address, port, mode);
-	open(mode);
-}
-
-void RcTcpSocket::connectToHost(const QString &hostName, quint16 port, OpenMode mode, NetworkLayerProtocol protocol)
-{
-	m_socket.connectToHost(hostName, port, mode, protocol);
-	open(mode);
-}
 
 qint64 RcTcpSocket::writeToNetwork(qint64 maxLen)
 {
 	qint64 bytesWritten =
-			m_socket.write(m_outgoing.data(), qMin(maxLen, qint64(m_outgoing.size())));
+			m_socket->write(m_outgoing.data(), qMin(maxLen, qint64(m_outgoing.size())));
 	if (bytesWritten <= 0)
 		return bytesWritten;
 	m_outgoing.remove(0, bytesWritten);
@@ -66,32 +70,50 @@ qint64 RcTcpSocket::readFromNetwork(qint64 maxLen)
 {
 	int oldSize = m_incoming.size();
 	m_incoming.resize(m_incoming.size() + maxLen);
-	qint64 bytesRead = m_socket.read(m_incoming.data() + oldSize, maxLen);
+	qint64 bytesRead = m_socket->read(m_incoming.data() + oldSize, maxLen);
 	m_incoming.resize(bytesRead <= 0 ? oldSize : oldSize + bytesRead);
 	if (bytesRead > 0)
 		emit readyRead();
 	return bytesRead;
 }
 
-bool RcTcpSocket::canTransferMore() const
-{
-	return !m_incoming.isEmpty()
-			|| !m_outgoing.isEmpty()
-			|| m_socket.bytesAvailable() > 0;
-}
-
 void RcTcpSocket::setReadBufferSize(qint64 size)
 {
-	m_socket.setReadBufferSize(size);
+	m_socket->setReadBufferSize(size);
 }
+
+bool RcTcpSocket::canTransferMore() const
+{
+	return bytesAvailable() > 0 || m_socket->bytesAvailable() > 0
+			|| !m_outgoing.isEmpty();
+}
+
+
+void RcTcpSocket::connectToHost(const QHostAddress &address, quint16 port, OpenMode mode)
+{
+	setOpenMode(mode);
+	m_socket->connectToHost(address, port, mode);
+}
+
+void RcTcpSocket::connectToHost(const QString &hostName, quint16 port, OpenMode mode, NetworkLayerProtocol protocol)
+{
+	setOpenMode(mode);
+	m_socket->connectToHost(hostName, port, mode, protocol);
+}
+
+void RcTcpSocket::disconnectFromHost()
+{
+	m_socket->disconnectFromHost();
+}
+
 
 void RcTcpSocket::socketStateChanged(QAbstractSocket::SocketState state)
 {
-	setLocalAddress(m_socket.localAddress());
-	setLocalPort(m_socket.localPort());
-	setPeerName(m_socket.peerName());
-	setPeerAddress(m_socket.peerAddress());
-	setPeerPort(m_socket.peerPort());
+	setLocalAddress(m_socket->localAddress());
+	setLocalPort(m_socket->localPort());
+	setPeerName(m_socket->peerName());
+	setPeerAddress(m_socket->peerAddress());
+	setPeerPort(m_socket->peerPort());
 	setSocketState(state);
 }
 
@@ -103,8 +125,8 @@ qint64 RcTcpSocket::readData(char *data, qint64 maxLen)
 
 	if (state() != ConnectedState) {
 		QByteArray buffer;
-		buffer.resize(m_socket.bytesAvailable());
-		m_socket.read(buffer.data(), buffer.size());
+		buffer.resize(m_socket->bytesAvailable());
+		m_socket->read(buffer.data(), buffer.size());
 		m_incoming += buffer;
 	}
 	return qint64(bytesRead);

@@ -19,6 +19,8 @@
 
 #include "torrentserver.h"
 #include "peer.h"
+#include "rctcpsocket.h"
+#include "ratecontroller.h"
 #include <QDebug>
 
 TorrentServer::TorrentServer()
@@ -62,7 +64,9 @@ bool TorrentServer::startServer(int port)
 void TorrentServer::newConnection()
 {
 	QTcpSocket *socket = m_server.nextPendingConnection();
-	Peer *peer = Peer::createClient(socket);
+	RcTcpSocket *rcsocket = new RcTcpSocket(socket, this);
+	RateController::instance()->addSocket(rcsocket);
+	Peer *peer = Peer::createClient(rcsocket);
 	m_peers.push_back(peer);
 }
 
