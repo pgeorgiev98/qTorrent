@@ -25,6 +25,8 @@
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
+	app.setOrganizationName("qTorrent");
+	app.setOrganizationDomain("qtorrent.com");
 	app.setApplicationName("qTorrent");
 
 	Remote remote;

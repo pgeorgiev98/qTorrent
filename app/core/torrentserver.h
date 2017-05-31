@@ -35,9 +35,8 @@ public:
 	TorrentServer();
 	~TorrentServer();
 
-	/* Start server on port 'port'. If port is 0, then
-	 * server will automatically choose port */
-	bool startServer(int port = 0);
+	/* Start the server using the port range in the settings file */
+	bool startServer();
 
 	QTcpServer& server();
 	int port();
